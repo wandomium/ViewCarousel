@@ -1,6 +1,7 @@
 package io.github.wandomium.webviewcarousel;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -10,10 +11,13 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import io.github.wandomium.webviewcarousel.ui.ViewCarousel;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+{
+    private static final String CLASS_TAG = MainActivity.class.getSimpleName();
 
     private ViewCarousel mViewCarousel;
-    private ViewPager2 mViewPager;
+    private ViewPager2 mViewPager2;
+    private ViewPager2.OnPageChangeCallback mCarouselScrollCb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,16 +25,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mViewCarousel = new ViewCarousel(Page.loadPages(this));
-        mViewPager = findViewById(R.id.viewPager);
-        mViewPager.setAdapter(mViewCarousel);
+        mViewPager2 = findViewById(R.id.viewPager);
+        mViewPager2.setAdapter(mViewCarousel);
 
         // TODO: Later we might want to change this or at least make it configurable
-        mViewPager.setOffscreenPageLimit(1);
+        mViewPager2.setOffscreenPageLimit(1);
+
+        _configureCarouselScroll();
     }
 
     @Override
     protected void onDestroy() {
         Page.savePages(this, mViewCarousel.getPages());
+        mViewPager2.unregisterOnPageChangeCallback(mCarouselScrollCb);
+        mCarouselScrollCb = null;
+        mViewPager2 = null;
+        mViewCarousel = null;
         super.onDestroy();
     }
 
@@ -46,15 +56,42 @@ public class MainActivity extends AppCompatActivity {
         super.onOptionsItemSelected(item);
 
         int id = item.getItemId();
-        int currentPos = mViewPager.getCurrentItem();
+        int currentPos = mViewPager2.getCurrentItem();
 
         if (id == R.id.action_add_page) {
             currentPos = mViewCarousel.insertPage(currentPos);
         } else if (id == R.id.action_remove_page) {
             currentPos = mViewCarousel.removePage(currentPos);
         }
-        mViewPager.setCurrentItem(currentPos, true);
+        mViewPager2.setCurrentItem(currentPos, true);
 
         return true;
+    }
+
+    private void _configureCarouselScroll() {
+        mCarouselScrollCb = new ViewPager2.OnPageChangeCallback()
+        {
+            private boolean mDragging = false;
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                mDragging = state == ViewPager2.SCROLL_STATE_DRAGGING;
+                super.onPageScrollStateChanged(state);
+            }
+
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                if (mDragging && positionOffset == 0.0) {
+                    if (position == 0) {
+                        mViewPager2.setCurrentItem(mViewCarousel.getItemCount(), false);
+                    } else if (position == mViewCarousel.getItemCount() - 1) {
+                        mViewPager2.setCurrentItem(0, false);
+                    }
+                    return;
+                }
+                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
+            }
+        };
+        mViewPager2.registerOnPageChangeCallback(mCarouselScrollCb);
     }
 }
