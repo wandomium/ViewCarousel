@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.wandomium.webviewcarousel.Page;
 import io.github.wandomium.webviewcarousel.R;
 
 public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
@@ -26,12 +27,22 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
         void onUrlSelected(int position, String value);
     }
 
-    private final ArrayList<String> mPages;
+    private final ArrayList<Page> mPages;
 
     // TODO: Load from config
-    public ViewCarousel(List<String> pages) {
-        this.mPages = new ArrayList<>();
-        this.mPages.add(null);
+    public ViewCarousel(ArrayList<Page> pages) {
+        if (pages == null || pages.isEmpty()) {
+            // Add a basic page so we are not empty
+            this.mPages = new ArrayList<>();
+            this.mPages.add(null);
+        }
+        else {
+            this.mPages = pages;
+        }
+    }
+
+    public ArrayList<Page> getPages() {
+        return mPages;
     }
 
     // Insert page after position
@@ -67,7 +78,7 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
 
 //        return new ViewHolder(view, (mPages::set));
         return new ViewHolder(view, ((position, value) -> {
-            mPages.set(position, value);
+            mPages.set(position, new Page(value));
             notifyItemChanged(position);
         }));
     }
@@ -113,9 +124,9 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
             });
         }
 
-        public void bind(String url) {
-            if (url != null) {
-                _loadWebPage(url);
+        public void bind(Page page) {
+            if (page != null) {
+                _loadWebPage(page.url);
             }
             else if (mCurrentView != VIEW_BTN) {
                 ViewGroup container = itemView.findViewById(R.id.container);

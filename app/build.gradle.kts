@@ -48,4 +48,5 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
 
     implementation("androidx.webkit:webkit:1.8.0")
+    implementation("com.google.code.gson:gson:2.13.2")
 }

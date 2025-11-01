@@ -20,12 +20,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mViewCarousel = new ViewCarousel(null);
+        mViewCarousel = new ViewCarousel(Page.loadPages(this));
         mViewPager = findViewById(R.id.viewPager);
         mViewPager.setAdapter(mViewCarousel);
 
         // TODO: Later we might want to change this or at least make it configurable
         mViewPager.setOffscreenPageLimit(1);
+    }
+
+    @Override
+    protected void onDestroy() {
+        Page.savePages(this, mViewCarousel.getPages());
+        super.onDestroy();
     }
 
     @Override
