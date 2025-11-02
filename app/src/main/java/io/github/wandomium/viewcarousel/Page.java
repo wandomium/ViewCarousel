@@ -1,6 +1,7 @@
 package io.github.wandomium.viewcarousel;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -15,7 +16,10 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class Page {
+public class Page
+{
+    private static final String CLASS_TAG = Page.class.getSimpleName();
+
     public int refreshRateSec = 15;
     public final String url;
 
@@ -39,6 +43,9 @@ public class Page {
             e.printStackTrace();
         }
 
+        Log.i(CLASS_TAG, "Loding from: " + file.getAbsolutePath());
+        Log.i(CLASS_TAG, pages == null ? "null" : gson.toJson(pages));
+
         return pages == null ? new ArrayList<>() : pages;
     }
 
@@ -50,7 +57,8 @@ public class Page {
 
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(pages, writer); // Serialize ArrayList to JSON file
-            System.out.println("ArrayList exported to " + file.getAbsolutePath());
+            Log.i(CLASS_TAG,"ArrayList exported to " + file.getAbsolutePath());
+            Log.i(CLASS_TAG, pages == null ? "null" : gson.toJson(pages));
         } catch (IOException e) {
             e.printStackTrace();
         }

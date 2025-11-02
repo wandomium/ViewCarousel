@@ -1,6 +1,9 @@
 package io.github.wandomium.viewcarousel;
 
+import android.app.PictureInPictureParams;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Rational;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -23,6 +26,10 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (isInPictureInPictureMode()) {
+            return;
+        }
+
         mViewCarousel = new ViewCarousel(Page.loadPages(this));
         mViewPager2 = findViewById(R.id.viewPager);
         mViewPager2.setAdapter(mViewCarousel);
@@ -31,6 +38,12 @@ public class MainActivity extends AppCompatActivity
         mViewPager2.setOffscreenPageLimit(1);
 
         _configureCarouselScroll();
+    }
+
+    @Override
+    protected void onPause() {
+        Page.savePages(this, mViewCarousel.getPages());
+        super.onPause();
     }
 
     @Override
@@ -62,9 +75,33 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.action_remove_page) {
             currentPos = mViewCarousel.removePage(currentPos);
         }
+        else if (id == R.id.action_enter_pip) {
+            enterPipMode();
+        }
         mViewPager2.setCurrentItem(currentPos, true);
 
         return true;
+    }
+
+    private void enterPipMode() {
+        Rational ratio = new Rational(9, 12);
+        PictureInPictureParams params = new PictureInPictureParams.Builder()
+                .setAspectRatio(ratio)
+                .setSeamlessResizeEnabled(true)
+                .build();
+        enterPictureInPictureMode(params);
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        enterPipMode();
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPipMode, Configuration newConfig) {
+        super.onPictureInPictureModeChanged(isInPipMode, newConfig);
+//        findViewById(R.id.pipButton).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
     }
 
     private void _configureCarouselScroll() {

@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "io.github.wandomium.viewcarousel"
-        minSdk = 29
+        minSdk = 31
         targetSdk = 35
         versionCode = 10
         versionName = "0.1.0"
@@ -43,6 +43,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+    implementation(libs.swiperefreshlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
