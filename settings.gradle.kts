@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "WebViewCarousel"
+rootProject.name = "ViewCarousel"
 include(":app")

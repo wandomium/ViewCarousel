@@ -1,4 +1,4 @@
-package io.github.wandomium.webviewcarousel.ui;
+package io.github.wandomium.viewcarousel.ui;
 
 import android.app.AlertDialog;
 import android.text.InputType;
@@ -15,10 +15,9 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import io.github.wandomium.webviewcarousel.Page;
-import io.github.wandomium.webviewcarousel.R;
+import io.github.wandomium.viewcarousel.Page;
+import io.github.wandomium.viewcarousel.R;
 
 public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
 {

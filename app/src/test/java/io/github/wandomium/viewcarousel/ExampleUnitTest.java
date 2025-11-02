@@ -1,4 +1,4 @@
-package io.github.wandomium.webviewcarousel;
+package io.github.wandomium.viewcarousel;
 
 import org.junit.Test;
 

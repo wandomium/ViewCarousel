@@ -1,7 +1,6 @@
-package io.github.wandomium.webviewcarousel;
+package io.github.wandomium.viewcarousel;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -9,7 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
-import io.github.wandomium.webviewcarousel.ui.ViewCarousel;
+import io.github.wandomium.viewcarousel.ui.ViewCarousel;
 
 public class MainActivity extends AppCompatActivity
 {

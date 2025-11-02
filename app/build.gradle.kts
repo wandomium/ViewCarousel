@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "io.github.wandomium.webviewcarousel"
+    namespace = "io.github.wandomium.viewcarousel"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "io.github.wandomium.webviewcarousel"
+        applicationId = "io.github.wandomium.viewcarousel"
         minSdk = 29
         targetSdk = 35
         versionCode = 10
