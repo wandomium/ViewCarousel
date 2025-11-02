@@ -3,10 +3,13 @@ package io.github.wandomium.viewcarousel;
 import android.app.PictureInPictureParams;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Rational;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
@@ -30,8 +33,19 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        mViewCarousel = new ViewCarousel(Page.loadPages(this));
         mViewPager2 = findViewById(R.id.viewPager);
+        mViewCarousel = new ViewCarousel(Page.loadPages(this), (view) -> {
+            Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
+            mViewPager2.setUserInputEnabled(false);
+            return false;
+        });
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Toast.makeText(MainActivity.this, "RELEASE", Toast.LENGTH_SHORT).show();
+                mViewPager2.setUserInputEnabled(true);
+            }
+        });
         mViewPager2.setAdapter(mViewCarousel);
 
         // TODO: Later we might want to change this or at least make it configurable

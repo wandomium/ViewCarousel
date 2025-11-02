@@ -31,9 +31,10 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
     }
 
     private final ArrayList<Page> mPages;
+    private View.OnLongClickListener mLongClickListener;
 
     // TODO: Load from config
-    public ViewCarousel(ArrayList<Page> pages) {
+    public ViewCarousel(ArrayList<Page> pages, View.OnLongClickListener onLongCLickListener) {
         if (pages == null || pages.isEmpty()) {
             // Add a basic page so we are not empty
             this.mPages = new ArrayList<>();
@@ -42,6 +43,8 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
         else {
             this.mPages = pages;
         }
+
+        this.mLongClickListener = onLongCLickListener;
     }
 
     public ArrayList<Page> getPages() {
@@ -89,7 +92,7 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         int realPosition = position % mPages.size();
-        holder.bind(mPages.get(realPosition));
+        holder.bind(mPages.get(realPosition), mLongClickListener);
     }
 
     @Override
@@ -107,14 +110,14 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
         Button mAddUrlBtn;
         int mCurrentView = VIEW_BTN;
 
-        public ViewHolder(@NonNull View itemView, OnUrlSelected listener) {
+        public ViewHolder(@NonNull View itemView, OnUrlSelected urlSelectedListener) {
             super(itemView);
-            _creteAddUrlBtn(listener);
+            _creteAddUrlBtn(urlSelectedListener);
         }
 
-        public void bind(Page page) {
+        public void bind(Page page, View.OnLongClickListener longClickListener) {
             if (page != null) {
-                _loadWebPage(page.url);
+                _loadWebPage(page.url, longClickListener);
             }
             else if (mCurrentView != VIEW_BTN) {
                 ViewGroup container = itemView.findViewById(R.id.container);
@@ -124,9 +127,9 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
             }
         }
 
-        private void _loadWebPage(final String url) {
+        private void _loadWebPage(final String url, View.OnLongClickListener longClickListener) {
             if (mWebView == null) {
-                _createWebView();
+                _createWebView(longClickListener);
             }
             if (mCurrentView != VIEW_URL) {
                 ViewGroup container = itemView.findViewById(R.id.container);
@@ -156,7 +159,7 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
             });
         }
 
-        private void _createWebView() {
+        private void _createWebView(View.OnLongClickListener longClickListener) {
             mWebView = new WebView(itemView.getContext());
             mWebView.getSettings().setJavaScriptEnabled(true);
             mWebView.getSettings().setDomStorageEnabled(true);
@@ -183,6 +186,8 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
                     super.onReceivedError(view, request, error);
                 }
             });
+
+            mWebView.setOnLongClickListener(longClickListener);
         }
     }
 }
