@@ -1,10 +1,13 @@
 package io.github.wandomium.viewcarousel.ui;
 
 import android.app.AlertDialog;
+import android.graphics.Bitmap;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -13,6 +16,7 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 
@@ -96,31 +100,16 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
 
     private static final int VIEW_BTN = 1;
     private static final int VIEW_URL = 2;
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder
+    {
         WebView mWebView;
+        SwipeRefreshLayout mSwipeRefresh;
         Button mAddUrlBtn;
         int mCurrentView = VIEW_BTN;
 
         public ViewHolder(@NonNull View itemView, OnUrlSelected listener) {
             super(itemView);
-
-            // Load init screen with selector
-            mAddUrlBtn = itemView.findViewById(R.id.btnAddWebView);
-            mAddUrlBtn.setOnClickListener(v -> {
-                EditText input = new EditText(v.getContext());
-                input.setHint("Enter page");
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
-                new AlertDialog.Builder(v.getContext())
-                    .setTitle("Enter URL")
-                    .setView(input)
-                    .setPositiveButton("OK", (id, l) -> {
-                        final String url = input.getText().toString();
-                        listener.onUrlSelected(getAbsoluteAdapterPosition(), url);
-//                        bind(url);
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
-            });
+            _creteAddUrlBtn(listener);
         }
 
         public void bind(Page page) {
@@ -137,21 +126,63 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
 
         private void _loadWebPage(final String url) {
             if (mWebView == null) {
-                mWebView = new WebView(itemView.getContext());
-                mWebView.setLayoutParams(new ConstraintLayout.LayoutParams(
-                        ConstraintLayout.LayoutParams.MATCH_PARENT,
-                        ConstraintLayout.LayoutParams.MATCH_PARENT));
-                mWebView.setWebViewClient(new WebViewClient());
-                mWebView.getSettings().setJavaScriptEnabled(true);
-                mWebView.getSettings().setDomStorageEnabled(true);
+                _createWebView();
             }
             if (mCurrentView != VIEW_URL) {
                 ViewGroup container = itemView.findViewById(R.id.container);
                 container.removeAllViews();
-                container.addView(mWebView);
+                container.addView(mSwipeRefresh);
                 mCurrentView = VIEW_URL;
             }
             mWebView.loadUrl(url);
+        }
+
+        private void _creteAddUrlBtn(OnUrlSelected listener) {
+            mAddUrlBtn = itemView.findViewById(R.id.btnAddWebView);
+            mAddUrlBtn.setOnClickListener(v -> {
+                EditText input = new EditText(v.getContext());
+                input.setHint("Enter page");
+                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                new AlertDialog.Builder(v.getContext())
+                        .setTitle("Enter URL")
+                        .setView(input)
+                        .setPositiveButton("OK", (id, l) -> {
+                            final String url = input.getText().toString();
+                            listener.onUrlSelected(getAbsoluteAdapterPosition(), url);
+//                        bind(url);
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            });
+        }
+
+        private void _createWebView() {
+            mWebView = new WebView(itemView.getContext());
+            mWebView.getSettings().setJavaScriptEnabled(true);
+            mWebView.getSettings().setDomStorageEnabled(true);
+
+            mSwipeRefresh = new SwipeRefreshLayout(itemView.getContext());
+            mSwipeRefresh.addView(mWebView, new ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.MATCH_PARENT,
+                ConstraintLayout.LayoutParams.MATCH_PARENT));
+
+            mSwipeRefresh.setOnRefreshListener(() -> mWebView.reload());
+
+            mWebView.setWebViewClient(new WebViewClient() {
+                @Override
+                public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                    mSwipeRefresh.setRefreshing(true);
+                }
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    mSwipeRefresh.setRefreshing(false);
+                }
+                @Override
+                public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                    mSwipeRefresh.setRefreshing(false);
+                    super.onReceivedError(view, request, error);
+                }
+            });
         }
     }
 }

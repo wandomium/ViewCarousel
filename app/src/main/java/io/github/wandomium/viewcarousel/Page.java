@@ -43,8 +43,8 @@ public class Page
             e.printStackTrace();
         }
 
-        Log.i(CLASS_TAG, "Loding from: " + file.getAbsolutePath());
-        Log.i(CLASS_TAG, pages == null ? "null" : gson.toJson(pages));
+        Log.d(CLASS_TAG, "Loading from: " + file.getAbsolutePath());
+        Log.d(CLASS_TAG, pages == null ? "null" : gson.toJson(pages));
 
         return pages == null ? new ArrayList<>() : pages;
     }
@@ -57,8 +57,8 @@ public class Page
 
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(pages, writer); // Serialize ArrayList to JSON file
-            Log.i(CLASS_TAG,"ArrayList exported to " + file.getAbsolutePath());
-            Log.i(CLASS_TAG, pages == null ? "null" : gson.toJson(pages));
+            Log.d(CLASS_TAG,"Saving to " + file.getAbsolutePath());
+            Log.d(CLASS_TAG, pages == null ? "null" : gson.toJson(pages));
         } catch (IOException e) {
             e.printStackTrace();
         }
