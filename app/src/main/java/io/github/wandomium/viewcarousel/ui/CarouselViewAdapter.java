@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import io.github.wandomium.viewcarousel.Page;
 import io.github.wandomium.viewcarousel.R;
 
-public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
+public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapter.ViewHolder>
 {
     @FunctionalInterface
     public interface OnUrlSelected {
@@ -31,10 +31,10 @@ public class ViewCarousel extends RecyclerView.Adapter<ViewCarousel.ViewHolder>
     }
 
     private final ArrayList<Page> mPages;
-    private View.OnLongClickListener mLongClickListener;
+    private final View.OnLongClickListener mLongClickListener;
 
     // TODO: Load from config
-    public ViewCarousel(ArrayList<Page> pages, View.OnLongClickListener onLongCLickListener) {
+    public CarouselViewAdapter(ArrayList<Page> pages, View.OnLongClickListener onLongCLickListener) {
         if (pages == null || pages.isEmpty()) {
             // Add a basic page so we are not empty
             this.mPages = new ArrayList<>();
