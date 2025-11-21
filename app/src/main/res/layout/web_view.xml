@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/container"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wv_swipe_refresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <WebView
-        android:id="@+id/webview"
+        android:id="@+id/wv_webview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-    />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_height="match_parent" />
+    <include
+        android:id="@+id/wv_blocker"
+        layout="@layout/overlay"/>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

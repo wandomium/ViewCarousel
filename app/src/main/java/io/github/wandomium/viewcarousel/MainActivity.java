@@ -3,11 +3,14 @@ package io.github.wandomium.viewcarousel;
 import android.app.PictureInPictureParams;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.util.Rational;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
@@ -25,6 +28,7 @@ public class MainActivity extends AppCompatActivity
     private CarouselViewAdapter mViewCarousel;
     private ViewPager2 mViewPager2;
     private ViewPager2.OnPageChangeCallback mCarouselScrollCb;
+    private Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,33 +41,15 @@ public class MainActivity extends AppCompatActivity
 
         mViewPager2 = findViewById(R.id.viewPager);
 
-        /* Menu button */
-//        findViewById(R.id.menu_btn).setOnClickListener((v)->openOptionsMenu());
-        findViewById(R.id.menu_btn).setOnClickListener(v -> {
-            Log.d(CLASS_TAG, "BUTTON CLICK");
-            PopupMenu menu = new PopupMenu(MainActivity.this, v);
-            menu.getMenuInflater().inflate(R.menu.main_menu, menu.getMenu());
-            menu.setOnMenuItemClickListener(this::_handleMenuSelection);
-            menu.show();
-        });
-
         /* Handle CAPTURE and RELEASE on view */
         mViewCarousel = new CarouselViewAdapter(Page.loadPages(this), (view) -> {
             if (mViewPager2.isUserInputEnabled()) {
                 Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
                 mViewPager2.setUserInputEnabled(false);
-//                ImageButton btn = findViewById(R.id.menu_btn);
-//                btn.setEnabled(false);
-//                btn.setVisibility(View.GONE);
-                findViewById(R.id.overlay_view).setVisibility(View.GONE);
-            }
-            return false;
-        });
-        findViewById(R.id.overlay_view).setOnLongClickListener((v) -> {
-            if (mViewPager2.isUserInputEnabled()) {
-                Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
-                mViewPager2.setUserInputEnabled(false);
-                findViewById(R.id.overlay_view).setVisibility(View.GONE);
+                ImageButton btn = findViewById(R.id.menu_btn);
+                btn.setEnabled(false);
+                btn.setVisibility(View.GONE);
+//                findViewById(R.id.overlay_view).setVisibility(View.GONE);
             }
             return false;
         });
@@ -73,10 +59,11 @@ public class MainActivity extends AppCompatActivity
                 if (!mViewPager2.isUserInputEnabled()) {
                     Toast.makeText(MainActivity.this, "RELEASE", Toast.LENGTH_SHORT).show();
                     mViewPager2.setUserInputEnabled(true);
-//                    ImageButton btn = findViewById(R.id.menu_btn);
-//                    btn.setEnabled(true);
-//                    btn.setVisibility(View.VISIBLE);
-                    findViewById(R.id.overlay_view).setVisibility(View.VISIBLE);
+                    ImageButton btn = findViewById(R.id.menu_btn);
+                    btn.setEnabled(true);
+                    btn.setVisibility(View.VISIBLE);
+//                    findViewById(R.id.overlay_view).setVisibility(View.VISIBLE);
+                    mViewCarousel.onReleaseFocus();
                 }
             }
         });
@@ -130,6 +117,15 @@ public class MainActivity extends AppCompatActivity
 //        findViewById(R.id.pipButton).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
     }
 
+    public void onMenuBtnClicked(View view) {
+//        findViewById(R.id.menu_btn).setOnClickListener((v)->openOptionsMenu());
+        Log.d(CLASS_TAG, "BUTTON CLICK");
+        PopupMenu menu = new PopupMenu(MainActivity.this, view);
+        menu.getMenuInflater().inflate(R.menu.main_menu, menu.getMenu());
+        menu.setOnMenuItemClickListener(this::_handleMenuSelection);
+        menu.show();
+    }
+
     private boolean _handleMenuSelection(MenuItem item) {
         int id = item.getItemId();
         int currentPos = mViewPager2.getCurrentItem();
@@ -160,10 +156,31 @@ public class MainActivity extends AppCompatActivity
         mCarouselScrollCb = new ViewPager2.OnPageChangeCallback()
         {
             private boolean mDragging = false;
+            private boolean mBlock = false;
+
+            private Runnable mUnblockInput = new Runnable() {
+                @Override
+                public void run() {
+                    mViewCarousel.blockInput(mBlock);
+                }
+            };
 
             @Override
             public void onPageScrollStateChanged(int state) {
                 mDragging = state == ViewPager2.SCROLL_STATE_DRAGGING;
+                mBlock = state != ViewPager2.SCROLL_STATE_IDLE;
+
+                Log.d(CLASS_TAG, "state: " + state + " block: " + mBlock);
+
+                if (mViewCarousel.isBlocked() && state == ViewPager2.SCROLL_STATE_IDLE) {
+                    Log.d(CLASS_TAG, "posting unblock");
+                    mMainHandler.removeCallbacks(mUnblockInput);
+                    mMainHandler.postDelayed(mUnblockInput, 5000);
+                }
+                if (mBlock) {
+                    mViewCarousel.blockInput(mBlock);
+                }
+
                 super.onPageScrollStateChanged(state);
             }
 

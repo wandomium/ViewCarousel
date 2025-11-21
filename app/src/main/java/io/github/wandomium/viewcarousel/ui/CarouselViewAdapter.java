@@ -1,37 +1,36 @@
 package io.github.wandomium.viewcarousel.ui;
 
 import android.app.AlertDialog;
-import android.graphics.Bitmap;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.Button;
+import android.view.ViewParent;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 
 import io.github.wandomium.viewcarousel.Page;
 import io.github.wandomium.viewcarousel.R;
 
-public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapter.ViewHolder>
+public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapter.ViewHolder> implements IFocusMngr
 {
-    @FunctionalInterface
-    public interface OnUrlSelected {
-        void onUrlSelected(int position, String value);
-    }
+    private static final String CLASS_TAG = CarouselViewAdapter.class.getSimpleName();
+
+//    @FunctionalInterface
+//    public interface OnUrlSelected {
+//        void onUrlSelected(int position, String value);
+//    }
 
     private final ArrayList<Page> mPages;
     private final View.OnLongClickListener mLongClickListener;
+    private boolean mItemFocusOn = false;
+    private boolean mBlockInput = false;
 
     // TODO: Load from config
     public CarouselViewAdapter(ArrayList<Page> pages, View.OnLongClickListener onLongCLickListener) {
@@ -76,6 +75,44 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return position;
     }
 
+    public void onUrlSelected(int position, String value) {
+        mPages.set(position, new Page(value));
+        notifyItemChanged(position);
+    }
+    @Override
+    public boolean isInFocus() {
+        return mItemFocusOn;
+    }
+    @Override
+    public void onReleaseFocus() {
+        mItemFocusOn = false;
+    }
+    @Override
+    public void onFocus() {
+        if (mBlockInput) {
+            Log.d(CLASS_TAG, "Input blocked");
+            return;
+        }
+        mItemFocusOn = true;
+        mLongClickListener.onLongClick(null);
+    }
+    @Override
+    public void blockInput(boolean block) {
+        Log.d(CLASS_TAG, "blockInput: " + block);
+        mBlockInput = block;
+    }
+    @Override
+    public boolean isBlocked() {
+        return mBlockInput;
+    }
+    @Override
+    public boolean onLongClick(View v) {
+        Log.d(CLASS_TAG, "onLongClick");
+        mItemFocusOn = true;
+        mLongClickListener.onLongClick(v);
+        return false;
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -83,16 +120,13 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
                 .inflate(R.layout.new_page, parent, false);
 
 //        return new ViewHolder(view, (mPages::set));
-        return new ViewHolder(view, ((position, value) -> {
-            mPages.set(position, new Page(value));
-            notifyItemChanged(position);
-        }));
+        return new ViewHolder(view, this);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         int realPosition = position % mPages.size();
-        holder.bind(mPages.get(realPosition), mLongClickListener);
+        holder.bind(mPages.get(realPosition));
     }
 
     @Override
@@ -101,93 +135,64 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return mPages.size();
     }
 
-    private static final int VIEW_BTN = 1;
+    private static final int VIEW_NEW_PAGE = 1;
     private static final int VIEW_URL = 2;
+
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
-        WebView mWebView;
-        SwipeRefreshLayout mSwipeRefresh;
-        Button mAddUrlBtn;
-        int mCurrentView = VIEW_BTN;
+        private static final String CLASS_TAG = ViewHolder.class.getSimpleName();
 
-        public ViewHolder(@NonNull View itemView, OnUrlSelected urlSelectedListener) {
+        ItemWebPage mWebPage;
+        int mCurrentView = -1;
+        private final CarouselViewAdapter mAdapter;
+
+        public ViewHolder(@NonNull View itemView, CarouselViewAdapter adapter) {
             super(itemView);
-            _creteAddUrlBtn(urlSelectedListener);
+            this.mAdapter = adapter;
         }
 
-        public void bind(Page page, View.OnLongClickListener longClickListener) {
+        public void bind(Page page) {
             if (page != null) {
-                _loadWebPage(page.url, longClickListener);
+                _loadWebPage(page.url);
             }
-            else if (mCurrentView != VIEW_BTN) {
-                ViewGroup container = itemView.findViewById(R.id.container);
-                container.removeAllViews();
-                container.addView(mAddUrlBtn);
-                mCurrentView = VIEW_BTN;
+            else if (mCurrentView != VIEW_NEW_PAGE){
+//                ViewGroup container = itemView.findViewById(R.id.container);
+//                container.removeAllViews();
+//                container.addView(mAddUrlBtn);
+                mCurrentView = VIEW_NEW_PAGE;
+                itemView.findViewById(R.id.btnAddWebView).setOnClickListener(this::_showAddUrlDialog);
             }
         }
 
-        private void _loadWebPage(final String url, View.OnLongClickListener longClickListener) {
-            if (mWebView == null) {
-                _createWebView(longClickListener);
+        private void _loadWebPage(final String url) {
+            if (mWebPage == null) {
+                mWebPage = new ItemWebPage(itemView.getContext());
+                mWebPage.setup(mAdapter);
             }
             if (mCurrentView != VIEW_URL) {
                 ViewGroup container = itemView.findViewById(R.id.container);
                 container.removeAllViews();
-                container.addView(mSwipeRefresh);
+                container.addView(mWebPage);
                 mCurrentView = VIEW_URL;
+//                itemView.findViewById(R.id.btnAddWebView).setOnClickListener(null);
             }
-            mWebView.loadUrl(url);
+            mWebPage.loadUrl(url);
         }
 
-        private void _creteAddUrlBtn(OnUrlSelected listener) {
-            mAddUrlBtn = itemView.findViewById(R.id.btnAddWebView);
-            mAddUrlBtn.setOnClickListener(v -> {
-                EditText input = new EditText(v.getContext());
-                input.setHint("Enter page");
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
-                new AlertDialog.Builder(v.getContext())
-                        .setTitle("Enter URL")
-                        .setView(input)
-                        .setPositiveButton("OK", (id, l) -> {
-                            final String url = input.getText().toString();
-                            listener.onUrlSelected(getAbsoluteAdapterPosition(), url);
+        private void _showAddUrlDialog(View v) {
+            EditText input = new EditText(v.getContext());
+            input.setHint("Enter page");
+            input.setInputType(InputType.TYPE_CLASS_TEXT);
+            new AlertDialog.Builder(v.getContext())
+                    .setTitle("Enter URL")
+                    .setView(input)
+                    .setPositiveButton("OK", (id, l) -> {
+                        final String url = input.getText().toString();
+                        mAdapter.onUrlSelected(getAbsoluteAdapterPosition(), url);
 //                        bind(url);
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .show();
-            });
-        }
-
-        private void _createWebView(View.OnLongClickListener longClickListener) {
-            mWebView = new WebView(itemView.getContext());
-            mWebView.getSettings().setJavaScriptEnabled(true);
-            mWebView.getSettings().setDomStorageEnabled(true);
-
-            mSwipeRefresh = new SwipeRefreshLayout(itemView.getContext());
-            mSwipeRefresh.addView(mWebView, new ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.MATCH_PARENT,
-                ConstraintLayout.LayoutParams.MATCH_PARENT));
-
-            mSwipeRefresh.setOnRefreshListener(() -> mWebView.reload());
-
-            mWebView.setWebViewClient(new WebViewClient() {
-                @Override
-                public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                    mSwipeRefresh.setRefreshing(true);
-                }
-                @Override
-                public void onPageFinished(WebView view, String url) {
-                    mSwipeRefresh.setRefreshing(false);
-                }
-                @Override
-                public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                    mSwipeRefresh.setRefreshing(false);
-                    super.onReceivedError(view, request, error);
-                }
-            });
-
-            mWebView.setOnLongClickListener(longClickListener);
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         }
     }
 }
