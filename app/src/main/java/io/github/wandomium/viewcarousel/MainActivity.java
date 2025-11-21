@@ -46,10 +46,7 @@ public class MainActivity extends AppCompatActivity
             if (mViewPager2.isUserInputEnabled()) {
                 Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
                 mViewPager2.setUserInputEnabled(false);
-                ImageButton btn = findViewById(R.id.menu_btn);
-                btn.setEnabled(false);
-                btn.setVisibility(View.GONE);
-//                findViewById(R.id.overlay_view).setVisibility(View.GONE);
+                findViewById(R.id.menu_btn).setVisibility(View.GONE);
             }
             return false;
         });
@@ -59,9 +56,7 @@ public class MainActivity extends AppCompatActivity
                 if (!mViewPager2.isUserInputEnabled()) {
                     Toast.makeText(MainActivity.this, "RELEASE", Toast.LENGTH_SHORT).show();
                     mViewPager2.setUserInputEnabled(true);
-                    ImageButton btn = findViewById(R.id.menu_btn);
-                    btn.setEnabled(true);
-                    btn.setVisibility(View.VISIBLE);
+                    findViewById(R.id.menu_btn).setVisibility(View.VISIBLE);
 //                    findViewById(R.id.overlay_view).setVisibility(View.VISIBLE);
                     mViewCarousel.onReleaseFocus();
                 }
@@ -114,7 +109,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onPictureInPictureModeChanged(boolean isInPipMode, Configuration newConfig) {
         super.onPictureInPictureModeChanged(isInPipMode, newConfig);
-//        findViewById(R.id.pipButton).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
+        findViewById(R.id.menu_btn).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
     }
 
     public void onMenuBtnClicked(View view) {
@@ -158,7 +153,7 @@ public class MainActivity extends AppCompatActivity
             private boolean mDragging = false;
             private boolean mBlock = false;
 
-            private Runnable mUnblockInput = new Runnable() {
+            private final Runnable mUnblockInput = new Runnable() {
                 @Override
                 public void run() {
                     mViewCarousel.blockInput(mBlock);
