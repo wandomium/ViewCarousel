@@ -1,11 +1,10 @@
 package io.github.wandomium.viewcarousel;
 
 import android.app.PictureInPictureParams;
+import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
 import android.util.Rational;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -47,6 +46,7 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
                 mViewPager2.setUserInputEnabled(false);
                 findViewById(R.id.menu_btn).setVisibility(View.GONE);
+                findViewById(R.id.call_btn).setVisibility(View.GONE);
                 return false;
             }
             @Override
@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(MainActivity.this, "RELEASE", Toast.LENGTH_SHORT).show();
                 mViewPager2.setUserInputEnabled(true);
                 findViewById(R.id.menu_btn).setVisibility(View.VISIBLE);
+                findViewById(R.id.call_btn).setVisibility(View.VISIBLE);
             }
         };
 
@@ -109,6 +110,7 @@ public class MainActivity extends AppCompatActivity
     public void onPictureInPictureModeChanged(boolean isInPipMode, @NonNull Configuration newConfig) {
         super.onPictureInPictureModeChanged(isInPipMode, newConfig);
         findViewById(R.id.menu_btn).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
+        findViewById(R.id.call_btn).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
     }
 
     public void onMenuBtnClicked(View view) {
@@ -117,6 +119,15 @@ public class MainActivity extends AppCompatActivity
         menu.getMenuInflater().inflate(R.menu.main_menu, menu.getMenu());
         menu.setOnMenuItemClickListener(this::_handleMenuSelection);
         menu.show();
+    }
+
+    public void onCallBtnClicked(View v) {
+        Intent dialIntent = new Intent(Intent.ACTION_DIAL);
+        dialIntent.setData(Uri.parse("tel:"));
+        startActivity(dialIntent);
+//        if (dialIntent.resolveActivity(getPackageManager()) != null) {
+//            startActivity(dialIntent);
+//        }
     }
 
     private boolean _handleMenuSelection(MenuItem item) {

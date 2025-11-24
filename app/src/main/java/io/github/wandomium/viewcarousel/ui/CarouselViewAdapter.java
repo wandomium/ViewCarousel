@@ -139,9 +139,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
             ((ItemWebPage)itemView).loadUrl(page.url);
         }
         @Override
-        public void cleanUp() {
-            ((ItemWebPage)itemView).cleanUp();
-        }
+        public void cleanUp() {}
     }
 
     public static class NewPageViewHolder extends ViewHolder

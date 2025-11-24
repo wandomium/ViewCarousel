@@ -18,9 +18,22 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
-    <include layout="@layout/menu_btn"
-        android:layout_width="60dp"
-        android:layout_height="80dp"
+    <ImageButton
+        android:id="@+id/menu_btn"
+        android:onClick="onMenuBtnClicked"
+        android:layout_width="80dp"
+        android:layout_height="100dp"
+        android:elevation="18dp"
+        android:background="@drawable/rounded_menu_24"
+        app:layout_constraintEnd_toEndOf="parent"/>
+    <ImageButton
+        android:id="@+id/call_btn"
+        android:onClick="onCallBtnClicked"
+        android:layout_width="80dp"
+        android:layout_height="100dp"
+        android:elevation="18dp"
+        android:background="@drawable/outline_call_24"
+        app:layout_constraintTop_toBottomOf="@+id/menu_btn"
         app:layout_constraintEnd_toEndOf="parent"/>
 <!--    <ImageButton-->
 <!--        android:id="@+id/menu_btn"-->
