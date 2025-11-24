@@ -10,7 +10,6 @@ import android.util.Rational;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
@@ -47,6 +46,7 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
                 mViewPager2.setUserInputEnabled(false);
                 findViewById(R.id.menu_btn).setVisibility(View.GONE);
+                mViewCarousel.setFocus(true);
             }
             return false;
         });
@@ -57,8 +57,7 @@ public class MainActivity extends AppCompatActivity
                     Toast.makeText(MainActivity.this, "RELEASE", Toast.LENGTH_SHORT).show();
                     mViewPager2.setUserInputEnabled(true);
                     findViewById(R.id.menu_btn).setVisibility(View.VISIBLE);
-//                    findViewById(R.id.overlay_view).setVisibility(View.VISIBLE);
-                    mViewCarousel.onReleaseFocus();
+                    mViewCarousel.setFocus(false);
                 }
             }
         });
@@ -163,12 +162,10 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onPageScrollStateChanged(int state) {
                 mDragging = state == ViewPager2.SCROLL_STATE_DRAGGING;
-                mBlock = state != ViewPager2.SCROLL_STATE_IDLE;
-
-                Log.d(CLASS_TAG, "state: " + state + " block: " + mBlock);
+                mBlock    = state != ViewPager2.SCROLL_STATE_IDLE;
 
                 if (mViewCarousel.isBlocked() && state == ViewPager2.SCROLL_STATE_IDLE) {
-                    Log.d(CLASS_TAG, "posting unblock");
+                    // Post delayed release, otherwise we trigger capture on the view (longClick)
                     mMainHandler.removeCallbacks(mUnblockInput);
                     mMainHandler.postDelayed(mUnblockInput, 5000);
                 }
@@ -181,6 +178,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                // hack that enables circular scroll on first and last item
                 if (mDragging && positionOffset == 0.0) {
                     if (position == 0) {
                         mViewPager2.setCurrentItem(mViewCarousel.getItemCount(), false);
@@ -189,6 +187,8 @@ public class MainActivity extends AppCompatActivity
                     }
                     return;
                 }
+
+                // we are not on last or first item, continue normally
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels);
             }
         };

@@ -2,12 +2,10 @@ package io.github.wandomium.viewcarousel.ui;
 
 import android.app.AlertDialog;
 import android.text.InputType;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewParent;
+import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
@@ -18,14 +16,12 @@ import java.util.ArrayList;
 import io.github.wandomium.viewcarousel.Page;
 import io.github.wandomium.viewcarousel.R;
 
-public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapter.ViewHolder> implements IFocusMngr
+public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapter.ViewHolder> implements IFocusHandler
 {
     private static final String CLASS_TAG = CarouselViewAdapter.class.getSimpleName();
 
-//    @FunctionalInterface
-//    public interface OnUrlSelected {
-//        void onUrlSelected(int position, String value);
-//    }
+    private static final int VIEW_NEW_PAGE = 1;
+    private static final int VIEW_URL = 2;
 
     private final ArrayList<Page> mPages;
     private final View.OnLongClickListener mLongClickListener;
@@ -52,131 +48,146 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
     // Insert page after position
     public int insertPage(int position) {
-        int realPosition = position % mPages.size() + 1;
-        mPages.add(realPosition, null);
-        notifyItemInserted(realPosition);
+        mPages.add(position + 1, null);
+        notifyItemInserted(position + 1);
 
         return position + 1;
     }
 
     public int removePage(int position) {
         if (!mPages.isEmpty()) {
-            int realPosition = position % mPages.size();
-            mPages.remove(realPosition);
+            mPages.remove(position);
             if (mPages.isEmpty()) {
                 // add a template page if there are none left
                 mPages.add(null);
-                notifyItemChanged(realPosition);
+                notifyItemChanged(position);
             }
             else {
-                notifyItemRemoved(realPosition);
+                notifyItemRemoved(position);
             }
         }
         return position;
     }
 
-    public void onUrlSelected(int position, String value) {
+    public void onWebPageAdded(int position, String value) {
         mPages.set(position, new Page(value));
         notifyItemChanged(position);
     }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (mPages.get(position) == null) {
+            return VIEW_NEW_PAGE;
+        }
+        else {
+            return VIEW_URL;
+        }
+    }
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View itemView = switch (viewType) {
+            case VIEW_NEW_PAGE -> LayoutInflater.from(parent.getContext()).inflate(R.layout.new_page, parent, false);
+            case VIEW_URL -> LayoutInflater.from(parent.getContext()).inflate(R.layout.web_page, parent, false);
+            default -> throw new RuntimeException("Invalid View Type");
+        };
+
+        return ViewHolder._createViewHolder(itemView, this, viewType);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        holder.bind(mPages.get(position));
+    }
+
+    // Called when item is put in pool for reuse
+    // (goes off screen or is removed - called after notifyItemRemoved
+    @Override
+    public void onViewRecycled(@NonNull CarouselViewAdapter.ViewHolder holder) {
+        super.onViewRecycled(holder);
+// we don't really want to do this. holder could still be reused for another web page
+// TODO: still need to implement the cleanup when actually destroyed
+//        holder.cleanUp();
+    }
+
+//    @Override
+//    onViewDetachedFromWindow(), calls onDetachedFromWindow on all views
+
+    @Override
+    public int getItemCount() {
+        return mPages.size();
+    }
+
     @Override
     public boolean isInFocus() {
         return mItemFocusOn;
     }
     @Override
-    public void onReleaseFocus() {
-        mItemFocusOn = false;
+    public void setFocus(boolean focus) {
+        mItemFocusOn = focus;
     }
     @Override
-    public void onFocus() {
-        if (mBlockInput) {
-            Log.d(CLASS_TAG, "Input blocked");
-            return;
-        }
-        mItemFocusOn = true;
-        mLongClickListener.onLongClick(null);
+    public boolean onLongClick(View v) {
+        return mBlockInput ? false : mLongClickListener.onLongClick(v);
     }
     @Override
     public void blockInput(boolean block) {
-        Log.d(CLASS_TAG, "blockInput: " + block);
         mBlockInput = block;
     }
     @Override
     public boolean isBlocked() {
         return mBlockInput;
     }
-    @Override
-    public boolean onLongClick(View v) {
-        Log.d(CLASS_TAG, "onLongClick");
-        mItemFocusOn = true;
-        mLongClickListener.onLongClick(v);
-        return false;
-    }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.new_page, parent, false);
 
-//        return new ViewHolder(view, (mPages::set));
-        return new ViewHolder(view, this);
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        int realPosition = position % mPages.size();
-        holder.bind(mPages.get(realPosition));
-    }
-
-    @Override
-    public int getItemCount() {
-//        return mPages.isEmpty() ? 0 : Integer.MAX_VALUE;
-        return mPages.size();
-    }
-
-    private static final int VIEW_NEW_PAGE = 1;
-    private static final int VIEW_URL = 2;
-
-    public static class ViewHolder extends RecyclerView.ViewHolder
+    public static abstract class ViewHolder extends RecyclerView.ViewHolder
     {
-        private static final String CLASS_TAG = ViewHolder.class.getSimpleName();
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+        }
+        public static ViewHolder _createViewHolder(@NonNull View itemView, CarouselViewAdapter adapter, int itemType) {
+            return switch (itemType) {
+                case VIEW_NEW_PAGE -> new NewPageViewHolder(itemView, adapter);
+                case VIEW_URL -> new WebPageViewHolder(itemView, adapter);
+                default -> throw new RuntimeException("Invalid View Type");
+            };
+        }
+        public abstract void bind(final Page page);
+        public abstract void cleanUp();
+    }
 
-        ItemWebPage mWebPage;
-        int mCurrentView = -1;
-        private final CarouselViewAdapter mAdapter;
+    public static class WebPageViewHolder extends ViewHolder
+    {
+        public WebPageViewHolder(@NonNull View itemView, CarouselViewAdapter adapter) {
+            super(itemView);
+            ((WebPageLayout)itemView).setFocusHandler(adapter);
+        }
 
-        public ViewHolder(@NonNull View itemView, CarouselViewAdapter adapter) {
+        @Override
+        public void bind(final Page page) {
+            ((WebPageLayout)itemView).loadUrl(page.url);
+        }
+        @Override
+        public void cleanUp() {
+            ((WebPageLayout)itemView).cleanUp();
+        }
+    }
+
+    public static class NewPageViewHolder extends ViewHolder
+    {
+        private CarouselViewAdapter mAdapter;
+        public NewPageViewHolder(@NonNull View itemView, CarouselViewAdapter adapter) {
             super(itemView);
             this.mAdapter = adapter;
+            itemView.findViewById(R.id.btnAddWebView).setOnClickListener(this::_showAddUrlDialog);
         }
-
-        public void bind(Page page) {
-            if (page != null) {
-                _loadWebPage(page.url);
-            }
-            else if (mCurrentView != VIEW_NEW_PAGE){
-//                ViewGroup container = itemView.findViewById(R.id.container);
-//                container.removeAllViews();
-//                container.addView(mAddUrlBtn);
-                mCurrentView = VIEW_NEW_PAGE;
-                itemView.findViewById(R.id.btnAddWebView).setOnClickListener(this::_showAddUrlDialog);
-            }
-        }
-
-        private void _loadWebPage(final String url) {
-            if (mWebPage == null) {
-                mWebPage = new ItemWebPage(itemView.getContext());
-                mWebPage.setup(mAdapter);
-            }
-            if (mCurrentView != VIEW_URL) {
-                ViewGroup container = itemView.findViewById(R.id.container);
-                container.removeAllViews();
-                container.addView(mWebPage);
-                mCurrentView = VIEW_URL;
-//                itemView.findViewById(R.id.btnAddWebView).setOnClickListener(null);
-            }
-            mWebPage.loadUrl(url);
+        @Override
+        public void bind(Page page) {}
+        @Override
+        public void cleanUp() {
+            itemView.findViewById(R.id.btnAddWebView).setOnClickListener(null);
+            mAdapter = null;
         }
 
         private void _showAddUrlDialog(View v) {
@@ -188,8 +199,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
                     .setView(input)
                     .setPositiveButton("OK", (id, l) -> {
                         final String url = input.getText().toString();
-                        mAdapter.onUrlSelected(getAbsoluteAdapterPosition(), url);
-//                        bind(url);
+                        mAdapter.onWebPageAdded(getAbsoluteAdapterPosition(), url);
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
