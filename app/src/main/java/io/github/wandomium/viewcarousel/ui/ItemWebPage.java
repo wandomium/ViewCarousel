@@ -2,10 +2,7 @@ package io.github.wandomium.viewcarousel.ui;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.webkit.WebResourceError;
@@ -20,9 +17,11 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 public class ItemWebPage extends SwipeRefreshLayout
 {
     private static final String CLASS_TAG = ItemWebPage.class.getSimpleName();
+
+    private WebView mWebView;
+
     private AFocusHandler mFocusHandler;
     private GestureDetector mGestureDetector;
-    private WebView mWebView;
 
     public ItemWebPage(Context ctx, AttributeSet attrs) {
         super(ctx, attrs);
@@ -56,11 +55,6 @@ public class ItemWebPage extends SwipeRefreshLayout
     }
 
     private void _init(Context ctx) {
-//        LayoutInflater inflater = LayoutInflater.from(ctx);
-//        inflater.inflate(R.layout.web_page, this, true);
-
-        // Setup web view
-//        mWebView = findViewById(R.id.wv_webview);
         mWebView = new WebView(ctx);
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setDomStorageEnabled(true);
