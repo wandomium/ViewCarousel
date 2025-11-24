@@ -25,7 +25,8 @@
         android:layout_height="100dp"
         android:elevation="18dp"
         android:background="@drawable/rounded_menu_24"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
     <ImageButton
         android:id="@+id/call_btn"
         android:onClick="onCallBtnClicked"
@@ -33,7 +34,6 @@
         android:layout_height="100dp"
         android:elevation="18dp"
         android:background="@drawable/outline_call_24"
-        app:layout_constraintTop_toBottomOf="@+id/menu_btn"
         app:layout_constraintEnd_toEndOf="parent"/>
 <!--    <ImageButton-->
 <!--        android:id="@+id/menu_btn"-->
