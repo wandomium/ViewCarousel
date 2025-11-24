@@ -5,9 +5,9 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 
+import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -20,18 +20,17 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 {
     private static final String CLASS_TAG = CarouselViewAdapter.class.getSimpleName();
 
-    private static final int VIEW_NEW_PAGE = 1;
-    private static final int VIEW_URL = 2;
+    private static final int ITEM_NEW_PAGE = 1;
+    private static final int ITEM_WEB_PAGE = 2;
 
     private final ArrayList<Page> mPages;
     private final View.OnLongClickListener mLongClickListener;
     private boolean mItemFocusOn = false;
     private boolean mBlockInput = false;
 
-    // TODO: Load from config
     public CarouselViewAdapter(ArrayList<Page> pages, View.OnLongClickListener onLongCLickListener) {
         if (pages == null || pages.isEmpty()) {
-            // Add a basic page so we are not empty
+            // Add a default page so we are not empty
             this.mPages = new ArrayList<>();
             this.mPages.add(null);
         }
@@ -46,7 +45,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return mPages;
     }
 
-    // Insert page after position
+    // Insert page after current position
     public int insertPage(int position) {
         mPages.add(position + 1, null);
         notifyItemInserted(position + 1);
@@ -54,11 +53,12 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return position + 1;
     }
 
+    // remove page at current position
     public int removePage(int position) {
         if (!mPages.isEmpty()) {
             mPages.remove(position);
             if (mPages.isEmpty()) {
-                // add a template page if there are none left
+                // add a default page if there are none left
                 mPages.add(null);
                 notifyItemChanged(position);
             }
@@ -77,23 +77,26 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
     @Override
     public int getItemViewType(int position) {
         if (mPages.get(position) == null) {
-            return VIEW_NEW_PAGE;
+            return ITEM_NEW_PAGE;
         }
         else {
-            return VIEW_URL;
+            return ITEM_WEB_PAGE;
         }
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = switch (viewType) {
-            case VIEW_NEW_PAGE -> LayoutInflater.from(parent.getContext()).inflate(R.layout.new_page, parent, false);
-            case VIEW_URL -> LayoutInflater.from(parent.getContext()).inflate(R.layout.web_page, parent, false);
+
+        @LayoutRes int viewLayout = switch (viewType) {
+            case ITEM_NEW_PAGE -> R.layout.item_new_page;
+            case ITEM_WEB_PAGE -> R.layout.item_web_page;
             default -> throw new RuntimeException("Invalid View Type");
         };
 
-        return ViewHolder._createViewHolder(itemView, this, viewType);
+        return ViewHolder._createViewHolder(
+            LayoutInflater.from(parent.getContext()).inflate(viewLayout, parent, false),
+            this, viewType);
     }
 
     @Override
@@ -140,7 +143,6 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return mBlockInput;
     }
 
-
     public static abstract class ViewHolder extends RecyclerView.ViewHolder
     {
         public ViewHolder(@NonNull View itemView) {
@@ -148,8 +150,8 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         }
         public static ViewHolder _createViewHolder(@NonNull View itemView, CarouselViewAdapter adapter, int itemType) {
             return switch (itemType) {
-                case VIEW_NEW_PAGE -> new NewPageViewHolder(itemView, adapter);
-                case VIEW_URL -> new WebPageViewHolder(itemView, adapter);
+                case ITEM_NEW_PAGE -> new NewPageViewHolder(itemView, adapter);
+                case ITEM_WEB_PAGE -> new WebPageViewHolder(itemView, adapter);
                 default -> throw new RuntimeException("Invalid View Type");
             };
         }
