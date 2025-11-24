@@ -13,11 +13,11 @@ import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
-import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
+import io.github.wandomium.viewcarousel.ui.AFocusHandler;
 import io.github.wandomium.viewcarousel.ui.CarouselViewAdapter;
 
 public class MainActivity extends AppCompatActivity
@@ -25,9 +25,8 @@ public class MainActivity extends AppCompatActivity
     private static final String CLASS_TAG = MainActivity.class.getSimpleName();
 
     private CarouselViewAdapter mViewCarousel;
+    private CarouselScrollFunc mCarouselScrollCb;
     private ViewPager2 mViewPager2;
-    private ViewPager2.OnPageChangeCallback mCarouselScrollCb;
-    private Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,34 +38,33 @@ public class MainActivity extends AppCompatActivity
         }
 
         mViewPager2 = findViewById(R.id.viewPager);
+        mViewPager2.setOffscreenPageLimit(4); // TODO: Later we might want to change this or at least make it configurable
 
         /* Handle CAPTURE and RELEASE on view */
-        mViewCarousel = new CarouselViewAdapter(Page.loadPages(this), (view) -> {
-            if (mViewPager2.isUserInputEnabled()) {
+        AFocusHandler focusHandler = new AFocusHandler() {
+            @Override
+            protected boolean _onObtainFocus(View v) {
                 Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
                 mViewPager2.setUserInputEnabled(false);
                 findViewById(R.id.menu_btn).setVisibility(View.GONE);
-                mViewCarousel.setFocus(true);
+                return false;
             }
-            return false;
-        });
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
-            public void handleOnBackPressed() {
-                if (!mViewPager2.isUserInputEnabled()) {
-                    Toast.makeText(MainActivity.this, "RELEASE", Toast.LENGTH_SHORT).show();
-                    mViewPager2.setUserInputEnabled(true);
-                    findViewById(R.id.menu_btn).setVisibility(View.VISIBLE);
-                    mViewCarousel.setFocus(false);
-                }
+            protected void _onReleaseFocus() {
+                Toast.makeText(MainActivity.this, "RELEASE", Toast.LENGTH_SHORT).show();
+                mViewPager2.setUserInputEnabled(true);
+                findViewById(R.id.menu_btn).setVisibility(View.VISIBLE);
             }
-        });
+        };
 
+        mViewCarousel = new CarouselViewAdapter(Page.loadPages(this), focusHandler);
+        getOnBackPressedDispatcher().addCallback(this, focusHandler);
 
-        // TODO: Later we might want to change this or at least make it configurable
-        mViewPager2.setOffscreenPageLimit(4);
         mViewPager2.setAdapter(mViewCarousel);
-        _configureCarouselScroll();
+
+        /* Use page scroll cb to implement rotating scroll trough items */
+        mCarouselScrollCb = new CarouselScrollFunc(mViewPager2, focusHandler);
+        mViewPager2.registerOnPageChangeCallback(mCarouselScrollCb);
     }
 
     @Override
@@ -80,6 +78,7 @@ public class MainActivity extends AppCompatActivity
         Page.savePages(this, mViewCarousel.getPages());
         mViewPager2.unregisterOnPageChangeCallback(mCarouselScrollCb);
         mCarouselScrollCb = null;
+
         mViewPager2.setAdapter(null);
         mViewCarousel = null;
         mViewPager2 = null;
@@ -99,6 +98,7 @@ public class MainActivity extends AppCompatActivity
         return _handleMenuSelection(item);
     }
 
+    // auto enter pip mode
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
@@ -106,14 +106,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPictureInPictureModeChanged(boolean isInPipMode, Configuration newConfig) {
+    public void onPictureInPictureModeChanged(boolean isInPipMode, @NonNull Configuration newConfig) {
         super.onPictureInPictureModeChanged(isInPipMode, newConfig);
         findViewById(R.id.menu_btn).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
     }
 
     public void onMenuBtnClicked(View view) {
 //        findViewById(R.id.menu_btn).setOnClickListener((v)->openOptionsMenu());
-        Log.d(CLASS_TAG, "BUTTON CLICK");
         PopupMenu menu = new PopupMenu(MainActivity.this, view);
         menu.getMenuInflater().inflate(R.menu.main_menu, menu.getMenu());
         menu.setOnMenuItemClickListener(this::_handleMenuSelection);
@@ -144,54 +143,5 @@ public class MainActivity extends AppCompatActivity
                 .setSeamlessResizeEnabled(true)
                 .build();
         enterPictureInPictureMode(params);
-    }
-
-    private void _configureCarouselScroll() {
-        mCarouselScrollCb = new ViewPager2.OnPageChangeCallback()
-        {
-            private boolean mDragging = false;
-            private boolean mBlock = false;
-
-            private final Runnable mUnblockInput = new Runnable() {
-                @Override
-                public void run() {
-                    mViewCarousel.blockInput(mBlock);
-                }
-            };
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-                mDragging = state == ViewPager2.SCROLL_STATE_DRAGGING;
-                mBlock    = state != ViewPager2.SCROLL_STATE_IDLE;
-
-                if (mViewCarousel.isBlocked() && state == ViewPager2.SCROLL_STATE_IDLE) {
-                    // Post delayed release, otherwise we trigger capture on the view (longClick)
-                    mMainHandler.removeCallbacks(mUnblockInput);
-                    mMainHandler.postDelayed(mUnblockInput, 5000);
-                }
-                if (mBlock) {
-                    mViewCarousel.blockInput(mBlock);
-                }
-
-                super.onPageScrollStateChanged(state);
-            }
-
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                // hack that enables circular scroll on first and last item
-                if (mDragging && positionOffset == 0.0) {
-                    if (position == 0) {
-                        mViewPager2.setCurrentItem(mViewCarousel.getItemCount(), false);
-                    } else if (position == mViewCarousel.getItemCount() - 1) {
-                        mViewPager2.setCurrentItem(0, false);
-                    }
-                    return;
-                }
-
-                // we are not on last or first item, continue normally
-                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-            }
-        };
-        mViewPager2.registerOnPageChangeCallback(mCarouselScrollCb);
     }
 }

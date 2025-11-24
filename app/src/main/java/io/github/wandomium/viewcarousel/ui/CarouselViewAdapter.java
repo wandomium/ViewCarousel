@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
-import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -16,7 +15,7 @@ import java.util.ArrayList;
 import io.github.wandomium.viewcarousel.Page;
 import io.github.wandomium.viewcarousel.R;
 
-public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapter.ViewHolder> implements IFocusHandler
+public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapter.ViewHolder>
 {
     private static final String CLASS_TAG = CarouselViewAdapter.class.getSimpleName();
 
@@ -24,11 +23,9 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
     private static final int ITEM_WEB_PAGE = 2;
 
     private final ArrayList<Page> mPages;
-    private final View.OnLongClickListener mLongClickListener;
-    private boolean mItemFocusOn = false;
-    private boolean mBlockInput = false;
+    private final AFocusHandler mFocusHandler;
 
-    public CarouselViewAdapter(ArrayList<Page> pages, View.OnLongClickListener onLongCLickListener) {
+    public CarouselViewAdapter(ArrayList<Page> pages, AFocusHandler focusHandler) {
         if (pages == null || pages.isEmpty()) {
             // Add a default page so we are not empty
             this.mPages = new ArrayList<>();
@@ -38,7 +35,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
             this.mPages = pages;
         }
 
-        this.mLongClickListener = onLongCLickListener;
+        this.mFocusHandler = focusHandler;
     }
 
     public ArrayList<Page> getPages() {
@@ -69,7 +66,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return position;
     }
 
-    public void onWebPageAdded(int position, String value) {
+    public void onWebPageItemAdded(int position, String value) {
         mPages.set(position, new Page(value));
         notifyItemChanged(position);
     }
@@ -87,16 +84,15 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-
-        @LayoutRes int viewLayout = switch (viewType) {
-            case ITEM_NEW_PAGE -> R.layout.item_new_page;
-            case ITEM_WEB_PAGE -> R.layout.item_web_page;
+        return switch (viewType) {
+            case ITEM_NEW_PAGE -> new NewPageViewHolder(
+                    LayoutInflater.from(parent.getContext()).inflate(R.layout.item_new_page, parent, false),
+                    this::onWebPageItemAdded);
+            case ITEM_WEB_PAGE -> new WebPageViewHolder(
+                    LayoutInflater.from(parent.getContext()).inflate(R.layout.item_web_page, parent, false),
+                    mFocusHandler);
             default -> throw new RuntimeException("Invalid View Type");
         };
-
-        return ViewHolder._createViewHolder(
-            LayoutInflater.from(parent.getContext()).inflate(viewLayout, parent, false),
-            this, viewType);
     }
 
     @Override
@@ -122,38 +118,10 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return mPages.size();
     }
 
-    @Override
-    public boolean isInFocus() {
-        return mItemFocusOn;
-    }
-    @Override
-    public void setFocus(boolean focus) {
-        mItemFocusOn = focus;
-    }
-    @Override
-    public boolean onLongClick(View v) {
-        return mBlockInput ? false : mLongClickListener.onLongClick(v);
-    }
-    @Override
-    public void blockInput(boolean block) {
-        mBlockInput = block;
-    }
-    @Override
-    public boolean isBlocked() {
-        return mBlockInput;
-    }
-
     public static abstract class ViewHolder extends RecyclerView.ViewHolder
     {
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-        }
-        public static ViewHolder _createViewHolder(@NonNull View itemView, CarouselViewAdapter adapter, int itemType) {
-            return switch (itemType) {
-                case ITEM_NEW_PAGE -> new NewPageViewHolder(itemView, adapter);
-                case ITEM_WEB_PAGE -> new WebPageViewHolder(itemView, adapter);
-                default -> throw new RuntimeException("Invalid View Type");
-            };
         }
         public abstract void bind(final Page page);
         public abstract void cleanUp();
@@ -161,38 +129,45 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
     public static class WebPageViewHolder extends ViewHolder
     {
-        public WebPageViewHolder(@NonNull View itemView, CarouselViewAdapter adapter) {
+        public WebPageViewHolder(@NonNull View itemView, AFocusHandler handler) {
             super(itemView);
-            ((WebPageLayout)itemView).setFocusHandler(adapter);
+            ((ItemWebPage)itemView).setFocusHandler(handler);
         }
 
         @Override
         public void bind(final Page page) {
-            ((WebPageLayout)itemView).loadUrl(page.url);
+            ((ItemWebPage)itemView).loadUrl(page.url);
         }
         @Override
         public void cleanUp() {
-            ((WebPageLayout)itemView).cleanUp();
+            ((ItemWebPage)itemView).cleanUp();
         }
     }
 
     public static class NewPageViewHolder extends ViewHolder
     {
-        private CarouselViewAdapter mAdapter;
-        public NewPageViewHolder(@NonNull View itemView, CarouselViewAdapter adapter) {
+        @FunctionalInterface
+        public interface UrlSelectedCb {
+            void onUrlSelected(final int position, final String url);
+        }
+        private UrlSelectedCb mUrlSelectedCb;
+
+        public NewPageViewHolder(@NonNull View itemView, UrlSelectedCb urlSelectedCb) {
             super(itemView);
-            this.mAdapter = adapter;
+            this.mUrlSelectedCb = urlSelectedCb;
             itemView.findViewById(R.id.btnAddWebView).setOnClickListener(this::_showAddUrlDialog);
         }
+
         @Override
         public void bind(Page page) {}
         @Override
         public void cleanUp() {
             itemView.findViewById(R.id.btnAddWebView).setOnClickListener(null);
-            mAdapter = null;
+            mUrlSelectedCb = null;
         }
 
         private void _showAddUrlDialog(View v) {
+            final int itemPosition = getAbsoluteAdapterPosition();
             EditText input = new EditText(v.getContext());
             input.setHint("Enter page");
             input.setInputType(InputType.TYPE_CLASS_TEXT);
@@ -201,7 +176,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
                     .setView(input)
                     .setPositiveButton("OK", (id, l) -> {
                         final String url = input.getText().toString();
-                        mAdapter.onWebPageAdded(getAbsoluteAdapterPosition(), url);
+                        mUrlSelectedCb.onUrlSelected(itemPosition, url);
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
