@@ -1,7 +1,10 @@
 package io.github.wandomium.viewcarousel;
 
+import android.app.AlertDialog;
 import android.app.PictureInPictureParams;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
@@ -34,6 +37,13 @@ public class MainActivity extends AppCompatActivity
 
         if (isInPictureInPictureMode()) {
             return;
+        }
+
+        if (Settings.getInstance(this).isFirstRun()) {
+            new AlertDialog.Builder(this)
+                .setMessage("Long press to capture WebPage focus, back to release")
+                .setPositiveButton("OK", null)
+                .show();
         }
 
         mViewPager2 = findViewById(R.id.viewPager);
