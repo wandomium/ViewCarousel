@@ -2,6 +2,8 @@ package io.github.wandomium.viewcarousel.ui;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -33,14 +35,14 @@ public class ItemWebPage extends SwipeRefreshLayout
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        if (super.onInterceptTouchEvent(ev)) {
-            // this was a refresh gesture
-            Log.d(CLASS_TAG, "Swipe refresh detected");
-            mFocusHandler.blockInput(true);
+        // Swipe refresh, ignore other gestures
+        if (super.onInterceptTouchEvent(ev) || isRefreshing()) {
             return true;
         }
-        mGestureDetector.onTouchEvent(ev); // detect longPress
-        return mFocusHandler != null && !mFocusHandler.isInFocus(); // prevent propagation of events to webview when not in focus
+        // detect longPress
+        mGestureDetector.onTouchEvent(ev);
+        // prevent propagation of events to webview when not in focus
+        return mFocusHandler != null && !mFocusHandler.isInFocus();
     }
 
     public void loadUrl(final String url) {
@@ -53,14 +55,6 @@ public class ItemWebPage extends SwipeRefreshLayout
         mFocusHandler = handler;
     }
 
-    public void cleanUp() {
-        if (mWebView != null) {
-            mWebView.setWebViewClient(new WebViewClient());
-        }
-        mFocusHandler = null;
-        mGestureDetector = null;
-    }
-
     private void _init(Context ctx) {
 //        LayoutInflater inflater = LayoutInflater.from(ctx);
 //        inflater.inflate(R.layout.web_page, this, true);
@@ -71,42 +65,34 @@ public class ItemWebPage extends SwipeRefreshLayout
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setDomStorageEnabled(true);
 
-        // !!! Needs constraint layout. Some pages do not display properly otherwise
-        //        addView(mWebView);
+        // !!! Needs constraint layout with fill parent. Some pages do not display properly otherwise
         addView(mWebView, new ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.MATCH_PARENT,
-                ConstraintLayout.LayoutParams.MATCH_PARENT));
+                ConstraintLayout.LayoutParams.MATCH_PARENT, ConstraintLayout.LayoutParams.MATCH_PARENT));
 
-        // connect swipe refresh and web view actions
+        // connect swipe refresh layout and web view actions
         setOnRefreshListener( () -> mWebView.reload() );
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                if (!isRefreshing()) {
-                    setRefreshing(true);
-                }
+                if (!isRefreshing()) { setRefreshing(true); }
             }
             @Override
             public void onPageFinished(WebView view, String url) {
-                if (isRefreshing()) {
-                    setRefreshing(false);
-                }
+                if (isRefreshing()) { setRefreshing(false); }
             }
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                if (isRefreshing()) {
-                    setRefreshing(false);
-                }
+                if (isRefreshing()) { setRefreshing(false); }
                 super.onReceivedError(view, request, error);
             }
         });
 
-        // Capture and release gestures
+        // Detect LONG PRESS for CAPTURE
         mGestureDetector = new GestureDetector(ctx, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public void onLongPress(@NonNull MotionEvent ignored) {
-                Log.d(CLASS_TAG, "Long press detected");
-                if (mFocusHandler != null) {
+                // Do not activate if Refreshing -> leads to loads of spurious captures
+                if (!isRefreshing() && mFocusHandler != null) {
                     mFocusHandler.onLongClick(mWebView);
                 }
             }

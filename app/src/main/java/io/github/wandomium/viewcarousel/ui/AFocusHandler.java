@@ -33,7 +33,7 @@ public abstract class AFocusHandler extends OnBackPressedCallback implements Vie
     @Override
     public boolean onLongClick(View v) {
         // if input is blocked ignore click ??? TODO is this ok???? maybe consume and not send to children - test it out
-        if (mBlockInput) { return false; }
+        if (mBlockInput) { return true; }
         // if item was in focus return false and precess any events in child
         if (mItemFocusOn) { return false; }
         // if item was not in focus then call _onGetFocus
