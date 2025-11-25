@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.util.Rational;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,9 +18,10 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
-import io.github.wandomium.viewcarousel.ui.AFocusHandler;
+import io.github.wandomium.viewcarousel.ui.AFocusMngr;
 import io.github.wandomium.viewcarousel.ui.CarouselViewAdapter;
 
 public class MainActivity extends AppCompatActivity
@@ -28,6 +32,20 @@ public class MainActivity extends AppCompatActivity
     private CarouselViewAdapter mViewCarousel;
     private CarouselScrollFunc mCarouselScrollCb;
     private ViewPager2 mViewPager2;
+
+    private int mRefreshRate;
+    private CarouselViewAdapter.ViewHolder mCurrentViewHolder;
+
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mRefreshRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mCurrentViewHolder.reload();
+            if (mRefreshRate > 0) {
+                mHandler.postDelayed(this, mRefreshRate * 1000);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +67,7 @@ public class MainActivity extends AppCompatActivity
         mViewPager2.setOffscreenPageLimit(4); // TODO: Later we might want to change this or at least make it configurable
 
         /* Handle CAPTURE and RELEASE on view */
-        AFocusHandler focusHandler = new AFocusHandler() {
+        AFocusMngr focusHandler = new AFocusMngr() {
             @Override
             protected void _onObtainFocus() {
                 Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
@@ -64,6 +82,10 @@ public class MainActivity extends AppCompatActivity
                 findViewById(R.id.menu_btn).setVisibility(View.VISIBLE);
                 findViewById(R.id.call_btn).setVisibility(View.VISIBLE);
             }
+            @Override
+            protected void _onBlock() { _stopRefreshTask(); }
+            @Override
+            protected void _onUnblock() { _startRefreshTask(); }
         };
 
         mViewCarousel = new CarouselViewAdapter(Page.loadPages(this), focusHandler);
@@ -74,12 +96,37 @@ public class MainActivity extends AppCompatActivity
         /* Use page scroll cb to implement rotating scroll trough items */
         mCarouselScrollCb = new CarouselScrollFunc(mViewPager2, focusHandler);
         mViewPager2.registerOnPageChangeCallback(mCarouselScrollCb);
+
+        /* PAge change to implement refreshing */
+        mViewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                Log.d(CLASS_TAG, "setActiveItem, is blocked: " + focusHandler.isBlocked());
+//                mViewPager2.post(() -> mViewCarousel.setActiveItem(position));
+                Page page = null;
+                if (!mViewCarousel.getPages().isEmpty()) { //if this happens we have a but
+                    page = mViewCarousel.getPages().get(position);
+                }
+                else {
+                    Log.e(CLASS_TAG, "EMPTY PAGES!!!");
+                }
+                mRefreshRate = page != null ? page.refreshRate : 0;
+            }
+        });
     }
 
     @Override
     protected void onPause() {
         Page.savePages(this, mViewCarousel.getPages());
+        _stopRefreshTask();
         super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        _startRefreshTask();
     }
 
     @Override
@@ -163,5 +210,18 @@ public class MainActivity extends AppCompatActivity
                 .setSeamlessResizeEnabled(true)
                 .build();
         enterPictureInPictureMode(params);
+    }
+
+    private void _startRefreshTask() {
+        mHandler.removeCallbacks(mRefreshRunnable);
+        if (mRefreshRate > 0) {
+            mCurrentViewHolder = (CarouselViewAdapter.ViewHolder)
+                    ((RecyclerView) mViewPager2.getChildAt(0))
+                            .findViewHolderForAdapterPosition(mViewPager2.getCurrentItem());
+            mHandler.postDelayed(mRefreshRunnable, mRefreshRate * 1000);
+        }
+    }
+    private void _stopRefreshTask() {
+        mHandler.removeCallbacks(mRefreshRunnable);
     }
 }

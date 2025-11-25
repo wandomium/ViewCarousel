@@ -5,21 +5,30 @@ import android.view.View;
 import androidx.activity.OnBackPressedCallback;
 
 /* Handle CAPTURE and RELEASE on view */
-public abstract class AFocusHandler extends OnBackPressedCallback implements View.OnLongClickListener
+public abstract class AFocusMngr extends OnBackPressedCallback implements View.OnLongClickListener
 {
     /* TO IMPLEMENT */
     protected abstract void _onObtainFocus();
     protected abstract void _onReleaseFocus();
 
+    protected abstract void _onBlock();
+    protected abstract void _onUnblock();
+
     /* CLASS LOGIC */
-    public AFocusHandler() { super(true); }
+    public AFocusMngr() { super(true); }
 
     private boolean mItemFocusOn = false;
     private boolean mBlockInput = false;
 
     public boolean isInFocus() { return mItemFocusOn; }
     public boolean isBlocked() { return mBlockInput; }
-    public void blockInput(boolean block) { mBlockInput = block; }
+    public void blockInput(boolean block) {
+        if (block != mBlockInput) {
+            mBlockInput = block;
+            if (block) { _onBlock(); }
+            else { _onUnblock(); }
+        }
+    }
 
     /* back press is used to release focus from the ITEM */
     @Override

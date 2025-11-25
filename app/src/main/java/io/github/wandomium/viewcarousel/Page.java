@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -18,14 +19,17 @@ import java.util.Objects;
 
 public class Page
 {
+    public static final int DEFAULT_REFRESH_RATE_S = 15;
+
     private static final String CLASS_TAG = Page.class.getSimpleName();
     private static final String CONFIG_FNAME = "config.json";
 
-    public int refreshRateSec = 15;
+    public int refreshRate = 0;
     public final String url;
 
-    public Page(@NonNull final String url) {
+    public Page(@NonNull final String url, @Nullable Integer rate) {
         this.url = Objects.requireNonNull(url);
+        this.refreshRate = rate == null ? 0 : rate;
     }
 
     public static ArrayList<Page> loadPages(final Context ctx) {

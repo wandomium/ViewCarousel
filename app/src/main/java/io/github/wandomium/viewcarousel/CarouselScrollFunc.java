@@ -7,12 +7,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewpager2.widget.ViewPager2;
 
-import io.github.wandomium.viewcarousel.ui.AFocusHandler;
+import io.github.wandomium.viewcarousel.ui.AFocusMngr;
 
 public class CarouselScrollFunc extends ViewPager2.OnPageChangeCallback
 {
     private final ViewPager2 mViewPager2;
-    private final AFocusHandler mFocusHandler;
+    private final AFocusMngr mFocusHandler;
 
     private boolean mDragging = false;
     private boolean mBlock = false;
@@ -20,7 +20,9 @@ public class CarouselScrollFunc extends ViewPager2.OnPageChangeCallback
     private final Handler mMainHandler;
     private final Runnable mUnblockInput;
 
-    public CarouselScrollFunc(@NonNull ViewPager2 viewPager2, @Nullable AFocusHandler focusHandler) {
+    private int mCurrentPage = 0;
+
+    public CarouselScrollFunc(@NonNull ViewPager2 viewPager2, @Nullable AFocusMngr focusHandler) {
         this.mViewPager2   = viewPager2;
         this.mFocusHandler = focusHandler;
         this.mMainHandler  = (mFocusHandler != null) ? new Handler(Looper.getMainLooper()) : null;
