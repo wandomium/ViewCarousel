@@ -2,24 +2,17 @@ package io.github.wandomium.viewcarousel.ui;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.view.View;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
-import io.github.wandomium.viewcarousel.Page;
 
 public class ItemWebPage extends SwipeRefreshLayout
 {
@@ -27,7 +20,6 @@ public class ItemWebPage extends SwipeRefreshLayout
     private static final String CLASS_TAG = ItemWebPage.class.getSimpleName();
 
     private WebView mWebView;
-    private String mUrl;
 
     private AFocusMngr mFocusMngr;
     private GestureDetector mGestureDetector;
@@ -54,10 +46,9 @@ public class ItemWebPage extends SwipeRefreshLayout
     }
 
     public void loadUrl(final String url) {
-        mUrl = url;
-        mWebView.loadUrl(mUrl);
+        mWebView.loadUrl(url);
 
-        if (mUrl.startsWith("https://meteo.arso.gov.si/uploads/meteo/app/inca/m/")) {
+        if (url.startsWith("https://meteo.arso.gov.si/uploads/meteo/app/inca/m/")) {
             // This fixes swipe to refresh gesture detection on some pages (for ex. INCA - Full-Screen WebGL map)
             // If view is at the top, we say child can't scroll and we get the gesture
             setOnChildScrollUpCallback((parent, child) -> mWebView.getScrollY() == 0);

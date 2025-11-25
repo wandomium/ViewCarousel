@@ -24,7 +24,7 @@ public class Page
     private static final String CLASS_TAG = Page.class.getSimpleName();
     private static final String CONFIG_FNAME = "config.json";
 
-    public int refreshRate = 0;
+    public int refreshRate;
     public final String url;
 
     public Page(@NonNull final String url, @Nullable Integer rate) {

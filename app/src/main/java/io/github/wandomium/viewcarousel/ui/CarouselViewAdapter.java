@@ -6,7 +6,6 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.NumberPicker;
 
 import androidx.annotation.NonNull;
@@ -138,7 +137,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
             super(itemView);
         }
         public abstract void bind(final Page page);
-        public void reload() {};
+        public void reload() {}
     }
 
     public static class WebPageViewHolder extends ViewHolder
@@ -165,6 +164,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
             void onUrlSelected(final Page page, int position);
         }
 
+        private static final String URL_INIT_TEXT = "https://";
         private final UrlSelectedCb mUrlSelectedCb;
 
         CarouselViewAdapter mAdapter;
@@ -186,8 +186,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
             // Configure URL text
             TextInputEditText urlInput = customView.findViewById(R.id.url);
-//        urlInput.setHint("Enter page");
-            urlInput.setInputType(InputType.TYPE_CLASS_TEXT);
+            urlInput.setText(URL_INIT_TEXT);
 
             // Configure the refresh rate selector
             NumberPicker refreshRate = customView.findViewById(R.id.refresh_rate);
@@ -202,7 +201,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
                     .setPositiveButton("OK", (id, l) -> {
                         if (urlInput.getText() != null) {
                             String url = urlInput.getText().toString();
-                            if (!url.isEmpty() && !url.equals("https://")) {
+                            if (!url.isEmpty() && !url.equals(URL_INIT_TEXT)) {
                                 urlSelectedCb.onUrlSelected(new Page(url, refreshRate.getValue()), getAbsoluteAdapterPosition());
                             }
                         }

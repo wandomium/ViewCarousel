@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity
         public void run() {
             mCurrentViewHolder.reload();
             if (mRefreshRate > 0) {
-                mHandler.postDelayed(this, mRefreshRate * 1000);
+                mHandler.postDelayed(this, mRefreshRate * 1000L);
             }
         }
     };
@@ -215,7 +215,7 @@ public class MainActivity extends AppCompatActivity
             mCurrentViewHolder = (CarouselViewAdapter.ViewHolder)
                     ((RecyclerView) mViewPager2.getChildAt(0))
                             .findViewHolderForAdapterPosition(mViewPager2.getCurrentItem());
-            mHandler.postDelayed(mRefreshRunnable, mRefreshRate * 1000);
+            mHandler.postDelayed(mRefreshRunnable, mRefreshRate * 1000L);
         }
     }
     private void _stopRefreshTask() {

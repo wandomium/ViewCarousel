@@ -20,8 +20,6 @@ public class CarouselScrollFunc extends ViewPager2.OnPageChangeCallback
     private final Handler mMainHandler;
     private final Runnable mUnblockInput;
 
-    private int mCurrentPage = 0;
-
     public CarouselScrollFunc(@NonNull ViewPager2 viewPager2, @Nullable AFocusMngr focusHandler) {
         this.mViewPager2   = viewPager2;
         this.mFocusHandler = focusHandler;
