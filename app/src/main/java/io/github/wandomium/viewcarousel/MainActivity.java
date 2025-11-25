@@ -41,6 +41,8 @@ public class MainActivity extends AppCompatActivity
     /** @noinspection unused*/
     private static final String CLASS_TAG = MainActivity.class.getSimpleName();
 
+    private static final long TIME_UNITS = 1000L * 60L;
+
     private CarouselViewAdapter mViewCarousel;
     private CarouselScrollFunc mCarouselScrollCb;
     private ViewPager2 mViewPager2;
@@ -56,7 +58,7 @@ public class MainActivity extends AppCompatActivity
         public void run() {
             mCurrentViewHolder.reload();
             if (mRefreshRate > 0) {
-                mHandler.postDelayed(this, mRefreshRate * 1000L);
+                mHandler.postDelayed(this, mRefreshRate * TIME_UNITS);
             }
         }
     };
@@ -236,7 +238,7 @@ public class MainActivity extends AppCompatActivity
             mCurrentViewHolder = (CarouselViewAdapter.ViewHolder)
                     ((RecyclerView) mViewPager2.getChildAt(0))
                             .findViewHolderForAdapterPosition(mViewPager2.getCurrentItem());
-            mHandler.postDelayed(mRefreshRunnable, mRefreshRate * 1000L);
+            mHandler.postDelayed(mRefreshRunnable, mRefreshRate * TIME_UNITS);
         }
     }
 
