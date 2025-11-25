@@ -14,6 +14,8 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import java.util.Objects;
+
 public class ItemWebPage extends SwipeRefreshLayout
 {
     /** @noinspection unused */
@@ -37,15 +39,19 @@ public class ItemWebPage extends SwipeRefreshLayout
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         // Swipe refresh, ignore other gestures
         if (super.onInterceptTouchEvent(ev) || isRefreshing()) {
-            return true;
+            if (!mFocusMngr.isInFocus()) {
+                // handle refresh
+                return true;
+            }
         }
         // detect longPress
         mGestureDetector.onTouchEvent(ev);
         // prevent propagation of events to webview when not in focus
-        return mFocusMngr != null && !mFocusMngr.isInFocus();
+        return !mFocusMngr.isInFocus();
     }
 
     public void loadUrl(final String url) {
+        Objects.requireNonNull(mFocusMngr); //called on bind. might as well test it here
         mWebView.loadUrl(url);
 
         if (url.startsWith("https://meteo.arso.gov.si/uploads/meteo/app/inca/m/")) {
@@ -60,11 +66,9 @@ public class ItemWebPage extends SwipeRefreshLayout
     public void reload() {
         mWebView.reload();
     }
-
     public void setFocusHandler(AFocusMngr handler) {
         mFocusMngr = handler;
     }
-
     private void _init(Context ctx) {
         mWebView = new WebView(ctx);
         mWebView.getSettings().setJavaScriptEnabled(true);
@@ -75,7 +79,10 @@ public class ItemWebPage extends SwipeRefreshLayout
                 ConstraintLayout.LayoutParams.MATCH_PARENT, ConstraintLayout.LayoutParams.MATCH_PARENT));
 
         // connect swipe refresh layout and web view actions
-        setOnRefreshListener( () -> mWebView.reload() );
+        setOnRefreshListener( () -> {
+            if (mFocusMngr.isInFocus()) { setRefreshing(false);}
+            else { mWebView.reload(); }
+        } );
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
