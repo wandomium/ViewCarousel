@@ -50,5 +50,4 @@ dependencies {
 
     implementation(libs.webkit)
     implementation(libs.gson)
-    implementation(libs.material.v1120)
 }

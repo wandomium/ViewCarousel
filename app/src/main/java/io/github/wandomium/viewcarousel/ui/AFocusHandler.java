@@ -8,8 +8,8 @@ import androidx.activity.OnBackPressedCallback;
 public abstract class AFocusHandler extends OnBackPressedCallback implements View.OnLongClickListener
 {
     /* TO IMPLEMENT */
-    protected abstract boolean _onObtainFocus(View v);
-    protected abstract void    _onReleaseFocus();
+    protected abstract void _onObtainFocus();
+    protected abstract void _onReleaseFocus();
 
     /* CLASS LOGIC */
     public AFocusHandler() { super(true); }
@@ -34,12 +34,11 @@ public abstract class AFocusHandler extends OnBackPressedCallback implements Vie
     public boolean onLongClick(View v) {
         // if input is blocked ignore click ??? TODO is this ok???? maybe consume and not send to children - test it out
         if (mBlockInput) { return true; }
-        // if item was in focus return false and precess any events in child
-        if (mItemFocusOn) { return false; }
         // if item was not in focus then call _onGetFocus
-        else {
+        if (!mItemFocusOn){
             mItemFocusOn = true;
-            return _onObtainFocus(v);
+            _onObtainFocus();
         }
+        return false;
     }
 }

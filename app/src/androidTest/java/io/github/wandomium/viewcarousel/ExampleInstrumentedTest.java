@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("io.github.wandomium.webviewcarousel", appContext.getPackageName());
+        assertEquals("io.github.wandomium.viewcarousel", appContext.getPackageName());
     }
 }

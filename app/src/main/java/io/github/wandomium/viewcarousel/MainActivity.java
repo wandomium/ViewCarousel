@@ -2,9 +2,7 @@ package io.github.wandomium.viewcarousel;
 
 import android.app.AlertDialog;
 import android.app.PictureInPictureParams;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,6 +22,7 @@ import io.github.wandomium.viewcarousel.ui.CarouselViewAdapter;
 
 public class MainActivity extends AppCompatActivity
 {
+    /** @noinspection unused*/
     private static final String CLASS_TAG = MainActivity.class.getSimpleName();
 
     private CarouselViewAdapter mViewCarousel;
@@ -52,12 +51,11 @@ public class MainActivity extends AppCompatActivity
         /* Handle CAPTURE and RELEASE on view */
         AFocusHandler focusHandler = new AFocusHandler() {
             @Override
-            protected boolean _onObtainFocus(View v) {
+            protected void _onObtainFocus() {
                 Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
                 mViewPager2.setUserInputEnabled(false);
                 findViewById(R.id.menu_btn).setVisibility(View.GONE);
                 findViewById(R.id.call_btn).setVisibility(View.GONE);
-                return false;
             }
             @Override
             protected void _onReleaseFocus() {
@@ -140,6 +138,7 @@ public class MainActivity extends AppCompatActivity
 //        }
     }
 
+    /** @noinspection SameReturnValue*/
     private boolean _handleMenuSelection(MenuItem item) {
         int id = item.getItemId();
         int currentPos = mViewPager2.getCurrentItem();

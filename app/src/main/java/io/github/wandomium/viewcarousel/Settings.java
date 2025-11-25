@@ -13,7 +13,7 @@ public class Settings
     private static final String IS_FIRST_RUN = "IS_FIRST_RUN";
 
     private Settings(@NonNull Context ctx) {
-        mPerfs = ctx.getSharedPreferences(R.string.app_name + "_settings", Context.MODE_PRIVATE);
+        mPerfs = ctx.getSharedPreferences(R.string.app_name + ".settings", Context.MODE_PRIVATE);
     }
     public static Settings getInstance(Context ctx) {
         if (mInstance == null) {

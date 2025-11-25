@@ -19,6 +19,7 @@ import java.util.Objects;
 public class Page
 {
     private static final String CLASS_TAG = Page.class.getSimpleName();
+    private static final String CONFIG_FNAME = "config.json";
 
     public int refreshRateSec = 15;
     public final String url;
@@ -27,12 +28,8 @@ public class Page
         this.url = Objects.requireNonNull(url);
     }
 
-    private static String _getConfigFilename() {
-        return "config.json";
-    }
-
     public static ArrayList<Page> loadPages(final Context ctx) {
-        File file = new File(ctx.getFilesDir(), _getConfigFilename());
+        File file = new File(ctx.getFilesDir(), CONFIG_FNAME);
         Gson gson = new Gson();
         ArrayList<Page> pages = null;
 
@@ -50,15 +47,20 @@ public class Page
     }
 
     public static void savePages(final Context ctx, ArrayList<Page> pages) {
-        File file = new File(ctx.getFilesDir(), _getConfigFilename());
+        File file = new File(ctx.getFilesDir(), CONFIG_FNAME);
         Gson gson = new Gson();
 
-        pages.removeIf(Objects::isNull);
+        if (pages == null) {
+            pages = new ArrayList<>();
+        }
+        else {
+            pages.removeIf(Objects::isNull);
+        }
 
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(pages, writer); // Serialize ArrayList to JSON file
             Log.d(CLASS_TAG,"Saving to " + file.getAbsolutePath());
-            Log.d(CLASS_TAG, pages == null ? "null" : gson.toJson(pages));
+            Log.d(CLASS_TAG, gson.toJson(pages));
         } catch (IOException e) {
             e.printStackTrace();
         }

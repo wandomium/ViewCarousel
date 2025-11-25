@@ -16,6 +16,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class ItemWebPage extends SwipeRefreshLayout
 {
+    /** @noinspection unused*/
     private static final String CLASS_TAG = ItemWebPage.class.getSimpleName();
 
     private WebView mWebView;

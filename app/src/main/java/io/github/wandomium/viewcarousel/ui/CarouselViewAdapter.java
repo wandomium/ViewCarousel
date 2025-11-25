@@ -17,6 +17,7 @@ import io.github.wandomium.viewcarousel.R;
 
 public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapter.ViewHolder>
 {
+    /** @noinspection unused*/
     private static final String CLASS_TAG = CarouselViewAdapter.class.getSimpleName();
 
     private static final int ITEM_NEW_PAGE = 1;
@@ -124,7 +125,6 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
             super(itemView);
         }
         public abstract void bind(final Page page);
-        public abstract void cleanUp();
     }
 
     public static class WebPageViewHolder extends ViewHolder
@@ -138,8 +138,6 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         public void bind(final Page page) {
             ((ItemWebPage)itemView).loadUrl(page.url);
         }
-        @Override
-        public void cleanUp() {}
     }
 
     public static class NewPageViewHolder extends ViewHolder
@@ -148,7 +146,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         public interface UrlSelectedCb {
             void onUrlSelected(final int position, final String url);
         }
-        private UrlSelectedCb mUrlSelectedCb;
+        private final UrlSelectedCb mUrlSelectedCb;
 
         public NewPageViewHolder(@NonNull View itemView, UrlSelectedCb urlSelectedCb) {
             super(itemView);
@@ -158,11 +156,6 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
         @Override
         public void bind(Page page) {}
-        @Override
-        public void cleanUp() {
-            itemView.findViewById(R.id.btnAddWebView).setOnClickListener(null);
-            mUrlSelectedCb = null;
-        }
 
         private void _showAddUrlDialog(View v) {
             final int itemPosition = getAbsoluteAdapterPosition();
