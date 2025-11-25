@@ -56,6 +56,15 @@ public class ItemWebPage extends SwipeRefreshLayout
     public void loadUrl(final String url) {
         mUrl = url;
         mWebView.loadUrl(mUrl);
+
+        if (mUrl.startsWith("https://meteo.arso.gov.si/uploads/meteo/app/inca/m/")) {
+            // This fixes swipe to refresh gesture detection on some pages (for ex. INCA - Full-Screen WebGL map)
+            // If view is at the top, we say child can't scroll and we get the gesture
+            setOnChildScrollUpCallback((parent, child) -> mWebView.getScrollY() == 0);
+        }
+        else {
+            setOnChildScrollUpCallback(null);
+        }
     }
     public void reload() {
         mWebView.reload();
@@ -91,9 +100,6 @@ public class ItemWebPage extends SwipeRefreshLayout
                 super.onReceivedError(view, request, error);
             }
         });
-        // This fixes swipe to refresh gesture detection on some pages (for ex. INCA - Full-Screen WebGL map)
-        // If view is at the top, we say child can't scroll and we get the gesture
-        setOnChildScrollUpCallback((parent, child) -> mWebView.getScrollY() == 0);
 
         // Detect LONG PRESS for CAPTURE
         mGestureDetector = new GestureDetector(ctx, new GestureDetector.SimpleOnGestureListener() {
