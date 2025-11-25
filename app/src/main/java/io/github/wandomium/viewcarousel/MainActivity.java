@@ -3,21 +3,14 @@ package io.github.wandomium.viewcarousel;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.PictureInPictureParams;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.media.AudioDeviceInfo;
-import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.telecom.TelecomManager;
-import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.util.Rational;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,9 +24,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import io.github.wandomium.viewcarousel.ui.AFocusMngr;
 import io.github.wandomium.viewcarousel.ui.CarouselViewAdapter;
@@ -81,49 +71,29 @@ public class MainActivity extends AppCompatActivity
         mViewPager2.setOffscreenPageLimit(4); // TODO: Later we might want to change this or at least make it configurable
 
         /* Handle CAPTURE and RELEASE on view */
-        AFocusMngr focusHandler = new AFocusMngr() {
-            @Override
-            protected void _onObtainFocus() {
-                Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
-                mViewPager2.setUserInputEnabled(false);
-                findViewById(R.id.menu_btn).setVisibility(View.GONE);
-                findViewById(R.id.call_btn).setVisibility(View.GONE);
-            }
-            @Override
-            protected void _onReleaseFocus() {
-                Toast.makeText(MainActivity.this, "RELEASE", Toast.LENGTH_SHORT).show();
-                mViewPager2.setUserInputEnabled(true);
-                findViewById(R.id.menu_btn).setVisibility(View.VISIBLE);
-                findViewById(R.id.call_btn).setVisibility(View.VISIBLE);
-            }
-            @Override
-            protected void _onBlock() { _stopRefreshTask(); }
-            @Override
-            protected void _onUnblock() { _startRefreshTask(); }
-        };
+        AFocusMngr focusMngr = _createFocusManager();
 
-        mViewCarousel = new CarouselViewAdapter(Page.loadPages(this), focusHandler);
-        getOnBackPressedDispatcher().addCallback(this, focusHandler);
-
+        mViewCarousel = new CarouselViewAdapter(
+                Page.loadPages(this), focusMngr,
+                (pers) -> ActivityCompat.requestPermissions(MainActivity.this, pers, 333));
+        getOnBackPressedDispatcher().addCallback(this, focusMngr);
         mViewPager2.setAdapter(mViewCarousel);
 
         /* Use page scroll cb to implement rotating scroll trough items */
-        mCarouselScrollCb = new CarouselScrollFunc(mViewPager2, focusHandler);
+        mCarouselScrollCb = new CarouselScrollFunc(mViewPager2, focusMngr);
         mViewPager2.registerOnPageChangeCallback(mCarouselScrollCb);
 
-        /* PAge change to implement refreshing */
+        /* Page change to implement refreshing */
         mViewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
-                Log.d(CLASS_TAG, "setActiveItem, is blocked: " + focusHandler.isBlocked());
 //                mViewPager2.post(() -> mViewCarousel.setActiveItem(position));
                 Page page = mViewCarousel.getPages().get(position);
                 mRefreshRate = page != null ? page.refreshRate : 0;
                 _startRefreshTask();
             }
         });
-        _initPhoneStuff();
     }
 
     @Override
@@ -195,6 +165,18 @@ public class MainActivity extends AppCompatActivity
 //        }
     }
 
+    public void onCallBtnClickedTest(View v) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Missing permission", Toast.LENGTH_LONG).show();
+        } else {
+            // make call
+            Intent intent = new Intent(Intent.ACTION_CALL);
+            intent.setData(Uri.parse("tel:+38640655943"));
+            intent.putExtra(TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE, true);
+            startActivity(intent);
+        }
+    }
+
     /** @noinspection SameReturnValue*/
     private boolean _handleMenuSelection(MenuItem item) {
         int id = item.getItemId();
@@ -233,125 +215,31 @@ public class MainActivity extends AppCompatActivity
             mHandler.postDelayed(mRefreshRunnable, mRefreshRate * 1000L);
         }
     }
+
     private void _stopRefreshTask() {
         mHandler.removeCallbacks(mRefreshRunnable);
     }
 
-
-
-
-
-
-    private final static int REQUEST_CALL_PHONE = 33;
-    public void onCallBtnClickedTest(View v) {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CALL_PHONE},
-                    REQUEST_CALL_PHONE);
-        } else {
-            _makeCall();
-        }
-
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_CALL_PHONE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                _makeCall();
-            } else {
-                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private void _makeCall() {
-        mCallPlaced = true;
-//        _enableSpeaker();
-        Intent intent = new Intent(Intent.ACTION_CALL);
-        intent.setData(Uri.parse("tel:+38640655943"));
-        intent.putExtra(TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE, true);
-        startActivity(intent);
-    }
-
-    //audioManager.setMode(AudioManager.MODE_IN_CALL)
-
-    private void _enableSpeaker() {
-        Log.d(CLASS_TAG, "Enable speaker");
-        // Get an AudioManager instance
-        AudioManager audioManager = getSystemService(AudioManager.class);
-        AudioDeviceInfo speakerDevice = null;
-        List<AudioDeviceInfo> devices = audioManager.getAvailableCommunicationDevices();
-        for (AudioDeviceInfo device : devices) {
-            if (device.getType() == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) {
-                speakerDevice = device;
-                break;
-            }
-        }
-        if (speakerDevice != null) {
-            // Turn speakerphone ON.
-            boolean result = audioManager.setCommunicationDevice(speakerDevice);
-            if (!result) {
-                Log.e(CLASS_TAG, "Could not turn speaker phone on");
-                // Handle error.
-            }
-            setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
-            audioManager.setMode(AudioManager.MODE_IN_CALL);
-            // Turn speakerphone OFF.
-//            audioManager.clearCommunicationDevice();
-        }
-        else {
-            Log.e(CLASS_TAG, "device is null");
-        }
-    }
-
-    private BroadcastReceiver phoneStateReceiver;
-    private boolean mCallPlaced = false;
-
-    private void _initPhoneStuff() {
-        phoneStateReceiver = new BroadcastReceiver() {
+    private AFocusMngr _createFocusManager() {
+        return new AFocusMngr() {
             @Override
-            public void onReceive(Context context, Intent intent) {
-                _parseState(context, intent);
+            protected void _onObtainFocus() {
+                Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
+                mViewPager2.setUserInputEnabled(false);
+                findViewById(R.id.menu_btn).setVisibility(View.GONE);
+                findViewById(R.id.call_btn).setVisibility(View.GONE);
             }
+            @Override
+            protected void _onReleaseFocus() {
+                Toast.makeText(MainActivity.this, "RELEASE", Toast.LENGTH_SHORT).show();
+                mViewPager2.setUserInputEnabled(true);
+                findViewById(R.id.menu_btn).setVisibility(View.VISIBLE);
+                findViewById(R.id.call_btn).setVisibility(View.VISIBLE);
+            }
+            @Override
+            protected void _onBlock() { _stopRefreshTask(); }
+            @Override
+            protected void _onUnblock() { _startRefreshTask(); }
         };
-        registerReceiver(phoneStateReceiver, new IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED));
-    }
-
-    private void _parseState(Context context, Intent intent) {
-        String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
-
-        if (state == null) {
-
-            //Outgoing call
-            String number = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER);
-            Log.e("tag", "Outgoing number : " + number);
-
-        } else if (state.equals(TelephonyManager.EXTRA_STATE_OFFHOOK)) {
-
-            Log.e("tag", "EXTRA_STATE_OFFHOOK");
-            if (mCallPlaced) { _enableSpeaker(); }
-
-        } else if (state.equals(TelephonyManager.EXTRA_STATE_IDLE)) {
-
-            Log.e("tag", "EXTRA_STATE_IDLE");
-
-            if (mCallPlaced) {
-                mCallPlaced = false;
-                getSystemService(AudioManager.class).clearCommunicationDevice();
-            }
-
-        } else if (state.equals(TelephonyManager.EXTRA_STATE_RINGING)) {
-
-            //Incoming call
-            String number = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
-            Log.e("tag", "Incoming number : " + number);
-
-        } else
-            Log.e("tag", "none");
     }
 }

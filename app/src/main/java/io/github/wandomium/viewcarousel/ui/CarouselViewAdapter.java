@@ -1,5 +1,6 @@
 package io.github.wandomium.viewcarousel.ui;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -28,10 +29,14 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
     private final ArrayList<Page> mPages;
     private final AFocusMngr mFocusHandler;
+    private final PermissionChecker mPerChecker;
 
-    private int mActiveItem = 0;
+    @FunctionalInterface
+    public interface PermissionChecker {
+        void checkPermission(String[] per);
+    }
 
-    public CarouselViewAdapter(ArrayList<Page> pages, AFocusMngr focusHandler) {
+    public CarouselViewAdapter(ArrayList<Page> pages, AFocusMngr focusMngr, PermissionChecker perChecker) {
         if (pages == null || pages.isEmpty()) {
             // Add a default page so we are not empty
             this.mPages = new ArrayList<>();
@@ -41,7 +46,8 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
             this.mPages = pages;
         }
 
-        this.mFocusHandler = focusHandler;
+        this.mFocusHandler = focusMngr;
+        this.mPerChecker = perChecker;
     }
 
     public ArrayList<Page> getPages() {
@@ -72,16 +78,13 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return position;
     }
 
-    public void setActiveItem(int position) {
-        final int oldItem = mActiveItem;
-        mActiveItem = position;
-        notifyItemChanged(oldItem);
-        notifyItemChanged(mActiveItem);
-    }
-
-    public void onWebPageItemAdded(Page page, int position) {
+    public void onPageConfigured(Page page, int position, int newItemType) {
         mPages.set(position, page);
         notifyItemChanged(position);
+
+        if (newItemType == ITEM_CALLS_PAGE) {
+            mPerChecker.checkPermission(new String[]{Manifest.permission.CALL_PHONE});
+        }
     }
 
     @Override
@@ -104,7 +107,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return switch (viewType) {
             case ITEM_NEW_PAGE -> new NewPageViewHolder(
                     LayoutInflater.from(parent.getContext()).inflate(R.layout.item_new_page, parent, false),
-                    this::onWebPageItemAdded, this);
+                    this::onPageConfigured);
             case ITEM_WEB_PAGE -> new WebPageViewHolder(
                     LayoutInflater.from(parent.getContext()).inflate(R.layout.item_web_page, parent, false),
                     mFocusHandler);
@@ -152,7 +155,6 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
             super(itemView);
             ((ItemWebPage)itemView).setFocusHandler(handler);
         }
-
         @Override
         public void bind(final Page page) {
             ((ItemWebPage)itemView).loadUrl(page.url);
@@ -168,7 +170,6 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         public CallsPageViewHolder(@NonNull View itemView) {
             super(itemView);
         }
-
         public void bind(final Page page) {
             //TODO
         }
@@ -177,20 +178,18 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
     public static class NewPageViewHolder extends ViewHolder
     {
         @FunctionalInterface
-        public interface UrlSelectedCb {
-            void onUrlSelected(final Page page, int position);
+        public interface PageConfigureCb {
+            void onPageConfigured(Page page, int position, int newType);
         }
 
         private static final String URL_INIT_TEXT = "https://";
-        private final UrlSelectedCb mUrlSelectedCb;
-        private final CarouselViewAdapter mAdapter;
+        private final PageConfigureCb mPageConfiguredCb;
 
-        public NewPageViewHolder(@NonNull View itemView, UrlSelectedCb urlSelectedCb, CarouselViewAdapter adapter) {
+        public NewPageViewHolder(@NonNull View itemView, PageConfigureCb pageUpdatedCb) {
             super(itemView);
-            mUrlSelectedCb = urlSelectedCb;
-            mAdapter = adapter;
+            mPageConfiguredCb = pageUpdatedCb;
             itemView.findViewById(R.id.btn_add_web_page).setOnClickListener(
-                (v) -> _showAddWebPageDialog(v.getContext(), mUrlSelectedCb));
+                (v) -> _showAddWebPageDialog(v.getContext()));
             itemView.findViewById(R.id.btn_add_call_page).setOnClickListener(
                     (v) -> _addCallPage());
         }
@@ -199,10 +198,10 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         public void bind(final Page page) {}
 
         private void _addCallPage() {
-            mAdapter.getPages().set(getAbsoluteAdapterPosition(), new Page("CALLS", 0));
-            mAdapter.notifyItemChanged(getAbsoluteAdapterPosition());
+            mPageConfiguredCb.onPageConfigured(new Page("CALLS", 0), getAbsoluteAdapterPosition(), ITEM_CALLS_PAGE);
         }
-        private void _showAddWebPageDialog(Context ctx, UrlSelectedCb urlSelectedCb)
+
+        private void _showAddWebPageDialog(Context ctx)
         {
             // 2. Inflate the custom layout
             LayoutInflater inflater = LayoutInflater.from(ctx);
@@ -226,7 +225,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
                         if (urlInput.getText() != null) {
                             String url = urlInput.getText().toString();
                             if (!url.isEmpty() && !url.equals(URL_INIT_TEXT)) {
-                                urlSelectedCb.onUrlSelected(new Page(url, refreshRate.getValue()), getAbsoluteAdapterPosition());
+                                mPageConfiguredCb.onPageConfigured(new Page(url, refreshRate.getValue()), getAbsoluteAdapterPosition(), ITEM_WEB_PAGE);
                             }
                         }
                         id.dismiss();
