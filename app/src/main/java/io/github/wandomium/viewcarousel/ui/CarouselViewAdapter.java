@@ -2,7 +2,6 @@ package io.github.wandomium.viewcarousel.ui;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +24,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
     private static final int ITEM_NEW_PAGE = 1;
     private static final int ITEM_WEB_PAGE = 2;
+    private static final int ITEM_CALLS_PAGE = 3;
 
     private final ArrayList<Page> mPages;
     private final AFocusMngr mFocusHandler;
@@ -89,8 +89,12 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         if (mPages.get(position) == null) {
             return ITEM_NEW_PAGE;
         }
-        else {
+        // TODO udpate this
+        else if (mPages.get(position).url.startsWith("http")) {
             return ITEM_WEB_PAGE;
+        }
+        else {
+            return ITEM_CALLS_PAGE;
         }
     }
 
@@ -100,10 +104,12 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return switch (viewType) {
             case ITEM_NEW_PAGE -> new NewPageViewHolder(
                     LayoutInflater.from(parent.getContext()).inflate(R.layout.item_new_page, parent, false),
-                    this::onWebPageItemAdded);
+                    this::onWebPageItemAdded, this);
             case ITEM_WEB_PAGE -> new WebPageViewHolder(
                     LayoutInflater.from(parent.getContext()).inflate(R.layout.item_web_page, parent, false),
                     mFocusHandler);
+            case ITEM_CALLS_PAGE -> new CallsPageViewHolder(
+                    LayoutInflater.from(parent.getContext()).inflate(R.layout.item_calls, parent, false));
             default -> throw new RuntimeException("Invalid View Type");
         };
     }
@@ -157,6 +163,17 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         }
     }
 
+    public static class CallsPageViewHolder extends ViewHolder
+    {
+        public CallsPageViewHolder(@NonNull View itemView) {
+            super(itemView);
+        }
+
+        public void bind(final Page page) {
+            //TODO
+        }
+    }
+
     public static class NewPageViewHolder extends ViewHolder
     {
         @FunctionalInterface
@@ -166,18 +183,25 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
         private static final String URL_INIT_TEXT = "https://";
         private final UrlSelectedCb mUrlSelectedCb;
+        private final CarouselViewAdapter mAdapter;
 
-        CarouselViewAdapter mAdapter;
-        public NewPageViewHolder(@NonNull View itemView, UrlSelectedCb urlSelectedCb) {
+        public NewPageViewHolder(@NonNull View itemView, UrlSelectedCb urlSelectedCb, CarouselViewAdapter adapter) {
             super(itemView);
             mUrlSelectedCb = urlSelectedCb;
-            itemView.findViewById(R.id.btnAddWebView).setOnClickListener(
+            mAdapter = adapter;
+            itemView.findViewById(R.id.btn_add_web_page).setOnClickListener(
                 (v) -> _showAddWebPageDialog(v.getContext(), mUrlSelectedCb));
+            itemView.findViewById(R.id.btn_add_call_page).setOnClickListener(
+                    (v) -> _addCallPage());
         }
 
         @Override
         public void bind(final Page page) {}
 
+        private void _addCallPage() {
+            mAdapter.getPages().set(getAbsoluteAdapterPosition(), new Page("CALLS", 0));
+            mAdapter.notifyItemChanged(getAbsoluteAdapterPosition());
+        }
         private void _showAddWebPageDialog(Context ctx, UrlSelectedCb urlSelectedCb)
         {
             // 2. Inflate the custom layout

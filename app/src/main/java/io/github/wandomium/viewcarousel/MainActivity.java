@@ -1,13 +1,22 @@
 package io.github.wandomium.viewcarousel;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.PictureInPictureParams;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.telecom.TelecomManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.util.Rational;
 import android.view.Menu;
@@ -18,8 +27,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import io.github.wandomium.viewcarousel.ui.AFocusMngr;
 import io.github.wandomium.viewcarousel.ui.CarouselViewAdapter;
@@ -109,6 +123,7 @@ public class MainActivity extends AppCompatActivity
                 _startRefreshTask();
             }
         });
+        _initPhoneStuff();
     }
 
     @Override
@@ -220,5 +235,123 @@ public class MainActivity extends AppCompatActivity
     }
     private void _stopRefreshTask() {
         mHandler.removeCallbacks(mRefreshRunnable);
+    }
+
+
+
+
+
+
+    private final static int REQUEST_CALL_PHONE = 33;
+    public void onCallBtnClickedTest(View v) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CALL_PHONE},
+                    REQUEST_CALL_PHONE);
+        } else {
+            _makeCall();
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CALL_PHONE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                _makeCall();
+            } else {
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void _makeCall() {
+        mCallPlaced = true;
+//        _enableSpeaker();
+        Intent intent = new Intent(Intent.ACTION_CALL);
+        intent.setData(Uri.parse("tel:+38640655943"));
+        intent.putExtra(TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE, true);
+        startActivity(intent);
+    }
+
+    //audioManager.setMode(AudioManager.MODE_IN_CALL)
+
+    private void _enableSpeaker() {
+        Log.d(CLASS_TAG, "Enable speaker");
+        // Get an AudioManager instance
+        AudioManager audioManager = getSystemService(AudioManager.class);
+        AudioDeviceInfo speakerDevice = null;
+        List<AudioDeviceInfo> devices = audioManager.getAvailableCommunicationDevices();
+        for (AudioDeviceInfo device : devices) {
+            if (device.getType() == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) {
+                speakerDevice = device;
+                break;
+            }
+        }
+        if (speakerDevice != null) {
+            // Turn speakerphone ON.
+            boolean result = audioManager.setCommunicationDevice(speakerDevice);
+            if (!result) {
+                Log.e(CLASS_TAG, "Could not turn speaker phone on");
+                // Handle error.
+            }
+            setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+            audioManager.setMode(AudioManager.MODE_IN_CALL);
+            // Turn speakerphone OFF.
+//            audioManager.clearCommunicationDevice();
+        }
+        else {
+            Log.e(CLASS_TAG, "device is null");
+        }
+    }
+
+    private BroadcastReceiver phoneStateReceiver;
+    private boolean mCallPlaced = false;
+
+    private void _initPhoneStuff() {
+        phoneStateReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                _parseState(context, intent);
+            }
+        };
+        registerReceiver(phoneStateReceiver, new IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED));
+    }
+
+    private void _parseState(Context context, Intent intent) {
+        String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
+
+        if (state == null) {
+
+            //Outgoing call
+            String number = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER);
+            Log.e("tag", "Outgoing number : " + number);
+
+        } else if (state.equals(TelephonyManager.EXTRA_STATE_OFFHOOK)) {
+
+            Log.e("tag", "EXTRA_STATE_OFFHOOK");
+            if (mCallPlaced) { _enableSpeaker(); }
+
+        } else if (state.equals(TelephonyManager.EXTRA_STATE_IDLE)) {
+
+            Log.e("tag", "EXTRA_STATE_IDLE");
+
+            if (mCallPlaced) {
+                mCallPlaced = false;
+                getSystemService(AudioManager.class).clearCommunicationDevice();
+            }
+
+        } else if (state.equals(TelephonyManager.EXTRA_STATE_RINGING)) {
+
+            //Incoming call
+            String number = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
+            Log.e("tag", "Incoming number : " + number);
+
+        } else
+            Log.e("tag", "none");
     }
 }
