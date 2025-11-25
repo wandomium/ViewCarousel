@@ -1,0 +1,2 @@
+Bugs
+[] When putting the app to the background with add web page open dialog we lose the page on reload and crash on inde out of err

@@ -3,12 +3,20 @@ package io.github.wandomium.viewcarousel.ui;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
+import android.provider.ContactsContract;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.NumberPicker;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputEditText;
@@ -167,11 +175,22 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
     public static class CallsPageViewHolder extends ViewHolder
     {
+        private static final int[] btnLayouts = {
+                R.id.btn_call_contact0, R.id.btn_call_contact1, R.id.btn_call_contact2
+        };
+
         public CallsPageViewHolder(@NonNull View itemView) {
             super(itemView);
         }
         public void bind(final Page page) {
-            //TODO
+            if (page.contacts != null) {
+                for (int i = 0; i < page.contacts.size(); i++) {
+                    Button btn = itemView.findViewById(btnLayouts[i]);
+                    btn.setVisibility(View.VISIBLE);
+                    btn.setText(page.contacts.get(i).name());
+                    btn.setTag(page.contacts.get(i)); //TODO maybe use id??
+                }
+            }
         }
     }
 

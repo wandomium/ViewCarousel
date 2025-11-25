@@ -20,10 +20,16 @@ import java.util.Objects;
 public class Page
 {
     public static final int DEFAULT_REFRESH_RATE = 15;
+    public static final String WEB_PAGE_PREFIX = "http";
+    public static final String CONTACTS_PREFIX = "contacts";
 
     private static final String CLASS_TAG = Page.class.getSimpleName();
     private static final String CONFIG_FNAME = "config.json";
 
+
+    public record Contact(String name, String phone) {};
+
+    public ArrayList<Contact> contacts;
     public int refreshRate;
     public final String url;
 

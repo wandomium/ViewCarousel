@@ -6,11 +6,14 @@ import android.app.PictureInPictureParams;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.ContactsContract;
 import android.telecom.TelecomManager;
+import android.util.Log;
 import android.util.Rational;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,12 +21,17 @@ import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
+
+import java.util.ArrayList;
 
 import io.github.wandomium.viewcarousel.ui.AFocusMngr;
 import io.github.wandomium.viewcarousel.ui.CarouselViewAdapter;
@@ -38,7 +46,9 @@ public class MainActivity extends AppCompatActivity
     private ViewPager2 mViewPager2;
 
     private int mRefreshRate;
-    private CarouselViewAdapter.ViewHolder mCurrentViewHolder;
+    private CarouselViewAdapter.ViewHolder mCurrentViewHolder; //maybe not have a fix reference here
+
+    private ActivityResultLauncher<Intent> mContactPickerLauncher;
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final Runnable mRefreshRunnable = new Runnable() {
@@ -94,6 +104,8 @@ public class MainActivity extends AppCompatActivity
                 _startRefreshTask();
             }
         });
+
+        mContactPickerLauncher = _createContactPickerLauncher();
     }
 
     @Override
@@ -165,16 +177,28 @@ public class MainActivity extends AppCompatActivity
 //        }
     }
 
-    public void onCallBtnClickedTest(View v) {
+    public void onDirectCallBtnClicked(View v) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Missing permission", Toast.LENGTH_LONG).show();
         } else {
             // make call
+            if (v.getTag() == null) {
+                Log.e(CLASS_TAG, "No number, cannot call");
+                return;
+            }
+            Page.Contact contact = (Page.Contact) v.getTag();
+
             Intent intent = new Intent(Intent.ACTION_CALL);
-            intent.setData(Uri.parse("tel:+38640655943"));
+            intent.setData(Uri.parse("tel:" + contact.phone())); //+38640655943"));
             intent.putExtra(TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE, true);
             startActivity(intent);
         }
+    }
+
+    public void addContactBtnClicked(View v) {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
+        mContactPickerLauncher.launch(intent);
     }
 
     /** @noinspection SameReturnValue*/
@@ -241,5 +265,37 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected void _onUnblock() { _startRefreshTask(); }
         };
+    }
+
+    private ActivityResultLauncher<Intent> _createContactPickerLauncher() {
+        return registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(), result -> {
+                    Page.Contact contact = null;
+                    if (result.getResultCode() == FragmentActivity.RESULT_OK)
+                        //This action is rare so we don't care about a potential performance hit when catching the exception
+                        try (final Cursor cursor = this.getContentResolver().query(result.getData().getData(),
+                                null, null, null, null)) {
+                            cursor.moveToFirst();
+
+                            contact = new Page.Contact(
+                                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)),
+                                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                            );
+                        } catch (IllegalArgumentException | NullPointerException e) {
+                            Log.e(CLASS_TAG, "Failed to add contact " + e.getMessage());
+                        }
+                    if (contact == null) {
+                        return;
+                    }
+                    int currentItem = mViewPager2.getCurrentItem();
+                    Page page = mViewCarousel.getPages().get(currentItem); // if this is null there is a bug
+                    if (page.contacts == null) {
+                        page.contacts = new ArrayList<>();
+                    }
+                    page.contacts.add(contact);
+                    mViewCarousel.notifyItemChanged(currentItem);
+                    // TODO recheck this
+                    // !! for now we will believe that the adapter will not change items when wew have this open
+                });
     }
 }
