@@ -1,2 +1,4 @@
-Bugs
-[] When putting the app to the background with add web page open dialog we lose the page on reload and crash on inde out of err
+Bugs - Major
+[] When putting the app to the background with add web page open dialog we lose the page on reload and crash on inde out of err!!
+
+[] Having bith swipe refresh and Capture functionality doesn't work ok. disable refresh when capture is active
