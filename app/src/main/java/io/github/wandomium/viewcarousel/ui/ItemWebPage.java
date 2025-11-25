@@ -5,14 +5,17 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.View;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -88,6 +91,9 @@ public class ItemWebPage extends SwipeRefreshLayout
                 super.onReceivedError(view, request, error);
             }
         });
+        // This fixes swipe to refresh gesture detection on some pages (for ex. INCA - Full-Screen WebGL map)
+        // If view is at the top, we say child can't scroll and we get the gesture
+        setOnChildScrollUpCallback((parent, child) -> mWebView.getScrollY() == 0);
 
         // Detect LONG PRESS for CAPTURE
         mGestureDetector = new GestureDetector(ctx, new GestureDetector.SimpleOnGestureListener() {

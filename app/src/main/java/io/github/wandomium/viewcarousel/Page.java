@@ -19,7 +19,7 @@ import java.util.Objects;
 
 public class Page
 {
-    public static final int DEFAULT_REFRESH_RATE_S = 15;
+    public static final int DEFAULT_REFRESH_RATE = 15;
 
     private static final String CLASS_TAG = Page.class.getSimpleName();
     private static final String CONFIG_FNAME = "config.json";

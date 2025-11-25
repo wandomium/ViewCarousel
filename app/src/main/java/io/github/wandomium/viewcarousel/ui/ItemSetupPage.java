@@ -34,7 +34,7 @@ public class ItemSetupPage
         NumberPicker refreshRate = customView.findViewById(R.id.refresh_rate);
         refreshRate.setMinValue(0);
         refreshRate.setMaxValue(100);
-        refreshRate.setValue(Page.DEFAULT_REFRESH_RATE_S);
+        refreshRate.setValue(Page.DEFAULT_REFRESH_RATE);
 
         // create and show dialog
         new AlertDialog.Builder(ctx)

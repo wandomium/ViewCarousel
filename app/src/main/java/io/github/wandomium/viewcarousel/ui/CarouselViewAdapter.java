@@ -1,14 +1,18 @@
 package io.github.wandomium.viewcarousel.ui;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.NumberPicker;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 
@@ -76,7 +80,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         notifyItemChanged(mActiveItem);
     }
 
-    public void onWebPageItemAdded(int position, Page page) {
+    public void onWebPageItemAdded(Page page, int position) {
         mPages.set(position, page);
         notifyItemChanged(position);
     }
@@ -97,7 +101,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return switch (viewType) {
             case ITEM_NEW_PAGE -> new NewPageViewHolder(
                     LayoutInflater.from(parent.getContext()).inflate(R.layout.item_new_page, parent, false),
-                    this);
+                    this::onWebPageItemAdded);
             case ITEM_WEB_PAGE -> new WebPageViewHolder(
                     LayoutInflater.from(parent.getContext()).inflate(R.layout.item_web_page, parent, false),
                     mFocusHandler);
@@ -107,7 +111,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(mPages.get(position), position == mActiveItem);
+        holder.bind(mPages.get(position));
     }
 
     // Called when item is put in pool for reuse
@@ -133,7 +137,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
         }
-        public abstract void bind(final Page page, final boolean isActiveItem);
+        public abstract void bind(final Page page);
         public void reload() {};
     }
 
@@ -145,7 +149,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         }
 
         @Override
-        public void bind(final Page page, final boolean isActiveItem) {
+        public void bind(final Page page) {
             ((ItemWebPage)itemView).loadUrl(page.url);
         }
         @Override
@@ -154,25 +158,58 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         }
     }
 
-    public static class NewPageViewHolder extends ViewHolder implements ItemSetupPage.UrlSelectedCb
+    public static class NewPageViewHolder extends ViewHolder
     {
+        @FunctionalInterface
+        public interface UrlSelectedCb {
+            void onUrlSelected(final Page page, int position);
+        }
+
+        private final UrlSelectedCb mUrlSelectedCb;
+
         CarouselViewAdapter mAdapter;
-        public NewPageViewHolder(@NonNull View itemView, CarouselViewAdapter adapter) {
+        public NewPageViewHolder(@NonNull View itemView, UrlSelectedCb urlSelectedCb) {
             super(itemView);
-            mAdapter = adapter;
-            itemView.findViewById(R.id.btnAddWebView).setOnClickListener(this::onCLick);
+            mUrlSelectedCb = urlSelectedCb;
+            itemView.findViewById(R.id.btnAddWebView).setOnClickListener(
+                (v) -> _showAddWebPageDialog(v.getContext(), mUrlSelectedCb));
         }
 
         @Override
-        public void bind(final Page page, final boolean isActiveItem) {}
+        public void bind(final Page page) {}
 
-        public void onCLick(View v) {
-            ItemSetupPage.showAddWebPageDialog(v.getContext(), this);
-        }
+        private void _showAddWebPageDialog(Context ctx, UrlSelectedCb urlSelectedCb)
+        {
+            // 2. Inflate the custom layout
+            LayoutInflater inflater = LayoutInflater.from(ctx);
+            View customView = inflater.inflate(R.layout.add_web_page_dialog, null);
 
-        @Override
-        public void onUrlSelected(Page page) {
-            mAdapter.onWebPageItemAdded(getAbsoluteAdapterPosition(), page);
+            // Configure URL text
+            TextInputEditText urlInput = customView.findViewById(R.id.url);
+//        urlInput.setHint("Enter page");
+            urlInput.setInputType(InputType.TYPE_CLASS_TEXT);
+
+            // Configure the refresh rate selector
+            NumberPicker refreshRate = customView.findViewById(R.id.refresh_rate);
+            refreshRate.setMinValue(0);
+            refreshRate.setMaxValue(100);
+            refreshRate.setValue(Page.DEFAULT_REFRESH_RATE);
+
+            // create and show dialog
+            new AlertDialog.Builder(ctx)
+                    .setTitle("Enter URL and refresh rate in minutes")
+                    .setView(customView)
+                    .setPositiveButton("OK", (id, l) -> {
+                        if (urlInput.getText() != null) {
+                            String url = urlInput.getText().toString();
+                            if (!url.isEmpty() && !url.equals("https://")) {
+                                urlSelectedCb.onUrlSelected(new Page(url, refreshRate.getValue()), getAbsoluteAdapterPosition());
+                            }
+                        }
+                        id.dismiss();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         }
     }
 }

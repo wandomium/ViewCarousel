@@ -104,14 +104,9 @@ public class MainActivity extends AppCompatActivity
                 super.onPageSelected(position);
                 Log.d(CLASS_TAG, "setActiveItem, is blocked: " + focusHandler.isBlocked());
 //                mViewPager2.post(() -> mViewCarousel.setActiveItem(position));
-                Page page = null;
-                if (!mViewCarousel.getPages().isEmpty()) { //if this happens we have a but
-                    page = mViewCarousel.getPages().get(position);
-                }
-                else {
-                    Log.e(CLASS_TAG, "EMPTY PAGES!!!");
-                }
+                Page page = mViewCarousel.getPages().get(position);
                 mRefreshRate = page != null ? page.refreshRate : 0;
+                _startRefreshTask();
             }
         });
     }
@@ -213,7 +208,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void _startRefreshTask() {
-        mHandler.removeCallbacks(mRefreshRunnable);
+        if (mHandler.hasCallbacks(mRefreshRunnable)) {
+            return;
+        }
         if (mRefreshRate > 0) {
             mCurrentViewHolder = (CarouselViewAdapter.ViewHolder)
                     ((RecyclerView) mViewPager2.getChildAt(0))
