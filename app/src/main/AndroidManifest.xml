@@ -18,7 +18,7 @@
         android:theme="@style/Theme.ViewCarousel">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".demo.DemoMainActivity"
             android:exported="true"
             android:supportsPictureInPicture="true"
             android:resizeableActivity="true"
