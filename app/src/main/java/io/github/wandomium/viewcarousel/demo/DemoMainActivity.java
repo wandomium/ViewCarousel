@@ -9,6 +9,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import io.github.wandomium.viewcarousel.CarouselScrollFunc;
 import io.github.wandomium.viewcarousel.Page;
 import io.github.wandomium.viewcarousel.R;
 
@@ -62,8 +63,6 @@ public class DemoMainActivity extends AppCompatActivity {
                 scrollDone = true;
             }
         };
-
-
         viewPager2.registerOnPageChangeCallback(cb);
     }
 

@@ -13,11 +13,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.github.wandomium.viewcarousel.overrides.FragmentStateAdapterOverride;
+
 public class DemoFragmentStateAdapter extends FragmentStateAdapter
 {
+    private static final String KEY_PREFIX_FRAGMENT = "f#";
+    private static @NonNull String createKey(@NonNull String prefix, long id) {
+        return prefix + id;
+    }
+
+
     private static final String CLASS_TAG = DemoFragmentStateAdapter.class.getSimpleName();
 
-    private static final int MAX_FRAGMENTS = 4;
+    public static final int MAX_FRAGMENTS = 4;
     private final List<Fragment> fragmentList;
     private final Map<Integer, Fragment> fragmentMap;
     private final FragmentActivity mActivity;
@@ -25,7 +33,7 @@ public class DemoFragmentStateAdapter extends FragmentStateAdapter
     public DemoFragmentStateAdapter(FragmentActivity fragmentActivity) {
         super(fragmentActivity);
         mActivity = fragmentActivity;
-        fragmentList = new ArrayList<>(MAX_FRAGMENTS);
+        fragmentList = new ArrayList<>();
         fragmentMap = new HashMap<Integer, Fragment>();
 //        fragmentList.add((new DemoFragment()));
 //        fragmentList.add(createFragment(1));
@@ -43,9 +51,12 @@ public class DemoFragmentStateAdapter extends FragmentStateAdapter
         Log.d(CLASS_TAG, "createFragment: " + position);
         int realPosition = _getRealPosition(position);
 
-        final String fTag = "test_f_tag_" + realPosition;
+//        final String fTag = "test_f_tag_" + realPosition;
+        final String fTag = createKey(KEY_PREFIX_FRAGMENT, realPosition);
+
 //        Fragment f = fragmentMap.get(realPosition);
         Fragment f = mActivity.getSupportFragmentManager().findFragmentByTag(fTag);
+//        f = mActivity.getSupportFragmentManager().findFragmentById(realPosition);
         if (f != null) {
             Log.d(CLASS_TAG, "Existing fragment: " + position + " -> " + realPosition);
             return f;
@@ -54,7 +65,7 @@ public class DemoFragmentStateAdapter extends FragmentStateAdapter
         f = new DemoFragment();
         Bundle args = new Bundle();
         // The object is just an integer.
-        args.putInt(DemoFragment.ARG_OBJECT, realPosition);
+        args.putInt(DemoFragment.ARG_OBJECT, position);
         f.setArguments(args);
 //        fragmentList.add(fragment);
         fragmentMap.put(realPosition, f);
