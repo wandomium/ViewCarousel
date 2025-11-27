@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Fragment> fragments;
     private int currentFragment = 0;
 
+    private final int PAGE_ID_DISPLAY_MS = 2000;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final Runnable mPageIdDisplay = new Runnable() {
         @Override
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
         mainView.setOnTouchListener(new OnSwipeTouchListener(this) {
             @Override
-            public void onSwipeToLeft() { //== swipeNext
+            public void onSwipeLeft() { //== swipeNext
                 if (currentFragment == fragments.size() - 1) {
                     currentFragment = 0;
                 }
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onSwipeToRight() {
+            public void onSwipeRight() {
                 if (currentFragment == 0) {
                     currentFragment = fragments.size() - 1;
                 }
@@ -76,9 +77,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void switchFragment(Fragment fragment, boolean fromLeftToRightFragment) {
+    private void switchFragment(Fragment fragment, boolean rightIn) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        if (fromLeftToRightFragment) {
+        if (rightIn) {
             transaction.setCustomAnimations(
                     R.anim.slide_in_right, //enter animation for new fragment
                     R.anim.slide_out_left  //exit animation for old fragment
@@ -107,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         mHandler.removeCallbacks(mPageIdDisplay);
         pageNumberTextView.setText((currentFragment+1) + "/" + fragments.size());
         pageNumberTextView.setVisibility(View.VISIBLE);
-        mHandler.postDelayed(mPageIdDisplay, 5000);
+        mHandler.postDelayed(mPageIdDisplay, PAGE_ID_DISPLAY_MS);
 
         transaction.commit();
     }

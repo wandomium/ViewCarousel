@@ -5,6 +5,8 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+
 public class OnSwipeTouchListener implements View.OnTouchListener {
 
     private final GestureDetector gestureDetector;
@@ -13,8 +15,8 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         gestureDetector = new GestureDetector(context, new GestureListener());
     }
 
-    public void onSwipeToLeft() {}
-    public void onSwipeToRight() {}
+    public void onSwipeLeft() {}
+    public void onSwipeRight() {}
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
@@ -26,7 +28,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         private static final int SWIPE_VELOCITY_THRESHOLD = 100;
 
         @Override
-        public boolean onDown(MotionEvent e) {
+        public boolean onDown(@NonNull MotionEvent ignored) {
             return true; // Must return true to detect other gestures
         }
 
@@ -39,7 +41,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
 
             if (Math.abs(diffX) > Math.abs(diffY)) {
                 if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffX > 0) onSwipeToRight(); else onSwipeToLeft();
+                    if (diffX > 0) onSwipeRight(); else onSwipeLeft();
                     return true;
                 }
             }
