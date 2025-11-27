@@ -1,7 +1,5 @@
 package io.github.wandomium.viewcarousel.testing;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -39,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.testing_activity_main);
         mainView = findViewById(R.id.root_view);
-        pageNumberTextView = findViewById(R.id.text_page_number);
+        pageNumberTextView = findViewById(R.id.page_indicator);
 
         fragments = new ArrayList<>(4);
         for (int i = 0; i < 4; i++) {
