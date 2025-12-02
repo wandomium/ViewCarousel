@@ -17,7 +17,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import io.github.wandomium.viewcarousel.R;
 import io.github.wandomium.viewcarousel.pager.ui.WebPage;
 
-public class FWebPage extends BaseFragment
+public class FragmentWebPage extends FragmentBase
 {
     private WebPage mWebPage;
     private SwipeRefreshLayout mSwipeRefresh;

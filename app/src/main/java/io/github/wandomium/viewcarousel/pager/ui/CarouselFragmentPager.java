@@ -1,4 +1,4 @@
-package io.github.wandomium.viewcarousel.pager;
+package io.github.wandomium.viewcarousel.pager.ui;
 
 import android.content.Context;
 import android.os.Handler;
@@ -21,6 +21,7 @@ import androidx.fragment.app.FragmentTransaction;
 import java.util.ArrayList;
 
 import io.github.wandomium.viewcarousel.R;
+import io.github.wandomium.viewcarousel.pager.FragmentBase;
 
 public class CarouselFragmentPager extends FrameLayout
 {
@@ -33,20 +34,16 @@ public class CarouselFragmentPager extends FrameLayout
     protected static final int RIGHT_IN = 1;
     protected static final int LEFT_IN = 2;
 
+    // Fragment list
     private FragmentManager mFragmentMngr;
-
-    private final GestureDetector mGestureDetector;
-    private final int cTouchSlop;
-
-    private boolean mSwipeDetected = false;
     private int mCurrentFragment = 0;
-
     private int mIdCount = 0;
     private String _createNewTag() {
         return "f_" + (mIdCount++);
     }
     private ArrayList<String> mFragmentTags = new ArrayList<>(MAX_VIEWS);
 
+    // Pge id indicator
     private TextView mPageIdDisplay;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final Runnable mPageIdAnimation = new Runnable() {
@@ -56,6 +53,10 @@ public class CarouselFragmentPager extends FrameLayout
         }
     };
 
+    // Swipe gesture detecotr - previous, next, focus
+    private final GestureDetector mGestureDetector;
+    private final int cTouchSlop;
+    private boolean mSwipeDetected = false;
     private CaptureInputListener mCaptureInputListener;
     private boolean mCaptureInput = false;
     @FunctionalInterface
@@ -240,17 +241,17 @@ public class CarouselFragmentPager extends FrameLayout
         }
     }
 
-    private BaseFragment _getCurrentFragment() {
+    private FragmentBase _getCurrentFragment() {
         // O(N) lookup but we have < 10 fragments
-        return (BaseFragment) mFragmentMngr.findFragmentByTag(mFragmentTags.get(mCurrentFragment));
+        return (FragmentBase) mFragmentMngr.findFragmentByTag(mFragmentTags.get(mCurrentFragment));
     }
     private void _switchFragment(int to, int direction) {
         _switchFragment(mCurrentFragment, to, direction);
     }
     private void _switchFragment(int from, int to, int direction) {
         FragmentTransaction fTransaction = mFragmentMngr.beginTransaction();
-        final BaseFragment fFrom = (BaseFragment) mFragmentMngr.findFragmentByTag(mFragmentTags.get(from));
-        final BaseFragment fTo = (BaseFragment) mFragmentMngr.findFragmentByTag(mFragmentTags.get(to));
+        final FragmentBase fFrom = (FragmentBase) mFragmentMngr.findFragmentByTag(mFragmentTags.get(from));
+        final FragmentBase fTo = (FragmentBase) mFragmentMngr.findFragmentByTag(mFragmentTags.get(to));
         switch (direction) {
             case RIGHT_IN -> fTransaction.setCustomAnimations(
                     R.anim.slide_in_right, R.anim.slide_out_left);

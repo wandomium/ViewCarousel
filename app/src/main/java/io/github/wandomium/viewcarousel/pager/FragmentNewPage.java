@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
 
 import io.github.wandomium.viewcarousel.R;
 
-public class FNewPage extends BaseFragment
+public class FragmentNewPage extends FragmentBase
 {
     @Nullable
     @Override

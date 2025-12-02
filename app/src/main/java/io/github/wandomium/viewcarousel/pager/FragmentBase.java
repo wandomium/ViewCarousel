@@ -14,9 +14,9 @@ import androidx.fragment.app.Fragment;
 import io.github.wandomium.viewcarousel.R;
 import io.github.wandomium.viewcarousel.testing.Fragments;
 
-public abstract class BaseFragment extends Fragment
+public abstract class FragmentBase extends Fragment
 {
-    private static final String CLASS_TAG = BaseFragment.class.getSimpleName();
+    private static final String CLASS_TAG = FragmentBase.class.getSimpleName();
 
     protected static final String ARG_ID = "id";
     protected int mId;
@@ -26,8 +26,8 @@ public abstract class BaseFragment extends Fragment
     public static final int FRAGMENT_WEB_PAGE = 1;
     public static Fragment createFragment(int id, int type) {
         Fragment f = switch (type) {
-            case FRAGMENT_WEB_PAGE -> new FWebPage();
-            default -> new FNewPage(); //Fragments.TestFragment();
+            case FRAGMENT_WEB_PAGE -> new FragmentWebPage();
+            default -> new FragmentNewPage(); //Fragments.TestFragment();
         };
         Bundle args = new Bundle();
         args.putInt(Fragments.ARG_ID, id);

@@ -7,6 +7,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import io.github.wandomium.viewcarousel.R;
+import io.github.wandomium.viewcarousel.pager.ui.CarouselFragmentPager;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -19,11 +20,12 @@ public class MainActivity extends AppCompatActivity
 
         CarouselFragmentPager pager = findViewById(R.id.carousel_pager);
         pager.setFragmentManager(getSupportFragmentManager());
+
+        // capture and release focus
         pager.setCaptureInputListener(() -> {
             mBackPressedCb.setEnabled(true);
             Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
         });
-
         mBackPressedCb = new OnBackPressedCallback(false) {
             @Override
             public void handleOnBackPressed() {
@@ -34,11 +36,12 @@ public class MainActivity extends AppCompatActivity
         };
         getOnBackPressedDispatcher().addCallback(mBackPressedCb);
 
+        // temp
         int i = 0;
         for (; i < CarouselFragmentPager.MAX_VIEWS - 1; i++) {
-            pager.addFragment(BaseFragment.createFragment(i, BaseFragment.FRAGMENT_NEW_PAGE), i);
+            pager.addFragment(FragmentBase.createFragment(i, FragmentBase.FRAGMENT_NEW_PAGE), i);
         }
-        FWebPage wp = (FWebPage) BaseFragment.createFragment(i, BaseFragment.FRAGMENT_WEB_PAGE);
+        FragmentWebPage wp = (FragmentWebPage) FragmentBase.createFragment(i, FragmentBase.FRAGMENT_WEB_PAGE);
         wp.setUrl("https://archlinux.org");
         pager.addFragment(wp, i++);
     }
