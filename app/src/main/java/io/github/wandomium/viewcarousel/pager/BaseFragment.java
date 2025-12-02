@@ -18,15 +18,16 @@ public abstract class BaseFragment extends Fragment
 {
     private static final String CLASS_TAG = BaseFragment.class.getSimpleName();
 
+    protected static final String ARG_ID = "id";
+    protected int mId;
+    protected boolean mCaptureInput = false;
+
     public static final int FRAGMENT_NEW_PAGE = 0;
     public static final int FRAGMENT_WEB_PAGE = 1;
-
-    public static final String ARG_ID = "id";
-    protected int mId;
     public static Fragment createFragment(int id, int type) {
         Fragment f = switch (type) {
             case FRAGMENT_WEB_PAGE -> new FWebPage();
-            default -> new Fragments.TestFragment();
+            default -> new FNewPage(); //Fragments.TestFragment();
         };
         Bundle args = new Bundle();
         args.putInt(Fragments.ARG_ID, id);
@@ -34,9 +35,12 @@ public abstract class BaseFragment extends Fragment
         return f;
     }
 
-    public void refresh() { Log.d(CLASS_TAG, "refresh"); }
     public void onHide()  { Log.d(CLASS_TAG, "onHide"); }
     public void onShow()  { Log.d(CLASS_TAG, "onShow"); }
+    public void captureInput(boolean capture) {
+        Log.d(CLASS_TAG, "captureInput: " + capture);
+        mCaptureInput = capture;
+    }
 
     @Nullable
     @Override
@@ -53,19 +57,9 @@ public abstract class BaseFragment extends Fragment
 
     @Override
     public void onHiddenChanged(boolean hidden) {
-        Log.d(CLASS_TAG, "onHiddenChanged: HIDDEN = " + hidden);
         super.onHiddenChanged(hidden);
-    }
 
-    @Override
-    public void onResume() {
-        Log.d(CLASS_TAG, "onResume");
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        Log.d(CLASS_TAG, "onPause");
-        super.onPause();
+        if (hidden) { onHide(); }
+        else { onShow(); }
     }
 }

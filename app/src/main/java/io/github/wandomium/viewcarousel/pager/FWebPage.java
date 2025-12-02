@@ -58,7 +58,28 @@ public class FWebPage extends BaseFragment
             }
         });
 
-        mWebPage.loadUrl(mUrl);
+        if (mUrl != null) {
+            mWebPage.loadUrl(mUrl);
+        }
+    }
+
+    @Override
+    public void captureInput(boolean capture) {
+        super.captureInput(capture);
+        mWebPage.captureInput(capture);
+    }
+
+    @Override
+    public void onShow() {
+        super.onShow();
+        if (mWebPage.getUrl() == null) { loadUrl(mUrl); }
+//        else { mWebPage.reload(); }
+    }
+
+    @Override
+    public void onDestroy() {
+        // stop any activities that could outlive this fragment and keep dangling references
+        super.onDestroy();
     }
 
     public void setUrl(final String url) {
@@ -76,11 +97,5 @@ public class FWebPage extends BaseFragment
         else {
             mSwipeRefresh.setOnChildScrollUpCallback(null);
         }
-    }
-
-    @Override
-    public void refresh() {
-        super.refresh();
-        mWebPage.reload();
     }
 }

@@ -56,6 +56,13 @@ public class CarouselFragmentPager extends FrameLayout
         }
     };
 
+    private CaptureInputListener mCaptureInputListener;
+    private boolean mCaptureInput = false;
+    @FunctionalInterface
+    public interface CaptureInputListener {
+        void onCaptureInput();
+    }
+
     public CarouselFragmentPager(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -67,10 +74,20 @@ public class CarouselFragmentPager extends FrameLayout
         mGestureDetector = new GestureDetector(context, new HorizontalSwipeListener());
     }
 
+    public void setFragmentManager(@NonNull FragmentManager fMngr) {
+        this.mFragmentMngr = fMngr;
+    }
+    public void setCaptureInputListener(CaptureInputListener listener) {
+        this.mCaptureInputListener = listener;
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        Log.d(CLASS_TAG, "onInterceptTouchEvent");
+        Log.d(CLASS_TAG, "onInterceptTouchEvent, capture=" + mCaptureInput);
 
+        if (mCaptureInput) {
+            return super.onInterceptTouchEvent(ev);
+        }
         mGestureDetector.onTouchEvent(ev);
 //        switch (action) {
 //            case MotionEvent.ACTION_DOWN -> {
@@ -94,8 +111,22 @@ public class CarouselFragmentPager extends FrameLayout
         return mGestureDetector.onTouchEvent(ev);
     }
 
-    public void setFragmentManager(@NonNull FragmentManager fMngr) {
-        this.mFragmentMngr = fMngr;
+    /* The primary cleanup method. Called when the view is removed from the window hierarchy
+     * (e.g., when its hosting Activity/Fragment is destroyed). This is where you should unregister listeners and nullify references.
+     */
+    @Override
+    public void onDetachedFromWindow() {
+        mHandler.removeCallbacks(mPageIdAnimation); // just in case, we don't want this to outlive our view even if it's 'impossible'
+        super.onDetachedFromWindow();
+    }
+
+    public void captureInput(final boolean capture) {
+        Log.d(CLASS_TAG, "captureInput: " + capture);
+        mCaptureInput = capture;
+        _getCurrentFragment().captureInput(capture);
+        if (mCaptureInputListener != null && capture) {
+            mCaptureInputListener.onCaptureInput();
+        }
     }
 
     public boolean addFragment(@NonNull Fragment f, final int position) throws IllegalArgumentException {
@@ -152,6 +183,11 @@ public class CarouselFragmentPager extends FrameLayout
         _switchFragment(to, LEFT_IN);
     }
 
+    protected void onSwipeUp() {
+        Log.d(CLASS_TAG, "onSwipeUp");
+        captureInput(true);
+    }
+
     private class HorizontalSwipeListener extends GestureDetector.SimpleOnGestureListener
     {
         private static final int SWIPE_DISTANCE_THRESHOLD = 100;
@@ -166,11 +202,13 @@ public class CarouselFragmentPager extends FrameLayout
         @Override
         public boolean onScroll(MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
             if (!mSwipeDetected) {
-                final float diffX = Math.abs(e1.getX() - e2.getX());
-                final float diffY = Math.abs(e1.getY() - e2.getY());
+                final float absDiffX = Math.abs(e2.getX() - e1.getX());
+                final float diffY = e2.getY() - e1.getY();
+                final float absDiffY = Math.abs(diffY);
 
-                if (diffX > cTouchSlop && diffX > diffY) {
-                    // This is a horizontal swipe! Parent takes over.
+                if ((absDiffY > cTouchSlop && diffY < 0 ) || // upwards swipe
+                    (absDiffX > cTouchSlop && absDiffX > absDiffY)) // horizontal swipe
+                {
                     mSwipeDetected = true;
                     return true;
                 }
@@ -190,16 +228,29 @@ public class CarouselFragmentPager extends FrameLayout
                     mSwipeDetected = false; // Reset after handling
                     return true;
                 }
+                else if (diffY < 0 && velocityY < 0) {
+                    if (Math.abs(diffY) > SWIPE_DISTANCE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                        onSwipeUp();
+                        mSwipeDetected = false;
+                        return true;
+                    }
+                }
             }
             return false;
         }
     }
 
+    private BaseFragment _getCurrentFragment() {
+        // O(N) lookup but we have < 10 fragments
+        return (BaseFragment) mFragmentMngr.findFragmentByTag(mFragmentTags.get(mCurrentFragment));
+    }
     private void _switchFragment(int to, int direction) {
         _switchFragment(mCurrentFragment, to, direction);
     }
     private void _switchFragment(int from, int to, int direction) {
         FragmentTransaction fTransaction = mFragmentMngr.beginTransaction();
+        final BaseFragment fFrom = (BaseFragment) mFragmentMngr.findFragmentByTag(mFragmentTags.get(from));
+        final BaseFragment fTo = (BaseFragment) mFragmentMngr.findFragmentByTag(mFragmentTags.get(to));
         switch (direction) {
             case RIGHT_IN -> fTransaction.setCustomAnimations(
                     R.anim.slide_in_right, R.anim.slide_out_left);
@@ -208,8 +259,10 @@ public class CarouselFragmentPager extends FrameLayout
             default -> throw new IllegalArgumentException(
                     "Unknown transition direction");
         }
-        fTransaction.hide(mFragmentMngr.findFragmentByTag(mFragmentTags.get(from)));
-        fTransaction.show(mFragmentMngr.findFragmentByTag(mFragmentTags.get(to)));
+        fTransaction.hide(fFrom);
+        fFrom.onHide();
+        fTransaction.show(fTo);
+        fFrom.onShow();
         fTransaction.disallowAddToBackStack();
 
         mCurrentFragment = to;

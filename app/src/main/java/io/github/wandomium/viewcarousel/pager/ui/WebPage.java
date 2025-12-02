@@ -20,10 +20,16 @@ public class WebPage extends WebView
 
     @Override
     public boolean onTouchEvent(MotionEvent e) {
-        return !mInputEnabled;
+//        return !mInputEnabled;
+        if (mInputEnabled) {
+            return super.onTouchEvent(e);
+        }
+        else {
+            return true;
+        }
     }
 
-    public void enableInput(final boolean enable) {
+    public void captureInput(final boolean enable) {
         mInputEnabled = enable;
     }
 }
