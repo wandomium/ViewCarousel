@@ -4,8 +4,12 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -31,6 +35,10 @@ public class CarouselFragmentPager extends FrameLayout
 
     private FragmentManager mFragmentMngr;
 
+    private final GestureDetector mGestureDetector;
+    private final int cTouchSlop;
+
+    private boolean mSwipeDetected = false;
     private int mCurrentFragment = 0;
 
     private int mIdCount = 0;
@@ -48,13 +56,42 @@ public class CarouselFragmentPager extends FrameLayout
         }
     };
 
-    public CarouselFragmentPager(@NonNull Context context) {
-        super(context);
-        _init(context);
-    }
     public CarouselFragmentPager(Context context, AttributeSet attrs) {
         super(context, attrs);
-        _init(context);
+
+//        _init(context);
+
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View v = inflater.inflate(R.layout.carousel_fragment_pager, this,true);
+
+        cTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+        mPageIdDisplay = v.findViewById(R.id.page_indicator);
+        mGestureDetector = new GestureDetector(context, new HorizontalSwipeListener());
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        Log.d(CLASS_TAG, "onInterceptTouchEvent");
+
+        final int action = ev.getAction();
+
+        mGestureDetector.onTouchEvent(ev);
+
+        switch (action) {
+            case MotionEvent.ACTION_DOWN -> {
+                return false; // pass to child
+            }
+            case MotionEvent.ACTION_MOVE -> {
+                if (mSwipeDetected) return true; // consume. events are dispatched to onTouchEvent
+            }
+        }
+        return super.onInterceptTouchEvent(ev);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        // when intercept returns true full event stream comes here
+        return mGestureDetector.onTouchEvent(ev);
     }
 
     public void setFragmentManager(@NonNull FragmentManager fMngr) {
@@ -133,18 +170,75 @@ public class CarouselFragmentPager extends FrameLayout
         View v = inflater.inflate(R.layout.carousel_fragment_pager, this,true);
 
         mPageIdDisplay = v.findViewById(R.id.page_indicator);
-        v.findViewById(R.id.root_view).setOnTouchListener(new ASwipeTouchListener(context) {
-            @Override
-            public void onSwipeLeft() { // == swipe next
-                final int to = (mCurrentFragment == mFragmentTags.size() - 1) ? 0 : mCurrentFragment+1;
-                _switchFragment(to, RIGHT_IN);
-            }
+//        v.findViewById(R.id.root_view).setOnTouchListener(new ASwipeTouchListener(context) {
+//            @Override
+//            public void onSwipeLeft() { // == swipe next
+//                final int to = (mCurrentFragment == mFragmentTags.size() - 1) ? 0 : mCurrentFragment+1;
+//                _switchFragment(to, RIGHT_IN);
+//            }
+//
+//            @Override
+//            public void onSwipeRight() {
+//                final int to = (mCurrentFragment == 0) ? mFragmentTags.size() - 1 : mCurrentFragment-1;
+//                _switchFragment(to, LEFT_IN);
+//            }
+//        });
+    }
 
-            @Override
-            public void onSwipeRight() {
-                final int to = (mCurrentFragment == 0) ? mFragmentTags.size() - 1 : mCurrentFragment-1;
-                _switchFragment(to, LEFT_IN);
+    public void onSwipeLeft() { // == swipe next
+        Log.d(CLASS_TAG, "onSwipeLeft");
+        mSwipeDetected = true;
+        final int to = (mCurrentFragment == mFragmentTags.size() - 1) ? 0 : mCurrentFragment+1;
+        _switchFragment(to, RIGHT_IN);
+    }
+
+    public void onSwipeRight() {
+        Log.d(CLASS_TAG, "onSwipeRight");
+        mSwipeDetected = true;
+        final int to = (mCurrentFragment == 0) ? mFragmentTags.size() - 1 : mCurrentFragment-1;
+        _switchFragment(to, LEFT_IN);
+    }
+
+    private class HorizontalSwipeListener extends GestureDetector.SimpleOnGestureListener
+    {
+        private static final int SWIPE_DISTANCE_THRESHOLD = 100;
+        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+
+        @Override
+        public boolean onDown(@NonNull MotionEvent ev) {
+            mSwipeDetected = false;
+            return true;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
+            if (!mSwipeDetected) {
+                final float diffX = Math.abs(e1.getX() - e2.getX());
+                final float diffY = Math.abs(e1.getY() - e2.getY());
+
+                if (diffX > cTouchSlop && diffX > diffY) {
+                    // This is a horizontal swipe! Parent takes over.
+                    mSwipeDetected = true;
+                    return true;
+                }
             }
-        });
+            return mSwipeDetected; // If already intercepting, continue consuming.
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
+            if (mSwipeDetected) {
+                final float diffX = e2.getX() - e1.getX();
+                final float diffY = e2.getY() - e1.getY();
+
+                if (Math.abs(diffX) > SWIPE_DISTANCE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffX > 0) { onSwipeRight(); }
+                    else { onSwipeLeft(); }
+                    mSwipeDetected = false; // Reset after handling
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

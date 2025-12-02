@@ -16,8 +16,12 @@ public class MainActivity extends AppCompatActivity
         CarouselFragmentPager pager = findViewById(R.id.carousel_pager);
         pager.setFragmentManager(getSupportFragmentManager());
 
-        for (int i = 0; i < CarouselFragmentPager.MAX_VIEWS; i++) {
-            pager.addFragment(BaseFragment.createFragment(i), i);
+        int i = 0;
+        for (; i < CarouselFragmentPager.MAX_VIEWS - 1; i++) {
+            pager.addFragment(BaseFragment.createFragment(i, BaseFragment.FRAGMENT_NEW_PAGE), i);
         }
+        FWebPage wp = (FWebPage) BaseFragment.createFragment(i, BaseFragment.FRAGMENT_WEB_PAGE);
+        wp.setUrl("https://archlinux.org");
+        pager.addFragment(wp, i++);
     }
 }
