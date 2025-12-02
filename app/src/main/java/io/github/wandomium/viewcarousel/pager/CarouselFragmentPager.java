@@ -30,8 +30,8 @@ public class CarouselFragmentPager extends FrameLayout
 
     private static final int PAGE_ID_DISPLAY_MS = 1000;
 
-    private static final int RIGHT_IN = 1;
-    private static final int LEFT_IN = 2;
+    protected static final int RIGHT_IN = 1;
+    protected static final int LEFT_IN = 2;
 
     private FragmentManager mFragmentMngr;
 
@@ -59,8 +59,6 @@ public class CarouselFragmentPager extends FrameLayout
     public CarouselFragmentPager(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-//        _init(context);
-
         LayoutInflater inflater = LayoutInflater.from(context);
         View v = inflater.inflate(R.layout.carousel_fragment_pager, this,true);
 
@@ -73,19 +71,21 @@ public class CarouselFragmentPager extends FrameLayout
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         Log.d(CLASS_TAG, "onInterceptTouchEvent");
 
-        final int action = ev.getAction();
-
         mGestureDetector.onTouchEvent(ev);
-
-        switch (action) {
-            case MotionEvent.ACTION_DOWN -> {
-                return false; // pass to child
-            }
-            case MotionEvent.ACTION_MOVE -> {
-                if (mSwipeDetected) return true; // consume. events are dispatched to onTouchEvent
-            }
+//        switch (action) {
+//            case MotionEvent.ACTION_DOWN -> {
+//                return false; // pass to child
+//            }
+//            case MotionEvent.ACTION_MOVE -> {
+//                if (mSwipeDetected) return true; // consume. events are dispatched to onTouchEvent
+//            }
+//        }
+        if (ev.getAction() == MotionEvent.ACTION_MOVE && mSwipeDetected) {
+            return true;
         }
-        return super.onInterceptTouchEvent(ev);
+        else {
+            return super.onInterceptTouchEvent(ev);
+        }
     }
 
     @Override
@@ -135,66 +135,19 @@ public class CarouselFragmentPager extends FrameLayout
         }
     }
 
-    private void _switchFragment(int to, int direction) {
-        _switchFragment(mCurrentFragment, to, direction);
-    }
-    private void _switchFragment(int from, int to, int direction) {
-        FragmentTransaction fTransaction = mFragmentMngr.beginTransaction();
-        switch (direction) {
-            case RIGHT_IN -> fTransaction.setCustomAnimations(
-                    R.anim.slide_in_right, R.anim.slide_out_left);
-            case LEFT_IN -> fTransaction.setCustomAnimations(
-                    R.anim.slide_in_left, R.anim.slide_out_right);
-            default -> throw new IllegalArgumentException(
-                    "Unknown transition direction");
-        }
-        fTransaction.hide(mFragmentMngr.findFragmentByTag(mFragmentTags.get(from)));
-        fTransaction.show(mFragmentMngr.findFragmentByTag(mFragmentTags.get(to)));
-        fTransaction.disallowAddToBackStack();
-
-        mCurrentFragment = to;
-        _showPageIndicator();
-
-        fTransaction.commit();
-    }
-
-    private void _showPageIndicator() {
+    public void showPageIndicator() {
         mHandler.removeCallbacks(mPageIdAnimation);
         mPageIdDisplay.setText((mCurrentFragment + 1) + "/" + mFragmentTags.size());
         mPageIdDisplay.setVisibility(View.VISIBLE);
         mHandler.postDelayed(mPageIdAnimation, PAGE_ID_DISPLAY_MS);
     }
 
-    private void _init(Context context) {
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View v = inflater.inflate(R.layout.carousel_fragment_pager, this,true);
-
-        mPageIdDisplay = v.findViewById(R.id.page_indicator);
-//        v.findViewById(R.id.root_view).setOnTouchListener(new ASwipeTouchListener(context) {
-//            @Override
-//            public void onSwipeLeft() { // == swipe next
-//                final int to = (mCurrentFragment == mFragmentTags.size() - 1) ? 0 : mCurrentFragment+1;
-//                _switchFragment(to, RIGHT_IN);
-//            }
-//
-//            @Override
-//            public void onSwipeRight() {
-//                final int to = (mCurrentFragment == 0) ? mFragmentTags.size() - 1 : mCurrentFragment-1;
-//                _switchFragment(to, LEFT_IN);
-//            }
-//        });
-    }
-
-    public void onSwipeLeft() { // == swipe next
-        Log.d(CLASS_TAG, "onSwipeLeft");
-        mSwipeDetected = true;
+    protected void onSwipeLeft() { // == swipe next
         final int to = (mCurrentFragment == mFragmentTags.size() - 1) ? 0 : mCurrentFragment+1;
         _switchFragment(to, RIGHT_IN);
     }
 
-    public void onSwipeRight() {
-        Log.d(CLASS_TAG, "onSwipeRight");
-        mSwipeDetected = true;
+    protected void onSwipeRight() {
         final int to = (mCurrentFragment == 0) ? mFragmentTags.size() - 1 : mCurrentFragment-1;
         _switchFragment(to, LEFT_IN);
     }
@@ -240,5 +193,28 @@ public class CarouselFragmentPager extends FrameLayout
             }
             return false;
         }
+    }
+
+    private void _switchFragment(int to, int direction) {
+        _switchFragment(mCurrentFragment, to, direction);
+    }
+    private void _switchFragment(int from, int to, int direction) {
+        FragmentTransaction fTransaction = mFragmentMngr.beginTransaction();
+        switch (direction) {
+            case RIGHT_IN -> fTransaction.setCustomAnimations(
+                    R.anim.slide_in_right, R.anim.slide_out_left);
+            case LEFT_IN -> fTransaction.setCustomAnimations(
+                    R.anim.slide_in_left, R.anim.slide_out_right);
+            default -> throw new IllegalArgumentException(
+                    "Unknown transition direction");
+        }
+        fTransaction.hide(mFragmentMngr.findFragmentByTag(mFragmentTags.get(from)));
+        fTransaction.show(mFragmentMngr.findFragmentByTag(mFragmentTags.get(to)));
+        fTransaction.disallowAddToBackStack();
+
+        mCurrentFragment = to;
+        showPageIndicator();
+
+        fTransaction.commit();
     }
 }
