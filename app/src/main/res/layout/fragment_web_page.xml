@@ -4,7 +4,7 @@
     android:id="@+id/swipe_refresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <io.github.wandomium.viewcarousel.pager.ui.WebPage
+    <WebView
         android:id="@+id/web_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
