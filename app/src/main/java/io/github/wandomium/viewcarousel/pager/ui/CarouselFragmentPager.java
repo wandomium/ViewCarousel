@@ -72,6 +72,10 @@ public class CarouselFragmentPager extends FrameLayout
         this.mCaptureInputListener = listener;
     }
 
+    public int numFragments() {
+        return mFragmentTags.size();
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         Log.d(CLASS_TAG, "onInterceptTouchEvent, capture=" + mCaptureInput);
@@ -119,7 +123,7 @@ public class CarouselFragmentPager extends FrameLayout
         }
     }
 
-    public boolean addFragment(@NonNull Fragment f, final int position) throws IllegalArgumentException {
+    public boolean addFragment(final int position, @NonNull Fragment f) throws IllegalArgumentException {
         if (position < 0 || position >= MAX_VIEWS) {
             final String msg = "Cannot add fragment. Position out of bounds: " + position;
             throw new IllegalArgumentException(msg);

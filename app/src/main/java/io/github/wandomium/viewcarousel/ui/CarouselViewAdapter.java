@@ -3,27 +3,20 @@ package io.github.wandomium.viewcarousel.ui;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
-import android.provider.ContactsContract;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.NumberPicker;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 
-import io.github.wandomium.viewcarousel.Page;
+import io.github.wandomium.viewcarousel.Page_old;
 import io.github.wandomium.viewcarousel.R;
 
 public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapter.ViewHolder>
@@ -35,7 +28,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
     private static final int ITEM_WEB_PAGE = 2;
     private static final int ITEM_CALLS_PAGE = 3;
 
-    private final ArrayList<Page> mPages;
+    private final ArrayList<Page_old> mPageOlds;
     private final AFocusMngr mFocusHandler;
     private final PermissionChecker mPerChecker;
 
@@ -44,27 +37,27 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         void checkPermission(String[] per);
     }
 
-    public CarouselViewAdapter(ArrayList<Page> pages, AFocusMngr focusMngr, PermissionChecker perChecker) {
+    public CarouselViewAdapter(ArrayList<Page_old> pages, AFocusMngr focusMngr, PermissionChecker perChecker) {
         if (pages == null || pages.isEmpty()) {
             // Add a default page so we are not empty
-            this.mPages = new ArrayList<>();
-            this.mPages.add(null);
+            this.mPageOlds = new ArrayList<>();
+            this.mPageOlds.add(null);
         }
         else {
-            this.mPages = pages;
+            this.mPageOlds = pages;
         }
 
         this.mFocusHandler = focusMngr;
         this.mPerChecker = perChecker;
     }
 
-    public ArrayList<Page> getPages() {
-        return mPages;
+    public ArrayList<Page_old> getPages() {
+        return mPageOlds;
     }
 
     // Insert page after current position
     public int insertPage(int position) {
-        mPages.add(position + 1, null);
+        mPageOlds.add(position + 1, null);
         notifyItemInserted(position + 1);
 
         return position + 1;
@@ -72,11 +65,11 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
     // remove page at current position
     public int removePage(int position) {
-        if (!mPages.isEmpty()) {
-            mPages.remove(position);
-            if (mPages.isEmpty()) {
+        if (!mPageOlds.isEmpty()) {
+            mPageOlds.remove(position);
+            if (mPageOlds.isEmpty()) {
                 // add a default page if there are none left
-                mPages.add(null);
+                mPageOlds.add(null);
                 notifyItemChanged(position);
             }
             else {
@@ -86,8 +79,8 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         return position;
     }
 
-    public void onPageConfigured(Page page, int position, int newItemType) {
-        mPages.set(position, page);
+    public void onPageConfigured(Page_old page, int position, int newItemType) {
+        mPageOlds.set(position, page);
         notifyItemChanged(position);
 
         if (newItemType == ITEM_CALLS_PAGE) {
@@ -97,11 +90,11 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
     @Override
     public int getItemViewType(int position) {
-        if (mPages.get(position) == null) {
+        if (mPageOlds.get(position) == null) {
             return ITEM_NEW_PAGE;
         }
         // TODO udpate this
-        else if (mPages.get(position).url.startsWith("http")) {
+        else if (mPageOlds.get(position).url.startsWith("http")) {
             return ITEM_WEB_PAGE;
         }
         else {
@@ -127,7 +120,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(mPages.get(position));
+        holder.bind(mPageOlds.get(position));
     }
 
     // Called when item is put in pool for reuse
@@ -145,7 +138,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
 
     @Override
     public int getItemCount() {
-        return mPages.size();
+        return mPageOlds.size();
     }
 
     public static abstract class ViewHolder extends RecyclerView.ViewHolder
@@ -153,7 +146,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
         }
-        public abstract void bind(final Page page);
+        public abstract void bind(final Page_old page);
         public void reload() {}
     }
 
@@ -164,7 +157,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
             ((ItemWebPage)itemView).setFocusHandler(handler);
         }
         @Override
-        public void bind(final Page page) {
+        public void bind(final Page_old page) {
             ((ItemWebPage)itemView).loadUrl(page.url);
         }
         @Override
@@ -182,7 +175,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         public CallsPageViewHolder(@NonNull View itemView) {
             super(itemView);
         }
-        public void bind(final Page page) {
+        public void bind(final Page_old page) {
             if (page.contacts != null) {
                 for (int i = 0; i < page.contacts.size(); i++) {
                     Button btn = itemView.findViewById(btnLayouts[i]);
@@ -198,7 +191,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
     {
         @FunctionalInterface
         public interface PageConfigureCb {
-            void onPageConfigured(Page page, int position, int newType);
+            void onPageConfigured(Page_old page, int position, int newType);
         }
 
         private static final String URL_INIT_TEXT = "https://";
@@ -214,10 +207,10 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
         }
 
         @Override
-        public void bind(final Page page) {}
+        public void bind(final Page_old page) {}
 
         private void _addCallPage() {
-            mPageConfiguredCb.onPageConfigured(new Page("CALLS", 0), getAbsoluteAdapterPosition(), ITEM_CALLS_PAGE);
+            mPageConfiguredCb.onPageConfigured(new Page_old("CALLS", 0), getAbsoluteAdapterPosition(), ITEM_CALLS_PAGE);
         }
 
         private void _showAddWebPageDialog(Context ctx)
@@ -234,7 +227,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
             NumberPicker refreshRate = customView.findViewById(R.id.refresh_rate);
             refreshRate.setMinValue(0);
             refreshRate.setMaxValue(100);
-            refreshRate.setValue(Page.DEFAULT_REFRESH_RATE);
+            refreshRate.setValue(Page_old.DEFAULT_REFRESH_RATE);
 
             // create and show dialog
             new AlertDialog.Builder(ctx)
@@ -244,7 +237,7 @@ public class CarouselViewAdapter extends RecyclerView.Adapter<CarouselViewAdapte
                         if (urlInput.getText() != null) {
                             String url = urlInput.getText().toString();
                             if (!url.isEmpty() && !url.equals(URL_INIT_TEXT)) {
-                                mPageConfiguredCb.onPageConfigured(new Page(url, refreshRate.getValue()), getAbsoluteAdapterPosition(), ITEM_WEB_PAGE);
+                                mPageConfiguredCb.onPageConfigured(new Page_old(url, refreshRate.getValue()), getAbsoluteAdapterPosition(), ITEM_WEB_PAGE);
                             }
                         }
                         id.dismiss();

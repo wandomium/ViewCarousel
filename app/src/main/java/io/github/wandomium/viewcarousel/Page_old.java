@@ -1,0 +1,78 @@
+package io.github.wandomium.viewcarousel;
+
+import android.content.Context;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Objects;
+
+public class Page_old
+{
+    public static final int DEFAULT_REFRESH_RATE = 15;
+    public static final String WEB_PAGE_PREFIX = "http";
+    public static final String CONTACTS_PREFIX = "contacts";
+
+    private static final String CLASS_TAG = Page_old.class.getSimpleName();
+    private static final String CONFIG_FNAME = "config.json";
+
+
+    public record Contact(String name, String phone) {};
+
+    public ArrayList<Contact> contacts;
+    public int refreshRate;
+    public final String url;
+
+    public Page_old(@NonNull final String url, @Nullable Integer rate) {
+        this.url = Objects.requireNonNull(url);
+        this.refreshRate = rate == null ? 0 : rate;
+    }
+
+    public static ArrayList<Page_old> loadPages(final Context ctx) {
+        File file = new File(ctx.getFilesDir(), CONFIG_FNAME);
+        Gson gson = new Gson();
+        ArrayList<Page_old> pages = null;
+
+        try (FileReader reader = new FileReader(file)) {
+            Type userListType = new TypeToken<ArrayList<Page_old>>() {}.getType();
+            pages = gson.fromJson(reader, userListType);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Log.d(CLASS_TAG, "Loading from: " + file.getAbsolutePath());
+        Log.d(CLASS_TAG, pages == null ? "null" : gson.toJson(pages));
+
+        return pages == null ? new ArrayList<>() : pages;
+    }
+
+    public static void savePages(final Context ctx, ArrayList<Page_old> pages) {
+        File file = new File(ctx.getFilesDir(), CONFIG_FNAME);
+        Gson gson = new Gson();
+
+        if (pages == null) {
+            pages = new ArrayList<>();
+        }
+        else {
+            pages.removeIf(Objects::isNull);
+        }
+
+        try (FileWriter writer = new FileWriter(file)) {
+            gson.toJson(pages, writer); // Serialize ArrayList to JSON file
+            Log.d(CLASS_TAG,"Saving to " + file.getAbsolutePath());
+            Log.d(CLASS_TAG, gson.toJson(pages));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

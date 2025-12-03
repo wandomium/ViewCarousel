@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity
         AFocusMngr focusMngr = _createFocusManager();
 
         mViewCarousel = new CarouselViewAdapter(
-                Page.loadPages(this), focusMngr,
+                Page_old.loadPages(this), focusMngr,
                 (pers) -> ActivityCompat.requestPermissions(MainActivity.this, pers, 333));
         getOnBackPressedDispatcher().addCallback(this, focusMngr);
         mViewPager2.setAdapter(mViewCarousel);
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
 //                mViewPager2.post(() -> mViewCarousel.setActiveItem(position));
-                Page page = mViewCarousel.getPages().get(position);
+                Page_old page = mViewCarousel.getPages().get(position);
                 mRefreshRate = page != null ? page.refreshRate : 0;
                 _startRefreshTask();
             }
@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onPause() {
-        Page.savePages(this, mViewCarousel.getPages());
+        Page_old.savePages(this, mViewCarousel.getPages());
         _stopRefreshTask();
         super.onPause();
     }
@@ -125,7 +125,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
-        Page.savePages(this, mViewCarousel.getPages());
+        Page_old.savePages(this, mViewCarousel.getPages());
         mViewPager2.unregisterOnPageChangeCallback(mCarouselScrollCb);
         mCarouselScrollCb = null;
 
@@ -188,7 +188,7 @@ public class MainActivity extends AppCompatActivity
                 Log.e(CLASS_TAG, "No number, cannot call");
                 return;
             }
-            Page.Contact contact = (Page.Contact) v.getTag();
+            Page_old.Contact contact = (Page_old.Contact) v.getTag();
 
             Intent intent = new Intent(Intent.ACTION_CALL);
             intent.setData(Uri.parse("tel:" + contact.phone())); //+38640655943"));
@@ -272,14 +272,14 @@ public class MainActivity extends AppCompatActivity
     private ActivityResultLauncher<Intent> _createContactPickerLauncher() {
         return registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(), result -> {
-                    Page.Contact contact = null;
+                    Page_old.Contact contact = null;
                     if (result.getResultCode() == FragmentActivity.RESULT_OK)
                         //This action is rare so we don't care about a potential performance hit when catching the exception
                         try (final Cursor cursor = this.getContentResolver().query(result.getData().getData(),
                                 null, null, null, null)) {
                             cursor.moveToFirst();
 
-                            contact = new Page.Contact(
+                            contact = new Page_old.Contact(
                                     cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)),
                                     cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
                             );
@@ -290,7 +290,7 @@ public class MainActivity extends AppCompatActivity
                         return;
                     }
                     int currentItem = mViewPager2.getCurrentItem();
-                    Page page = mViewCarousel.getPages().get(currentItem); // if this is null there is a bug
+                    Page_old page = mViewCarousel.getPages().get(currentItem); // if this is null there is a bug
                     if (page.contacts == null) {
                         page.contacts = new ArrayList<>();
                     }

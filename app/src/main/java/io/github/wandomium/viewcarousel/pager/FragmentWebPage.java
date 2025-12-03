@@ -23,7 +23,6 @@ public class FragmentWebPage extends FragmentBase
     private SwipeRefreshLayout mSwipeRefresh;
     private String mUrl;
 
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,

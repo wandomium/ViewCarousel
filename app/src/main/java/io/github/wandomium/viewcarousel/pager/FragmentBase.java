@@ -22,12 +22,14 @@ public abstract class FragmentBase extends Fragment
     protected int mId;
     protected boolean mCaptureInput = false;
 
+    // TODO: unify this with Page IDs
     public static final int FRAGMENT_NEW_PAGE = 0;
     public static final int FRAGMENT_WEB_PAGE = 1;
-    public static Fragment createFragment(int id, int type) {
-        Fragment f = switch (type) {
+    public static FragmentBase createFragment(int id, int type) {
+        FragmentBase f = switch (type) {
             case FRAGMENT_WEB_PAGE -> new FragmentWebPage();
-            default -> new FragmentNewPage(); //Fragments.TestFragment();
+            case FRAGMENT_NEW_PAGE -> new FragmentNewPage();
+            default -> throw new IllegalArgumentException("Invalid fragment type");
         };
         Bundle args = new Bundle();
         args.putInt(Fragments.ARG_ID, id);
