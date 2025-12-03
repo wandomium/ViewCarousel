@@ -29,10 +29,10 @@ public class CarouselFragmentPager extends FrameLayout
 
     public static final int MAX_VIEWS = 5;
 
-    private static final int PAGE_ID_DISPLAY_MS = 1000;
-
     protected static final int RIGHT_IN = 1;
-    protected static final int LEFT_IN = 2;
+    protected static final int LEFT_IN  = 2;
+
+    private PageIndicator mPageIdDisplay;
 
     // Fragment list
     private FragmentManager mFragmentMngr;
@@ -43,22 +43,12 @@ public class CarouselFragmentPager extends FrameLayout
     }
     private ArrayList<String> mFragmentTags = new ArrayList<>(MAX_VIEWS);
 
-    // Pge id indicator
-    private TextView mPageIdDisplay;
-    private final Handler mHandler = new Handler(Looper.getMainLooper());
-    private final Runnable mPageIdAnimation = new Runnable() {
-        @Override
-        public void run() {
-            mPageIdDisplay.setVisibility(View.GONE);
-        }
-    };
-
-    // Swipe gesture detecotr - previous, next, focus
+    // Swipe gesture detector - previous, next, focus
     private final GestureDetector mGestureDetector;
     private final int cTouchSlop;
     private boolean mSwipeDetected = false;
+    private boolean mCaptureInput  = false;
     private CaptureInputListener mCaptureInputListener;
-    private boolean mCaptureInput = false;
     @FunctionalInterface
     public interface CaptureInputListener {
         void onCaptureInput();
@@ -117,7 +107,6 @@ public class CarouselFragmentPager extends FrameLayout
      */
     @Override
     public void onDetachedFromWindow() {
-        mHandler.removeCallbacks(mPageIdAnimation); // just in case, we don't want this to outlive our view even if it's 'impossible'
         super.onDetachedFromWindow();
     }
 
@@ -165,13 +154,6 @@ public class CarouselFragmentPager extends FrameLayout
             final String msg = "Trying to remove non-existing fragment: " + e.getClass().getSimpleName();
             throw new IllegalArgumentException(msg);
         }
-    }
-
-    public void showPageIndicator() {
-        mHandler.removeCallbacks(mPageIdAnimation);
-        mPageIdDisplay.setText((mCurrentFragment + 1) + "/" + mFragmentTags.size());
-        mPageIdDisplay.setVisibility(View.VISIBLE);
-        mHandler.postDelayed(mPageIdAnimation, PAGE_ID_DISPLAY_MS);
     }
 
     protected void onSwipeLeft() { // == swipe next
@@ -267,7 +249,7 @@ public class CarouselFragmentPager extends FrameLayout
         fTransaction.disallowAddToBackStack();
 
         mCurrentFragment = to;
-        showPageIndicator();
+        mPageIdDisplay.showPageIndicator(mCurrentFragment+1, mFragmentTags.size());
 
         fTransaction.commit();
     }
