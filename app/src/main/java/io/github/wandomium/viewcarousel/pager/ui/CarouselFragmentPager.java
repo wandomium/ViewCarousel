@@ -19,6 +19,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import io.github.wandomium.viewcarousel.R;
 import io.github.wandomium.viewcarousel.pager.FragmentBase;
@@ -123,6 +124,12 @@ public class CarouselFragmentPager extends FrameLayout
         }
     }
 
+
+    // todo - have append fragment to replace this
+    public int currentFragment() {
+        return mCurrentFragment;
+    }
+
     public boolean addFragment(final int position, @NonNull Fragment f) throws IllegalArgumentException {
         if (position < 0 || position >= MAX_VIEWS) {
             final String msg = "Cannot add fragment. Position out of bounds: " + position;
@@ -138,26 +145,90 @@ public class CarouselFragmentPager extends FrameLayout
             mFragmentTags.add(fTag);
         }
         else {
-            mFragmentTags.set(position, fTag);
+            mFragmentTags.add(position, fTag);
         }
 
+        // todo - is commitNow the best thing here?
+        // TODO - have switch to new fragment option and use commitNow in this case
         if (mFragmentTags.size() == 1) {
-            mFragmentMngr.beginTransaction().replace(R.id.fragment_container, f, fTag).commit();
+            mFragmentMngr.beginTransaction().replace(R.id.fragment_container, f, fTag).commitNow();
         }
         else {
-            mFragmentMngr.beginTransaction().add(R.id.fragment_container, f, fTag).hide(f).commit();
+            mFragmentMngr.beginTransaction().add(R.id.fragment_container, f, fTag).hide(f).commitNow();
         }
+
+        // TODO: show the added fragment?? probably
+        Log.d(CLASS_TAG, mFragmentTags.toString());
+        Log.d(CLASS_TAG, mFragmentMngr.getFragments().toString());
         return true;
     }
 
-    public void removeFragment(final int position) throws IllegalArgumentException {
+    public void removeFragment(final int position, boolean removeAndSwitch) throws IllegalArgumentException {
         try {
-            final String fTag = mFragmentTags.remove(position);
-            mFragmentMngr.beginTransaction().remove(mFragmentMngr.findFragmentByTag(fTag)).commit();
+            final String fTag = mFragmentTags.get(position);
+            final Fragment fRemove = mFragmentMngr.findFragmentByTag(fTag);
+            // TODO null checks and commit transaction
+            if (position == mCurrentFragment && removeAndSwitch) {
+                // TODO do we need the commitNow?
+                //mFragmentMngr.beginTransaction().remove().show().commitNow();
+                _switchFragment(mCurrentFragment, _previousFragment(), LEFT_IN, true);
+            }
+            else {
+                mFragmentMngr.beginTransaction().remove(fRemove).commitNow();
+            }
         } catch (IndexOutOfBoundsException | NullPointerException e) {
             final String msg = "Trying to remove non-existing fragment: " + e.getClass().getSimpleName();
             throw new IllegalArgumentException(msg);
         }
+        mFragmentTags.remove(position);
+        Log.d(CLASS_TAG, "Removed, remaining: " + mFragmentTags.toString());
+    }
+
+    public void replaceFragment(final int position, Fragment fNew) throws IllegalArgumentException {
+        try {
+            // TODO null checks and commit transaction
+            final Fragment fRemove = mFragmentMngr.findFragmentByTag(mFragmentTags.get(position));
+            final String fNewTag = _createNewTag();
+            FragmentTransaction fTransaction =
+                mFragmentMngr.beginTransaction().remove(fRemove).add(R.id.fragment_container, fNew, fNewTag);
+            if (position != mCurrentFragment) {
+                fTransaction.hide(fNew);
+            }
+            fTransaction.commitNow();
+            mFragmentTags.set(position, fNewTag);
+        } catch (IndexOutOfBoundsException | NullPointerException e) {
+            final String msg = "Trying to remove non-existing fragment: " + e.getClass().getSimpleName();
+            throw new IllegalArgumentException(msg);
+        }
+        Log.d(CLASS_TAG, "Removed, remaining: " + mFragmentTags.toString());
+    }
+
+
+    private int _previousFragment() {
+        return (mCurrentFragment == 0) ? mFragmentTags.size() - 1 : mCurrentFragment - 1;
+    }
+    private int _nextFragment() {
+        return (mCurrentFragment == mFragmentTags.size() - 1) ? 0 : mCurrentFragment + 1;
+    }
+    public boolean showFragment(final int position) {
+        if (mFragmentMngr.executePendingTransactions()) {
+            // we have pendind transactions. state might not be as expected
+            return false;
+        }
+        int direction;
+        if (position == 0 && mCurrentFragment == mFragmentTags.size() - 1) {
+            direction = LEFT_IN;
+        }
+        else if (position == mFragmentTags.size() - 1 && currentFragment() == 0) {
+            direction = RIGHT_IN;
+        }
+        else {
+            direction = position < mCurrentFragment ? LEFT_IN : RIGHT_IN;
+        }
+
+        _switchFragment(position, direction);
+
+        return true;
     }
 
     protected void onSwipeLeft() { // == swipe next
@@ -232,12 +303,17 @@ public class CarouselFragmentPager extends FrameLayout
         return (FragmentBase) mFragmentMngr.findFragmentByTag(mFragmentTags.get(mCurrentFragment));
     }
     private void _switchFragment(int to, int direction) {
-        _switchFragment(mCurrentFragment, to, direction);
+        _switchFragment(mCurrentFragment, to, direction, false);
     }
-    private void _switchFragment(int from, int to, int direction) {
+    private void _switchFragment(int from, int to, int direction, boolean remove) {
+        Log.d(CLASS_TAG, "switch: " + from + " -> " + to);
+        Log.d(CLASS_TAG, mFragmentTags.toString());
+        // TODO: pop enter animations
         FragmentTransaction fTransaction = mFragmentMngr.beginTransaction();
-        final FragmentBase fFrom = (FragmentBase) mFragmentMngr.findFragmentByTag(mFragmentTags.get(from));
-        final FragmentBase fTo = (FragmentBase) mFragmentMngr.findFragmentByTag(mFragmentTags.get(to));
+        final FragmentBase fFrom = (FragmentBase) Objects.requireNonNull(
+                mFragmentMngr.findFragmentByTag(mFragmentTags.get(from)));
+        final FragmentBase fTo = (FragmentBase) Objects.requireNonNull(
+                mFragmentMngr.findFragmentByTag(mFragmentTags.get(to)));
         switch (direction) {
             case RIGHT_IN -> fTransaction.setCustomAnimations(
                     R.anim.slide_in_right, R.anim.slide_out_left);
@@ -246,7 +322,11 @@ public class CarouselFragmentPager extends FrameLayout
             default -> throw new IllegalArgumentException(
                     "Unknown transition direction");
         }
-        fTransaction.hide(fFrom);
+        if (remove) {
+            fTransaction.remove(fFrom);
+        } else {
+            fTransaction.hide(fFrom);
+        }
         fFrom.onHide();
         fTransaction.show(fTo);
         fFrom.onShow();
@@ -255,6 +335,6 @@ public class CarouselFragmentPager extends FrameLayout
         mCurrentFragment = to;
         mPageIdDisplay.showPageIndicator(mCurrentFragment+1, mFragmentTags.size());
 
-        fTransaction.commit();
+        fTransaction.commitNow();
     }
 }

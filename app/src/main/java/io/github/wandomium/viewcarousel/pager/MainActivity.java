@@ -1,7 +1,12 @@
 package io.github.wandomium.viewcarousel.pager;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -50,6 +55,29 @@ public class MainActivity extends AppCompatActivity
         _loadPages();
     }
 
+    @Override
+    protected void onPause() {
+        Page.savePages(this, mPages);
+        super.onPause();
+    }
+
+    public void onMenuBtnClicked(View view) {
+//        findViewById(R.id.menu_btn).setOnClickListener((v)->openOptionsMenu());
+        PopupMenu menu = new PopupMenu(MainActivity.this, view);
+        menu.getMenuInflater().inflate(R.menu.main_menu, menu.getMenu());
+        menu.setOnMenuItemClickListener(this::_handleMenuSelection);
+        menu.show();
+    }
+
+    public void onCallBtnClicked(View v) {
+        Intent dialIntent = new Intent(Intent.ACTION_DIAL);
+        dialIntent.setData(Uri.parse("tel:"));
+        startActivity(dialIntent);
+//        if (dialIntent.resolveActivity(getPackageManager()) != null) {
+//            startActivity(dialIntent);
+//        }
+    }
+
     private void _loadPages() {
         mPages = Page.loadPages(this);
         Log.d(CLASS_TAG, "mPages is null: " + (mPages == null));
@@ -72,10 +100,33 @@ public class MainActivity extends AppCompatActivity
 
     private void _addNewPageFragment(int idx) {
         mFNewPageIdx = idx;
-        mFNewPage = (FragmentNewPage) FragmentBase.createFragment(0, FragmentBase.FRAGMENT_NEW_PAGE);
-        mFPager.addFragment(0, mFNewPage);
-        mFNewPage.setPageConfigredCb((page) -> {
-            Log.d(CLASS_TAG, MainActivity.this.mPages.toString() + " is null " + (mPages == null));
+        mFNewPage = (FragmentNewPage) FragmentBase.createFragment(mFNewPageIdx, FragmentBase.FRAGMENT_NEW_PAGE);
+        mFPager.addFragment(mFNewPageIdx, mFNewPage);
+        mFNewPage.setPageConfigredCb(new PageConfiguredCb());
+        mFPager.showFragment(mFNewPageIdx);
+    }
+
+    /** @noinspection SameReturnValue*/
+    private boolean _handleMenuSelection(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_add_page) {
+            _addNewPageFragment(mFPager.currentFragment() + 1);
+        } else if (id == R.id.action_remove_page) {
+            mFPager.removeFragment(mFPager.currentFragment(), false);
+            mFPager.showFragment(mFPager.currentFragment());
+        }
+        else if (id == R.id.action_enter_pip) {
+            _showUnsupportedActionToast();
+//            _enterPipMode();
+        }
+
+        return true;
+    }
+
+    private class PageConfiguredCb implements FragmentNewPage.PageConfiguredCb {
+        @Override
+        public void onPageConfigured(Page page) {
             // TODO support contacts
             FragmentBase fBase = null;
             switch (page.page_type) {
@@ -85,19 +136,24 @@ public class MainActivity extends AppCompatActivity
                     ((FragmentWebPage) fBase).setUrl(page.url);
                 }
                 case Page.PAGE_TYPE_CONTACTS -> {
-                    Toast.makeText(MainActivity.this, "UNSUPPORTED FRAGMENT TYPE", Toast.LENGTH_LONG).show();
+                    _showUnsupportedActionToast();
                 }
                 default -> {} //keep the fragment
             }
             if (fBase != null) {
-                MainActivity.this.mPages.add(page);
+                MainActivity.this.mPages.add(page); //todo!! arrange correctly
                 // replace new page with selected page
-                mFPager.removeFragment(mFNewPageIdx);
-                mFPager.addFragment(mFNewPageIdx, fBase);
+                mFPager.replaceFragment(mFNewPageIdx, fBase);
+                // clear new page
+                mFNewPage.setPageConfigredCb(null);
                 mFNewPage = null;
                 mFNewPageIdx = -1;
             }
-        });
+        }
+    }
+
+    private void _showUnsupportedActionToast() {
+        Toast.makeText(this, "Unsupported action", Toast.LENGTH_LONG).show();
     }
 
     private void _loadDummyPages() {
@@ -110,39 +166,5 @@ public class MainActivity extends AppCompatActivity
         FragmentWebPage wp = (FragmentWebPage) FragmentBase.createFragment(i, FragmentBase.FRAGMENT_WEB_PAGE);
         wp.setUrl("https://archlinux.org");
         mFPager.addFragment(i++, wp);
-    }
-
-    @Override
-    protected void onPause() {
-        Page.savePages(this, mPages);
-        super.onPause();
-    }
-
-    private class PageConfiguredCb implements FragmentNewPage.PageConfiguredCb {
-        @Override
-        public void onPageConfigured(Page page) {
-            Log.d(CLASS_TAG, MainActivity.this.mPages.toString() + " is null " + (mPages == null));
-            // TODO support contacts
-            FragmentBase fBase = null;
-            switch (page.page_type) {
-                case Page.PAGE_TYPE_WEB -> {
-                    fBase = FragmentBase.createFragment(mFNewPageIdx, FragmentBase.FRAGMENT_WEB_PAGE);
-                    // todo set refreshRate
-                    ((FragmentWebPage) fBase).setUrl(page.url);
-                }
-                case Page.PAGE_TYPE_CONTACTS -> {
-                    Toast.makeText(MainActivity.this, "UNSUPPORTED FRAGMENT TYPE", Toast.LENGTH_LONG).show();
-                }
-                default -> {} //keep the fragment
-            }
-            if (fBase != null) {
-                MainActivity.this.mPages.add(page);
-                // replace new page with selected page
-                mFPager.removeFragment(mFNewPageIdx);
-                mFPager.addFragment(mFNewPageIdx, fBase);
-                mFNewPage = null;
-                mFNewPageIdx = -1;
-            }
-        }
     }
 }
