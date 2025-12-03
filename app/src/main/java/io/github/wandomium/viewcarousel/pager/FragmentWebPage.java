@@ -66,6 +66,7 @@ public class FragmentWebPage extends FragmentBase
     public void captureInput(boolean capture) {
         super.captureInput(capture);
         mWebPage.captureInput(capture);
+        mSwipeRefresh.setEnabled(!capture);
     }
 
     @Override
