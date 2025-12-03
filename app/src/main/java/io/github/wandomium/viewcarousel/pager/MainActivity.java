@@ -144,8 +144,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.action_add_page) {
             _addNewPageFragment(mFPager.currentFragment() + 1);
         } else if (id == R.id.action_remove_page) {
-            mFPager.removeFragment(mFPager.currentFragment(), false);
-            mFPager.showFragment(mFPager.currentFragment());
+            mFPager.removeFragment(mFPager.currentFragment());
         }
         else if (id == R.id.action_enter_pip) {
             _enterPipMode();

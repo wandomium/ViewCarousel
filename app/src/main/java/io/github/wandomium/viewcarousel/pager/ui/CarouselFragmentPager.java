@@ -163,12 +163,12 @@ public class CarouselFragmentPager extends FrameLayout
         return true;
     }
 
-    public void removeFragment(final int position, boolean removeAndSwitch) throws IllegalArgumentException {
+    public void removeFragment(final int position) throws IllegalArgumentException {
         try {
             final String fTag = mFragmentTags.get(position);
             final Fragment fRemove = mFragmentMngr.findFragmentByTag(fTag);
             // TODO null checks and commit transaction
-            if (position == mCurrentFragment && removeAndSwitch) {
+            if (position == mCurrentFragment) {
                 // TODO do we need the commitNow?
                 //mFragmentMngr.beginTransaction().remove().show().commitNow();
                 _switchFragment(mCurrentFragment, _previousFragment(), LEFT_IN, true);
