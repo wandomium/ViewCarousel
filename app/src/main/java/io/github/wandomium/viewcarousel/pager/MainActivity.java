@@ -40,6 +40,8 @@ public class MainActivity extends AppCompatActivity
         // capture and release focus
         mFPager.setCaptureInputListener(() -> {
             mBackPressedCb.setEnabled(true);
+            findViewById(R.id.menu_btn).setVisibility(View.GONE);
+            findViewById(R.id.call_btn).setVisibility(View.GONE);
             Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
         });
         mBackPressedCb = new OnBackPressedCallback(false) {
@@ -47,6 +49,8 @@ public class MainActivity extends AppCompatActivity
             public void handleOnBackPressed() {
                 mFPager.captureInput(false);
                 setEnabled(false); // system handled back gesture
+                findViewById(R.id.menu_btn).setVisibility(View.VISIBLE);
+                findViewById(R.id.call_btn).setVisibility(View.VISIBLE);
                 Toast.makeText(MainActivity.this, "RELEASE", Toast.LENGTH_SHORT).show();
             }
         };
