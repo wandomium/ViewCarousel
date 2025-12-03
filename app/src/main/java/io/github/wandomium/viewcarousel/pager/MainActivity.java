@@ -1,15 +1,19 @@
 package io.github.wandomium.viewcarousel.pager;
 
+import android.app.PictureInPictureParams;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Rational;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
@@ -65,6 +69,20 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
     }
 
+    // auto enter pip mode
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        _enterPipMode();
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPipMode, @NonNull Configuration newConfig) {
+        super.onPictureInPictureModeChanged(isInPipMode, newConfig);
+        findViewById(R.id.menu_btn).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
+        findViewById(R.id.call_btn).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
+    }
+
     public void onMenuBtnClicked(View view) {
 //        findViewById(R.id.menu_btn).setOnClickListener((v)->openOptionsMenu());
         PopupMenu menu = new PopupMenu(MainActivity.this, view);
@@ -110,6 +128,15 @@ public class MainActivity extends AppCompatActivity
         mFPager.showFragment(mFNewPageIdx);
     }
 
+    private void _enterPipMode() {
+        Rational ratio = new Rational(9, 12);
+        PictureInPictureParams params = new PictureInPictureParams.Builder()
+                .setAspectRatio(ratio)
+                .setSeamlessResizeEnabled(true)
+                .build();
+        enterPictureInPictureMode(params);
+    }
+
     /** @noinspection SameReturnValue*/
     private boolean _handleMenuSelection(MenuItem item) {
         int id = item.getItemId();
@@ -121,8 +148,7 @@ public class MainActivity extends AppCompatActivity
             mFPager.showFragment(mFPager.currentFragment());
         }
         else if (id == R.id.action_enter_pip) {
-            _showUnsupportedActionToast();
-//            _enterPipMode();
+            _enterPipMode();
         }
 
         return true;
