@@ -1,8 +1,6 @@
 package io.github.wandomium.viewcarousel.pager.ui;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -11,7 +9,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -46,8 +43,7 @@ public class CarouselFragmentPager extends FrameLayout
 
     // Swipe gesture detector - previous, next, focus
     private final GestureDetector mGestureDetector;
-    private final int cTouchSlop;
-    private boolean mSwipeDetected = false;
+    private final SwipeDetectorListener mSwipeDetectorListener;
     private boolean mCaptureInput  = false;
     private CaptureInputListener mCaptureInputListener;
     @FunctionalInterface
@@ -61,9 +57,16 @@ public class CarouselFragmentPager extends FrameLayout
         LayoutInflater inflater = LayoutInflater.from(context);
         View v = inflater.inflate(R.layout.carousel_fragment_pager, this,true);
 
-        cTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mPageIdDisplay = v.findViewById(R.id.page_indicator);
-        mGestureDetector = new GestureDetector(context, new HorizontalSwipeListener());
+        mSwipeDetectorListener = new SwipeDetectorListener(
+            ViewConfiguration.get(context).getScaledTouchSlop(), (direction) -> {
+                switch (direction) {
+                    case SwipeDetectorListener.SWIPE_LEFT -> _switchFragment(_nextFragment(), RIGHT_IN);
+                    case SwipeDetectorListener.SWIPE_RIGHT -> _switchFragment(_previousFragment(), LEFT_IN);
+                    case SwipeDetectorListener.SWIPE_UP -> captureInput(true);
+                }
+        });
+        mGestureDetector = new GestureDetector(getContext(), mSwipeDetectorListener);
     }
 
     public void setFragmentManager(@NonNull FragmentManager fMngr) {
@@ -93,7 +96,7 @@ public class CarouselFragmentPager extends FrameLayout
 //                if (mSwipeDetected) return true; // consume. events are dispatched to onTouchEvent
 //            }
 //        }
-        if (ev.getAction() == MotionEvent.ACTION_MOVE && mSwipeDetected) {
+        if (ev.getAction() == MotionEvent.ACTION_MOVE && mSwipeDetectorListener.swipeInProcess()) {
             return true;
         }
         else {
@@ -124,38 +127,30 @@ public class CarouselFragmentPager extends FrameLayout
         }
     }
 
-
     // todo - have append fragment to replace this
     public int currentFragment() {
         return mCurrentFragment;
     }
 
     public boolean addFragment(final int position, @NonNull Fragment f) throws IllegalArgumentException {
-        if (position < 0 || position >= MAX_VIEWS) {
-            final String msg = "Cannot add fragment. Position out of bounds: " + position;
-            throw new IllegalArgumentException(msg);
-        }
         if (mFragmentTags.size() >= MAX_VIEWS) {
             final String msg = "Cannot at fragment. Max view limit reached: " + MAX_VIEWS;
             throw new IllegalArgumentException(msg);
         }
+        if (position < 0 || position > mFragmentTags.size()) {
+            final String msg = "Cannot add fragment. Invalid position: " + position + " of total " + mFragmentTags.size();
+            throw new IllegalArgumentException(msg);
+        }
 
         final String fTag = _createNewTag();
-        if (position == mFragmentTags.size()) {
-            mFragmentTags.add(fTag);
-        }
-        else {
-            mFragmentTags.add(position, fTag);
-        }
+        mFragmentTags.add(position, fTag);
 
-        // todo - is commitNow the best thing here?
-        // TODO - have switch to new fragment option and use commitNow in this case
-        if (mFragmentTags.size() == 1) {
-            mFragmentMngr.beginTransaction().replace(R.id.fragment_container, f, fTag).commitNow();
+        FragmentTransaction fTransaction = mFragmentMngr.beginTransaction().add(R.id.fragment_container, f, fTag);
+        if (mFragmentTags.size() > 1) {
+            fTransaction.hide(f);
         }
-        else {
-            mFragmentMngr.beginTransaction().add(R.id.fragment_container, f, fTag).hide(f).commitNow();
-        }
+        // use commitNow so that fragments are immediately available
+        fTransaction.commitNow();
 
         // TODO: show the added fragment?? probably
         Log.d(CLASS_TAG, mFragmentTags.toString());
@@ -165,15 +160,12 @@ public class CarouselFragmentPager extends FrameLayout
 
     public void removeFragment(final int position) throws IllegalArgumentException {
         try {
-            final String fTag = mFragmentTags.get(position);
-            final Fragment fRemove = mFragmentMngr.findFragmentByTag(fTag);
-            // TODO null checks and commit transaction
             if (position == mCurrentFragment) {
-                // TODO do we need the commitNow?
-                //mFragmentMngr.beginTransaction().remove().show().commitNow();
                 _switchFragment(mCurrentFragment, _previousFragment(), LEFT_IN, true);
             }
             else {
+                // TODO do we need the commitNow? probably not for remove
+                final Fragment fRemove = mFragmentMngr.findFragmentByTag(mFragmentTags.get(position));
                 mFragmentMngr.beginTransaction().remove(fRemove).commitNow();
             }
         } catch (IndexOutOfBoundsException | NullPointerException e) {
@@ -186,13 +178,12 @@ public class CarouselFragmentPager extends FrameLayout
 
     public void replaceFragment(final int position, Fragment fNew) throws IllegalArgumentException {
         try {
-            // TODO null checks and commit transaction
             final Fragment fRemove = mFragmentMngr.findFragmentByTag(mFragmentTags.get(position));
             final String fNewTag = _createNewTag();
             FragmentTransaction fTransaction =
                 mFragmentMngr.beginTransaction().remove(fRemove).add(R.id.fragment_container, fNew, fNewTag);
             if (position != mCurrentFragment) {
-                fTransaction.hide(fNew);
+                fTransaction.hide(fNew); // if replacing at current position, keep fragment visible
             }
             fTransaction.commitNow();
             mFragmentTags.set(position, fNewTag);
@@ -203,13 +194,6 @@ public class CarouselFragmentPager extends FrameLayout
         Log.d(CLASS_TAG, "Removed, remaining: " + mFragmentTags.toString());
     }
 
-
-    private int _previousFragment() {
-        return (mCurrentFragment == 0) ? mFragmentTags.size() - 1 : mCurrentFragment - 1;
-    }
-    private int _nextFragment() {
-        return (mCurrentFragment == mFragmentTags.size() - 1) ? 0 : mCurrentFragment + 1;
-    }
     public boolean showFragment(final int position) {
         if (mFragmentMngr.executePendingTransactions()) {
             // we have pendind transactions. state might not be as expected
@@ -219,7 +203,7 @@ public class CarouselFragmentPager extends FrameLayout
         if (position == 0 && mCurrentFragment == mFragmentTags.size() - 1) {
             direction = LEFT_IN;
         }
-        else if (position == mFragmentTags.size() - 1 && currentFragment() == 0) {
+        else if (position == mFragmentTags.size() - 1 && mCurrentFragment == 0) {
             direction = RIGHT_IN;
         }
         else {
@@ -231,73 +215,12 @@ public class CarouselFragmentPager extends FrameLayout
         return true;
     }
 
-    protected void onSwipeLeft() { // == swipe next
-        final int to = (mCurrentFragment == mFragmentTags.size() - 1) ? 0 : mCurrentFragment+1;
-        _switchFragment(to, RIGHT_IN);
+    private int _previousFragment() {
+        return (mCurrentFragment == 0) ? mFragmentTags.size() - 1 : mCurrentFragment - 1;
     }
-
-    protected void onSwipeRight() {
-        final int to = (mCurrentFragment == 0) ? mFragmentTags.size() - 1 : mCurrentFragment-1;
-        _switchFragment(to, LEFT_IN);
+    private int _nextFragment() {
+        return (mCurrentFragment == mFragmentTags.size() - 1) ? 0 : mCurrentFragment + 1;
     }
-
-    protected void onSwipeUp() {
-        Log.d(CLASS_TAG, "onSwipeUp");
-        captureInput(true);
-    }
-
-    private class HorizontalSwipeListener extends GestureDetector.SimpleOnGestureListener
-    {
-        private static final int SWIPE_DISTANCE_THRESHOLD = 100;
-        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
-
-        @Override
-        public boolean onDown(@NonNull MotionEvent ev) {
-            mSwipeDetected = false;
-            return true;
-        }
-
-        @Override
-        public boolean onScroll(MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
-            if (!mSwipeDetected) {
-                final float absDiffX = Math.abs(e2.getX() - e1.getX());
-                final float diffY = e2.getY() - e1.getY();
-                final float absDiffY = Math.abs(diffY);
-
-                if ((absDiffY > cTouchSlop && diffY < 0 ) || // upwards swipe
-                    (absDiffX > cTouchSlop && absDiffX > absDiffY)) // horizontal swipe
-                {
-                    mSwipeDetected = true;
-                    return true;
-                }
-            }
-            return mSwipeDetected; // If already intercepting, continue consuming.
-        }
-
-        @Override
-        public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
-            if (mSwipeDetected) {
-                final float diffX = e2.getX() - e1.getX();
-                final float diffY = e2.getY() - e1.getY();
-
-                if (Math.abs(diffX) > SWIPE_DISTANCE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffX > 0) { onSwipeRight(); }
-                    else { onSwipeLeft(); }
-                    mSwipeDetected = false; // Reset after handling
-                    return true;
-                }
-                else if (diffY < 0 && velocityY < 0) {
-                    if (Math.abs(diffY) > SWIPE_DISTANCE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                        onSwipeUp();
-                        mSwipeDetected = false;
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-    }
-
     private FragmentBase _getCurrentFragment() {
         // O(N) lookup but we have < 10 fragments
         return (FragmentBase) mFragmentMngr.findFragmentByTag(mFragmentTags.get(mCurrentFragment));
@@ -333,8 +256,10 @@ public class CarouselFragmentPager extends FrameLayout
         fTransaction.disallowAddToBackStack();
 
         mCurrentFragment = to;
+        // TODO bug here in page indicator when removing fragment
         mPageIdDisplay.showPageIndicator(mCurrentFragment+1, mFragmentTags.size());
 
+        // TODO: we probably don't need commitNow here. only when adding new fragments
         fTransaction.commitNow();
     }
 }

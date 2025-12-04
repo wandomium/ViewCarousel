@@ -139,12 +139,14 @@ public class MainActivity extends AppCompatActivity
 
     /** @noinspection SameReturnValue*/
     private boolean _handleMenuSelection(MenuItem item) {
-        int id = item.getItemId();
+        final int id = item.getItemId();
+        final int currentFragmentId = mFPager.currentFragment();
 
         if (id == R.id.action_add_page) {
-            _addNewPageFragment(mFPager.currentFragment() + 1);
+            _addNewPageFragment(currentFragmentId + 1);
         } else if (id == R.id.action_remove_page) {
-            mFPager.removeFragment(mFPager.currentFragment());
+            mPages.remove(currentFragmentId);
+            mFPager.removeFragment(currentFragmentId);
         }
         else if (id == R.id.action_enter_pip) {
             _enterPipMode();
