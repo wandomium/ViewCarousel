@@ -256,8 +256,11 @@ public class CarouselFragmentPager extends FrameLayout
         fTransaction.disallowAddToBackStack();
 
         mCurrentFragment = to;
-        // TODO bug here in page indicator when removing fragment
-        mPageIdDisplay.showPageIndicator(mCurrentFragment+1, mFragmentTags.size());
+        int numpPages = mFragmentTags.size();
+        if (remove) {
+            numpPages--;
+        }
+        mPageIdDisplay.showPageIndicator(mCurrentFragment+1, numpPages);
 
         // TODO: we probably don't need commitNow here. only when adding new fragments
         fTransaction.commitNow();
