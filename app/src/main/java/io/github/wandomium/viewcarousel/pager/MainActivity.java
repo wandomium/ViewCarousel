@@ -123,7 +123,12 @@ public class MainActivity extends AppCompatActivity
     private void _addNewPageFragment(int idx) {
         mFNewPageIdx = idx;
         mFNewPage = (FragmentNewPage) FragmentBase.createFragment(mFNewPageIdx, FragmentBase.FRAGMENT_NEW_PAGE);
-        mFPager.addFragment(mFNewPageIdx, mFNewPage);
+        try {
+            mFPager.addFragment(mFNewPageIdx, mFNewPage);
+        } catch (IllegalArgumentException ignored) {
+            Toast.makeText(MainActivity.this, "Max page limit reached", Toast.LENGTH_LONG).show();
+        }
+        mPages.add(idx, null); //blank page. not exported but we need it for index
         mFNewPage.setPageConfigredCb(new PageConfiguredCb());
         mFPager.showFragment(mFNewPageIdx);
     }
