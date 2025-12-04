@@ -2,6 +2,8 @@ package io.github.wandomium.viewcarousel.pager;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,12 +17,27 @@ import androidx.annotation.Nullable;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import io.github.wandomium.viewcarousel.R;
+import io.github.wandomium.viewcarousel.pager.data.Page;
 
 public class FragmentWebPage extends FragmentBase
 {
     private WebView mWebView;
     private SwipeRefreshLayout mSwipeRefresh;
     private String mUrl;
+
+    private static final long TIME_UNITS = 1000L * 60L;
+    private int mRefreshRate = 0;
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mRefreshRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mRefreshRate > 0) {
+                mWebView.reload();
+                mHandler.postDelayed(this, mRefreshRate * TIME_UNITS);
+            }
+        }
+    };
+
 
     @Nullable
     @Override
@@ -75,18 +92,27 @@ public class FragmentWebPage extends FragmentBase
     public void onShow() {
         super.onShow();
         if (mWebView.getUrl() == null) { loadUrl(mUrl); }
+        else {
+            mHandler.post(mRefreshRunnable);
+        }
 //        else { mWebPage.reload(); }
+    }
+
+    @Override
+    public void onHide() {
+        super.onHide();
+        mHandler.removeCallbacks(mRefreshRunnable);
     }
 
     @Override
     public void onDestroy() {
         // stop any activities that could outlive this fragment and keep dangling references
+        mHandler.removeCallbacks(mRefreshRunnable);
         super.onDestroy();
     }
 
-    public void setUrl(final String url) {
-        mUrl = url;
-    }
+    public void setmRefreshRate(int rate) { mRefreshRate = rate;}
+    public void setUrl(final String url) { mUrl = url; }
 
     public void loadUrl(final String url) {
         mWebView.loadUrl(url);

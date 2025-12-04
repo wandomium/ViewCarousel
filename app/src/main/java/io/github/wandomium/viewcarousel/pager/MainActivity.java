@@ -69,6 +69,12 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
     }
 
+    @Override
+    public void onDestroy() {
+        Page.savePages(this, mPages);
+        super.onDestroy();
+    }
+
     // auto enter pip mode
     @Override
     protected void onUserLeaveHint() {
@@ -111,6 +117,7 @@ public class MainActivity extends AppCompatActivity
                 FragmentWebPage fWp = (FragmentWebPage) FragmentBase
                         .createFragment(idx, FragmentBase.FRAGMENT_WEB_PAGE);
                 fWp.setUrl(page.url);
+                fWp.setmRefreshRate(page.refresh_rate);
                 mFPager.addFragment(idx, fWp);
             }
         }
