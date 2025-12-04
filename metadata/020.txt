@@ -1,0 +1,7 @@
+[] nredi konfigurabilno ali imas btns ali ne
+[] implementiraj calls page
+[] podpri multiple konfiguracije
+
+low:
+[] user manual on first run
+[] remove unused code
