@@ -13,7 +13,7 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
 
 
     private static final int SWIPE_DISTANCE_THRESHOLD = 100;
-    private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+    private static final int SWIPE_VELOCITY_THRESHOLD = 20;
 
     private final int cTouchSlop;
     private final SwipeCallback mSwipeCb;

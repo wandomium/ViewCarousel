@@ -181,7 +181,7 @@ public class CarouselFragmentPager extends FrameLayout
             throw new IllegalArgumentException(msg);
         }
         mFragmentTags.remove(position);
-        Log.d(CLASS_TAG, "Removed, remaining: " + mFragmentTags.toString());
+        Log.d(CLASS_TAG, "Removed, remaining: " + mFragmentTags.toString() + " current=" + mCurrentFragment);
     }
 
     public void replaceFragment(final int position, Fragment fNew) throws IllegalArgumentException {
@@ -236,7 +236,7 @@ public class CarouselFragmentPager extends FrameLayout
     private void _switchFragment(int to, int direction) {
         _switchFragment(mCurrentFragment, to, direction, false);
     }
-    private void _switchFragment(int from, int to, int direction, boolean remove) {
+    private void _switchFragment(int from, int to, int direction, boolean inPlace) {
         Log.d(CLASS_TAG, "switch: " + from + " -> " + to);
         Log.d(CLASS_TAG, mFragmentTags.toString());
         // TODO: pop enter animations
@@ -253,7 +253,7 @@ public class CarouselFragmentPager extends FrameLayout
             default -> throw new IllegalArgumentException(
                     "Unknown transition direction");
         }
-        if (remove) {
+        if (inPlace) {
             fTransaction.remove(fFrom);
         } else {
             fTransaction.hide(fFrom);
@@ -263,9 +263,9 @@ public class CarouselFragmentPager extends FrameLayout
         fFrom.onShow();
         fTransaction.disallowAddToBackStack();
 
-        mCurrentFragment = to;
+        mCurrentFragment = inPlace ? from : to; //if we did an inplace switch, the current one stays
         int numpPages = mFragmentTags.size();
-        if (remove) {
+        if (inPlace) {
             numpPages--;
         }
         mPageIdDisplay.showPageIndicator(mCurrentFragment+1, numpPages);

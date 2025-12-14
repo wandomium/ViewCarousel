@@ -25,7 +25,6 @@ import androidx.fragment.app.FragmentActivity;
 
 import java.util.ArrayList;
 
-import io.github.wandomium.viewcarousel.Page_old;
 import io.github.wandomium.viewcarousel.R;
 import io.github.wandomium.viewcarousel.pager.data.Page;
 import io.github.wandomium.viewcarousel.pager.ui.CarouselFragmentPager;
@@ -92,6 +91,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
+        Page.savePages(this, mPages);
         _enterPipMode();
     }
 
@@ -103,6 +103,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void addContactBtnClicked(View v) {
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, 333);
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
         mContactPickerLauncher.launch(intent);
@@ -195,9 +196,10 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(this, "New page already exsists at index: " + mFNewPageIdx, Toast.LENGTH_LONG).show();
             }
         } else if (id == R.id.action_remove_page) {
-            Log.d(CLASS_TAG, mPages.toString() + "  " + currentFragmentId);
+            Log.d(CLASS_TAG, "Remove: " + mPages.toString() + "  " + currentFragmentId);
             mPages.remove(currentFragmentId);
             if (mPages.isEmpty()) {
+                // replace current fragment with new one
                 _addNewPageFragment(0, true);
             }
             else {
