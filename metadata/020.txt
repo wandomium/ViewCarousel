@@ -1,5 +1,5 @@
 [] nredi konfigurabilno ali imas btns ali ne
-[] implementiraj calls page
+[x] implementiraj calls page
 [] podpri multiple konfiguracije
 
 bugfix:

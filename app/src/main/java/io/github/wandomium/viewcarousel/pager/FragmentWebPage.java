@@ -23,6 +23,7 @@ public class FragmentWebPage extends FragmentBase
 {
     private WebView mWebView;
     private SwipeRefreshLayout mSwipeRefresh;
+    private View mBlockerView;
     private String mUrl;
 
     private static final long TIME_UNITS = 1000L * 60L;
@@ -51,6 +52,7 @@ public class FragmentWebPage extends FragmentBase
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mSwipeRefresh = view.findViewById(R.id.swipe_refresh);
         mWebView = view.findViewById(R.id.web_view);
+        mBlockerView = view.findViewById(R.id.web_view_blocker);
 
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setDomStorageEnabled(true);
@@ -84,6 +86,7 @@ public class FragmentWebPage extends FragmentBase
     @Override
     public void captureInput(boolean capture) {
         super.captureInput(capture);
+        mBlockerView.setVisibility(capture ? View.GONE : View.VISIBLE);
         mWebView.setEnabled(capture);
         mSwipeRefresh.setEnabled(!capture);
     }
@@ -91,7 +94,7 @@ public class FragmentWebPage extends FragmentBase
     @Override
     public void updateData(Page page) {
         setUrl(page.url);
-        setmRefreshRate(page.refresh_rate);
+        setRefreshRate(page.refresh_rate);
     }
 
     @Override
@@ -117,7 +120,7 @@ public class FragmentWebPage extends FragmentBase
         super.onDestroy();
     }
 
-    public void setmRefreshRate(int rate) { mRefreshRate = rate;}
+    public void setRefreshRate(int rate) { mRefreshRate = rate;}
     public void setUrl(final String url) { mUrl = url; }
 
     public void loadUrl(final String url) {

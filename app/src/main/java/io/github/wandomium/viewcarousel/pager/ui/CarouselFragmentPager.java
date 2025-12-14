@@ -257,7 +257,6 @@ public class CarouselFragmentPager extends FrameLayout
             fTransaction.remove(fFrom);
         } else {
             fTransaction.hide(fFrom);
-            mCurrentFragment = to;
         }
         fFrom.onHide();
         fTransaction.show(fTo);
@@ -265,6 +264,7 @@ public class CarouselFragmentPager extends FrameLayout
         fTransaction.disallowAddToBackStack();
 
         int numpPages = mFragmentTags.size();
+        mCurrentFragment = to;
         if (replaceCurrent) {
             numpPages--;
         }

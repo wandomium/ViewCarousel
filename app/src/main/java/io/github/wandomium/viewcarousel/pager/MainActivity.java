@@ -198,6 +198,9 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.action_remove_page) {
             Log.d(CLASS_TAG, "Remove: " + mPages.toString() + "  " + currentFragmentId);
             mPages.remove(currentFragmentId);
+            if (currentFragmentId == mFNewPageIdx) {
+                _clearNewPage();
+            }
             if (mPages.isEmpty()) {
                 // replace current fragment with new one
                 _addNewPageFragment(0, true);
@@ -243,6 +246,12 @@ public class MainActivity extends AppCompatActivity
                 });
     }
 
+    private void _clearNewPage() {
+        mFNewPage.setPageConfigredCb(null);
+        mFNewPage = null;
+        mFNewPageIdx = NEW_PAGE_IDX_NONE;
+    }
+
     private class PageConfiguredCb implements FragmentNewPage.PageConfiguredCb {
         @Override
         public void onPageConfigured(Page page) {
@@ -266,9 +275,7 @@ public class MainActivity extends AppCompatActivity
                 // replace new page with selected page
                 mFPager.replaceFragment(mFNewPageIdx, fBase);
                 // clear new page
-                mFNewPage.setPageConfigredCb(null);
-                mFNewPage = null;
-                mFNewPageIdx = NEW_PAGE_IDX_NONE;
+                _clearNewPage();
             }
         }
     }
