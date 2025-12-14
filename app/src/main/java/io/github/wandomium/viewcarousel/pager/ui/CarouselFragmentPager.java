@@ -28,8 +28,9 @@ public class CarouselFragmentPager extends FrameLayout
 
     public static final int MAX_VIEWS = 5;
 
-    protected static final int RIGHT_IN = 1;
-    protected static final int LEFT_IN  = 2;
+    protected enum Direction {
+        RIGHT_IN, LEFT_IN
+    }
 
     private PageIndicator mPageIdDisplay;
 
@@ -62,8 +63,8 @@ public class CarouselFragmentPager extends FrameLayout
         mSwipeDetectorListener = new SwipeDetectorListener(
             ViewConfiguration.get(context).getScaledTouchSlop(), (direction) -> {
                 switch (direction) {
-                    case SwipeDetectorListener.SWIPE_LEFT -> _switchFragment(_nextFragment(), RIGHT_IN);
-                    case SwipeDetectorListener.SWIPE_RIGHT -> _switchFragment(_previousFragment(), LEFT_IN);
+                    case SwipeDetectorListener.SWIPE_LEFT -> _switchFragment(_nextFragment(), Direction.RIGHT_IN, false);
+                    case SwipeDetectorListener.SWIPE_RIGHT -> _switchFragment(_previousFragment(), Direction.LEFT_IN, false);
                     case SwipeDetectorListener.SWIPE_UP -> captureInput(true);
                 }
         });
@@ -169,7 +170,7 @@ public class CarouselFragmentPager extends FrameLayout
     public void removeFragment(final int position) throws IllegalArgumentException {
         try {
             if (position == mCurrentFragment) {
-                _switchFragment(mCurrentFragment, _previousFragment(), LEFT_IN, true);
+                _switchFragment(_previousFragment(), Direction.LEFT_IN, true);
             }
             else {
                 // TODO do we need the commitNow? probably not for remove
@@ -207,18 +208,18 @@ public class CarouselFragmentPager extends FrameLayout
             // we have pendind transactions. state might not be as expected
             return false;
         }
-        int direction;
+        Direction direction;
         if (position == 0 && mCurrentFragment == mFragmentTags.size() - 1) {
-            direction = LEFT_IN;
+            direction = Direction.LEFT_IN;
         }
         else if (position == mFragmentTags.size() - 1 && mCurrentFragment == 0) {
-            direction = RIGHT_IN;
+            direction = Direction.RIGHT_IN;
         }
         else {
-            direction = position < mCurrentFragment ? LEFT_IN : RIGHT_IN;
+            direction = position < mCurrentFragment ? Direction.LEFT_IN : Direction.RIGHT_IN;
         }
 
-        _switchFragment(position, direction);
+        _switchFragment(position, direction, false);
 
         return true;
     }
@@ -233,16 +234,14 @@ public class CarouselFragmentPager extends FrameLayout
         // O(N) lookup but we have < 10 fragments
         return (FragmentBase) mFragmentMngr.findFragmentByTag(mFragmentTags.get(mCurrentFragment));
     }
-    private void _switchFragment(int to, int direction) {
-        _switchFragment(mCurrentFragment, to, direction, false);
-    }
-    private void _switchFragment(int from, int to, int direction, boolean inPlace) {
-        Log.d(CLASS_TAG, "switch: " + from + " -> " + to);
+
+    private void _switchFragment(int to, Direction direction, boolean replaceCurrent) {
+        Log.d(CLASS_TAG, "switch: " + mCurrentFragment + " -> " + to);
         Log.d(CLASS_TAG, mFragmentTags.toString());
         // TODO: pop enter animations
         FragmentTransaction fTransaction = mFragmentMngr.beginTransaction();
         final FragmentBase fFrom = (FragmentBase) Objects.requireNonNull(
-                mFragmentMngr.findFragmentByTag(mFragmentTags.get(from)));
+                mFragmentMngr.findFragmentByTag(mFragmentTags.get(mCurrentFragment)));
         final FragmentBase fTo = (FragmentBase) Objects.requireNonNull(
                 mFragmentMngr.findFragmentByTag(mFragmentTags.get(to)));
         switch (direction) {
@@ -253,19 +252,20 @@ public class CarouselFragmentPager extends FrameLayout
             default -> throw new IllegalArgumentException(
                     "Unknown transition direction");
         }
-        if (inPlace) {
+        if (replaceCurrent) {
+            //on inplace switch, current fragment id stays
             fTransaction.remove(fFrom);
         } else {
             fTransaction.hide(fFrom);
+            mCurrentFragment = to;
         }
         fFrom.onHide();
         fTransaction.show(fTo);
         fFrom.onShow();
         fTransaction.disallowAddToBackStack();
 
-        mCurrentFragment = inPlace ? from : to; //if we did an inplace switch, the current one stays
         int numpPages = mFragmentTags.size();
-        if (inPlace) {
+        if (replaceCurrent) {
             numpPages--;
         }
         mPageIdDisplay.showPageIndicator(mCurrentFragment+1, numpPages);
