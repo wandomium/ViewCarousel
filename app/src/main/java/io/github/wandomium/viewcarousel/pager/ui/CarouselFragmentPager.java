@@ -20,6 +20,7 @@ import java.util.Objects;
 
 import io.github.wandomium.viewcarousel.R;
 import io.github.wandomium.viewcarousel.pager.FragmentBase;
+import io.github.wandomium.viewcarousel.pager.data.Page;
 
 public class CarouselFragmentPager extends FrameLayout
 {
@@ -79,6 +80,18 @@ public class CarouselFragmentPager extends FrameLayout
     public int numFragments() {
         return mFragmentTags.size();
     }
+    // todo - have append fragment to replace this
+    public int currentFragment() {
+        return mCurrentFragment;
+    }
+    public void notifyFragmentDataChanged(int framgentIdx, Page newData) {
+        try {
+            ((FragmentBase) mFragmentMngr.findFragmentByTag(mFragmentTags.get(framgentIdx))).updateData(newData);
+        }
+        catch (NullPointerException | IndexOutOfBoundsException e) {
+            Log.e(CLASS_TAG, "Could not get fragment for fragment id " + framgentIdx);
+        }
+    }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
@@ -125,11 +138,6 @@ public class CarouselFragmentPager extends FrameLayout
         if (mCaptureInputListener != null && capture) {
             mCaptureInputListener.onCaptureInput();
         }
-    }
-
-    // todo - have append fragment to replace this
-    public int currentFragment() {
-        return mCurrentFragment;
     }
 
     public boolean addFragment(final int position, @NonNull Fragment f) throws IllegalArgumentException {

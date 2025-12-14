@@ -89,6 +89,12 @@ public class FragmentWebPage extends FragmentBase
     }
 
     @Override
+    public void updateData(Page page) {
+        setUrl(page.url);
+        setmRefreshRate(page.refresh_rate);
+    }
+
+    @Override
     public void onShow() {
         super.onShow();
         if (mWebView.getUrl() == null) { loadUrl(mUrl); }

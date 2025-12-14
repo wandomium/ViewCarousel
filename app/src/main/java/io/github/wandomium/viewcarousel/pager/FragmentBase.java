@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import io.github.wandomium.viewcarousel.R;
+import io.github.wandomium.viewcarousel.pager.data.Page;
 import io.github.wandomium.viewcarousel.testing.Fragments;
 
 public abstract class FragmentBase extends Fragment
@@ -25,10 +26,12 @@ public abstract class FragmentBase extends Fragment
     // TODO: unify this with Page IDs
     public static final int FRAGMENT_NEW_PAGE = 0;
     public static final int FRAGMENT_WEB_PAGE = 1;
+    public static final int FRAGMENT_CALLS = 2;
     public static FragmentBase createFragment(int id, int type) {
         FragmentBase f = switch (type) {
             case FRAGMENT_WEB_PAGE -> new FragmentWebPage();
             case FRAGMENT_NEW_PAGE -> new FragmentNewPage();
+            case FRAGMENT_CALLS -> new FragmentCalls();
             default -> throw new IllegalArgumentException("Invalid fragment type");
         };
         Bundle args = new Bundle();
@@ -37,6 +40,7 @@ public abstract class FragmentBase extends Fragment
         return f;
     }
 
+    public void updateData(Page page) {}
     public void onHide()  { Log.d(CLASS_TAG, "onHide"); }
     public void onShow()  { Log.d(CLASS_TAG, "onShow"); }
     public void captureInput(boolean capture) {

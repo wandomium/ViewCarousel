@@ -3,8 +3,10 @@ package io.github.wandomium.viewcarousel.pager;
 import android.app.PictureInPictureParams;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.util.Rational;
 import android.view.MenuItem;
@@ -13,11 +15,15 @@ import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
 
 import java.util.ArrayList;
 
+import io.github.wandomium.viewcarousel.Page_old;
 import io.github.wandomium.viewcarousel.R;
 import io.github.wandomium.viewcarousel.pager.data.Page;
 import io.github.wandomium.viewcarousel.pager.ui.CarouselFragmentPager;
@@ -33,6 +39,8 @@ public class MainActivity extends AppCompatActivity
     private final int NEW_PAGE_IDX_NONE = -1;
     private FragmentNewPage mFNewPage = null;
     private int mFNewPageIdx = NEW_PAGE_IDX_NONE;
+
+    private ActivityResultLauncher<Intent> mContactPickerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +68,8 @@ public class MainActivity extends AppCompatActivity
             }
         };
         getOnBackPressedDispatcher().addCallback(mBackPressedCb);
+
+        mContactPickerLauncher = _createContactPickerLauncher();
 
         _loadPages();
     }
@@ -90,6 +100,12 @@ public class MainActivity extends AppCompatActivity
         findViewById(R.id.call_btn).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
     }
 
+    public void addContactBtnClicked(View v) {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
+        mContactPickerLauncher.launch(intent);
+    }
+
     public void onMenuBtnClicked(View view) {
 //        findViewById(R.id.menu_btn).setOnClickListener((v)->openOptionsMenu());
         PopupMenu menu = new PopupMenu(MainActivity.this, view);
@@ -109,17 +125,18 @@ public class MainActivity extends AppCompatActivity
 
     private void _loadPages() {
         mPages = Page.loadPages(this);
-        Log.d(CLASS_TAG, "mPages is null: " + (mPages == null));
 
         // TODO: detect if config file was manhandled and has too many pages
         for (Page page : mPages) {
             final int idx = mFPager.numFragments();
-            if (page.page_type == Page.PAGE_TYPE_WEB) {
-                FragmentWebPage fWp = (FragmentWebPage) FragmentBase
-                        .createFragment(idx, FragmentBase.FRAGMENT_WEB_PAGE);
-                fWp.setUrl(page.url);
-                fWp.setmRefreshRate(page.refresh_rate);
-                mFPager.addFragment(idx, fWp);
+            switch (page.page_type) {
+                case Page.PAGE_TYPE_WEB, Page.PAGE_TYPE_CONTACTS:
+                    FragmentBase fBase = FragmentBase.createFragment(idx, page.page_type);
+                    fBase.updateData(page);
+                    mFPager.addFragment(idx, fBase);
+                    break;
+                default:
+                    continue;
             }
         }
         if (mFPager.numFragments() == 0) {
@@ -190,6 +207,36 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    private ActivityResultLauncher<Intent> _createContactPickerLauncher() {
+        return registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(), result -> {
+                    Page.Contact contact = null;
+                    if (result.getResultCode() == FragmentActivity.RESULT_OK)
+                        //This action is rare so we don't care about a potential performance hit when catching the exception
+                        try (final Cursor cursor = this.getContentResolver().query(result.getData().getData(),
+                                null, null, null, null)) {
+                            cursor.moveToFirst();
+
+                            contact = new Page.Contact(
+                                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)),
+                                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                            );
+                        } catch (IllegalArgumentException | NullPointerException e) {
+                            Log.e(CLASS_TAG, "Failed to add contact " + e.getMessage());
+                        }
+                    if (contact == null) {
+                        return;
+                    }
+                    int currentItem = mFPager.currentFragment();
+                    Page page = mPages.get(currentItem); // if this is null there is a bug
+                    if (page.contacts == null) {
+                        page.contacts = new ArrayList<>();
+                    }
+                    page.contacts.add(contact);
+                    mFPager.notifyFragmentDataChanged(currentItem, page);
+                });
+    }
+
     private class PageConfiguredCb implements FragmentNewPage.PageConfiguredCb {
         @Override
         public void onPageConfigured(Page page) {
@@ -202,7 +249,8 @@ public class MainActivity extends AppCompatActivity
                     ((FragmentWebPage) fBase).setUrl(page.url);
                 }
                 case Page.PAGE_TYPE_CONTACTS -> {
-                    _showUnsupportedActionToast();
+//                    _showUnsupportedActionToast();
+                    fBase = FragmentBase.createFragment(mFNewPageIdx, FragmentBase.FRAGMENT_CALLS);
                 }
                 default -> {} //keep the fragment
             }
