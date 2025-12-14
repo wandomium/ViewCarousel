@@ -3,8 +3,8 @@
 [] podpri multiple konfiguracije
 
 bugfix:
-[] config does not persist
-[x] when all pages are removed a black screen appears
+[?] config does not persist
+[x] when all pages are removed, black screen appears
 
 low:
 [] user manual on first run
