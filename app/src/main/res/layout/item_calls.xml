@@ -14,20 +14,17 @@
             android:id="@+id/btn_call_contact0"
             style="@style/CallContactBtn"
             android:visibility="gone"
-            app:icon="@drawable/outline_call_24"
-            android:onClick="onDirectCallBtnClicked"/>
+            app:icon="@drawable/outline_call_24"/>
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_call_contact1"
             style="@style/CallContactBtn"
             android:visibility="gone"
-            app:icon="@drawable/outline_call_24"
-            android:onClick="onDirectCallBtnClicked"/>
+            app:icon="@drawable/outline_call_24"/>
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_call_contact2"
             style="@style/CallContactBtn"
             android:visibility="gone"
-            app:icon="@drawable/outline_call_24"
-            android:onClick="onDirectCallBtnClicked"/>
+            app:icon="@drawable/outline_call_24"/>
         <com.google.android.material.button.MaterialButton
             android:id="@+id/add_contact_button"
             android:layout_width="@dimen/call_contact_btn_width"

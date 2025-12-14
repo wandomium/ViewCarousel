@@ -58,14 +58,14 @@ public class FragmentCalls extends FragmentBase
         }
     }
 
-    public void onDirectCallBtnClicked(View v) {
+    public boolean onDirectCallBtnClicked(View v) {
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(getContext(), "Missing permission", Toast.LENGTH_LONG).show();
         } else {
             // make call
             if (v.getTag() == null) {
                 Log.e(CLASS_TAG, "No number, cannot call");
-                return;
+                return true; // we don't want to forward this
             }
             Page.Contact contact = (Page.Contact) v.getTag();
 
@@ -74,6 +74,8 @@ public class FragmentCalls extends FragmentBase
             intent.putExtra(TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE, true);
             startActivity(intent);
         }
+
+        return true;
     }
 
     private void _setupBtns() {
@@ -84,13 +86,13 @@ public class FragmentCalls extends FragmentBase
             mBtns[i].setVisibility(View.VISIBLE);
             mBtns[i].setText(contact.name());
             mBtns[i].setTag(contact); //TODO maybe use id??
-            mBtns[i].setOnClickListener(this::onDirectCallBtnClicked);
+            mBtns[i].setOnLongClickListener(this::onDirectCallBtnClicked);
         }
         for (; i < mBtns.length; i++) {
             mBtns[i].setVisibility(View.GONE);
             mBtns[i].setText("");
             mBtns[i].setTag("");
-            mBtns[i].setOnClickListener(null);
+            mBtns[i].setOnLongClickListener(null);
         }
     }
 }
