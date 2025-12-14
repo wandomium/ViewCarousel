@@ -17,7 +17,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
-import io.github.wandomium.viewcarousel.Page_old;
 import io.github.wandomium.viewcarousel.R;
 import io.github.wandomium.viewcarousel.pager.data.Page;
 
@@ -68,7 +67,7 @@ public class FragmentCalls extends FragmentBase
                 Log.e(CLASS_TAG, "No number, cannot call");
                 return;
             }
-            Page_old.Contact contact = (Page_old.Contact) v.getTag();
+            Page.Contact contact = (Page.Contact) v.getTag();
 
             Intent intent = new Intent(Intent.ACTION_CALL);
             intent.setData(Uri.parse("tel:" + contact.phone())); //+38640655943"));

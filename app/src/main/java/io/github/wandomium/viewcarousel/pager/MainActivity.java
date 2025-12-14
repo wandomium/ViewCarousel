@@ -1,5 +1,6 @@
 package io.github.wandomium.viewcarousel.pager;
 
+import android.Manifest;
 import android.app.PictureInPictureParams;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -19,6 +20,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import java.util.ArrayList;
@@ -195,9 +197,11 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.action_remove_page) {
             Log.d(CLASS_TAG, mPages.toString() + "  " + currentFragmentId);
             mPages.remove(currentFragmentId);
-//            mFPager.removeFragment(currentFragmentId);
             if (mPages.isEmpty()) {
                 _addNewPageFragment(0, true);
+            }
+            else {
+                mFPager.removeFragment(currentFragmentId);
             }
         }
         else if (id == R.id.action_enter_pip) {
@@ -251,6 +255,7 @@ public class MainActivity extends AppCompatActivity
                 case Page.PAGE_TYPE_CONTACTS -> {
 //                    _showUnsupportedActionToast();
                     fBase = FragmentBase.createFragment(mFNewPageIdx, FragmentBase.FRAGMENT_CALLS);
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, 333);
                 }
                 default -> {} //keep the fragment
             }
