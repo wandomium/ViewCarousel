@@ -2,6 +2,10 @@
 [] implementiraj calls page
 [] podpri multiple konfiguracije
 
+bugfix:
+[] config does not persist
+[] when all pages are removed a black screen appears
+
 low:
 [] user manual on first run
 [] remove unused code

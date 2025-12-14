@@ -30,8 +30,9 @@ public class MainActivity extends AppCompatActivity
     private CarouselFragmentPager mFPager;
     private ArrayList<Page> mPages;
 
+    private final int NEW_PAGE_IDX_NONE = -1;
     private FragmentNewPage mFNewPage = null;
-    private int mFNewPageIdx = -1;
+    private int mFNewPageIdx = NEW_PAGE_IDX_NONE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,21 +124,33 @@ public class MainActivity extends AppCompatActivity
         }
         if (mFPager.numFragments() == 0) {
             // add new page fragment
-            _addNewPageFragment(0);
+            _addNewPageFragment(0, false);
         }
     }
 
-    private void _addNewPageFragment(int idx) {
-        mFNewPageIdx = idx;
-        mFNewPage = (FragmentNewPage) FragmentBase.createFragment(mFNewPageIdx, FragmentBase.FRAGMENT_NEW_PAGE);
+    private boolean _addNewPageFragment(int idx, boolean replace) {
+        if (mFNewPageIdx != NEW_PAGE_IDX_NONE) {
+            return false;
+        }
+        FragmentNewPage fNewPage = (FragmentNewPage) FragmentBase.createFragment(mFNewPageIdx, FragmentBase.FRAGMENT_NEW_PAGE);
         try {
-            mFPager.addFragment(mFNewPageIdx, mFNewPage);
+            if (replace) {
+                mFPager.replaceFragment(idx, fNewPage);
+            }
+            else {
+                mFPager.addFragment(idx, fNewPage);
+                mFPager.showFragment(idx);
+            }
         } catch (IllegalArgumentException ignored) {
             Toast.makeText(MainActivity.this, "Max page limit reached", Toast.LENGTH_LONG).show();
+            return false;
         }
+        mFNewPage = fNewPage;
+        mFNewPageIdx = idx;
         mPages.add(idx, null); //blank page. not exported but we need it for index
         mFNewPage.setPageConfigredCb(new PageConfiguredCb());
-        mFPager.showFragment(mFNewPageIdx);
+
+        return true;
     }
 
     private void _enterPipMode() {
@@ -155,10 +168,20 @@ public class MainActivity extends AppCompatActivity
         final int currentFragmentId = mFPager.currentFragment();
 
         if (id == R.id.action_add_page) {
-            _addNewPageFragment(currentFragmentId + 1);
+            // only add new page if there isn't an existing one
+            if (mFNewPageIdx == NEW_PAGE_IDX_NONE) {
+                _addNewPageFragment(currentFragmentId + 1, false);
+            }
+            else {
+                Toast.makeText(this, "New page already exsists at index: " + mFNewPageIdx, Toast.LENGTH_LONG).show();
+            }
         } else if (id == R.id.action_remove_page) {
+            Log.d(CLASS_TAG, mPages.toString() + "  " + currentFragmentId);
             mPages.remove(currentFragmentId);
-            mFPager.removeFragment(currentFragmentId);
+//            mFPager.removeFragment(currentFragmentId);
+            if (mPages.isEmpty()) {
+                _addNewPageFragment(0, true);
+            }
         }
         else if (id == R.id.action_enter_pip) {
             _enterPipMode();
@@ -184,13 +207,13 @@ public class MainActivity extends AppCompatActivity
                 default -> {} //keep the fragment
             }
             if (fBase != null) {
-                MainActivity.this.mPages.add(page); //todo!! arrange correctly
+                MainActivity.this.mPages.set(mFNewPageIdx, page); //todo!! arrange correctly
                 // replace new page with selected page
                 mFPager.replaceFragment(mFNewPageIdx, fBase);
                 // clear new page
                 mFNewPage.setPageConfigredCb(null);
                 mFNewPage = null;
-                mFNewPageIdx = -1;
+                mFNewPageIdx = NEW_PAGE_IDX_NONE;
             }
         }
     }
