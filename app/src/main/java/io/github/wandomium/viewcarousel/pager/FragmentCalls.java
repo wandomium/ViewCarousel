@@ -1,6 +1,7 @@
 package io.github.wandomium.viewcarousel.pager;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -17,12 +18,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.snackbar.Snackbar;
 
 import io.github.wandomium.viewcarousel.R;
@@ -174,12 +177,19 @@ public class FragmentCalls extends FragmentBase
             params.setMargins(0, 50, 0, 0); // Add a margin so it's not touching the status bar
             snackbarView.setLayoutParams(params);
 
+            // add progress bar
+            ProgressBar progressBar = new CircularProgressIndicator(v.getContext());
+            progressBar.setMax(CALL_DELAY_S * 1000);
+            Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) mSnackbar.getView();
+            layout.addView(progressBar, 1);
+
             mTimer = new CountDownTimer(CALL_DELAY_S * 1000, 100) {
                 @Override
                 public void onTick(long millisUntilFinished) {
                     // Update the text every 1 second
                     int remaining = (int) (millisUntilFinished / 1000) + 1;
-                    mSnackbar.setText(message + remaining);
+                    mSnackbar.setText("  " + remaining + "s       " + message);
+                    progressBar.setProgress((int)millisUntilFinished);
                 }
 
                 @Override
