@@ -4,6 +4,7 @@
 [] exportaj config v user-accessible directory
 [] manual open in menu
 [] when adding phone page, notify the user of long press and direct call via speaker
+[x] Show countdown to call
 
 [x] Fixed swipe up detection
 

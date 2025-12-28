@@ -168,7 +168,7 @@ public class FragmentCalls extends FragmentBase
         private final CountDownTimer mTimer;
 
         public CountdownSnackbar(View v) {
-            final String message = "Long press to call    ";
+            final String message = "Long press for speaker call    ";
             mSnackbar = Snackbar.make(v, message, Snackbar.LENGTH_SHORT);
             View snackbarView = mSnackbar.getView();
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) snackbarView.getLayoutParams();
