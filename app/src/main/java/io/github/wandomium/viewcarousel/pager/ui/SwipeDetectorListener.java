@@ -62,18 +62,18 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
             final float diffX = e2.getX() - e1.getX();
             final float diffY = e2.getY() - e1.getY();
 
-            if (Math.abs(diffX) > SWIPE_DISTANCE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                if (diffX > 0) { mSwipeCb.onSwipe(SWIPE_RIGHT); }
-                else { mSwipeCb.onSwipe(SWIPE_LEFT); }
-                mSwipeInProccess = false; // Reset after handling
-                return true;
-            }
-            else if (diffY < 0 && velocityY < 0) {
+            if ((Math.abs(diffY)/Math.abs(diffX)) > 0.5  && (diffY < 0 && velocityY < 0)) {
                 if (Math.abs(diffY) > SWIPE_DISTANCE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
                     mSwipeCb.onSwipe(SWIPE_UP);
                     mSwipeInProccess = false;
                     return true;
                 }
+            }
+            else if (Math.abs(diffX) > SWIPE_DISTANCE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                if (diffX > 0) { mSwipeCb.onSwipe(SWIPE_RIGHT); }
+                else { mSwipeCb.onSwipe(SWIPE_LEFT); }
+                mSwipeInProccess = false; // Reset after handling
+                return true;
             }
         }
         return false;
