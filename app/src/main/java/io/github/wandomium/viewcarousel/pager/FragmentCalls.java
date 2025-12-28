@@ -173,8 +173,9 @@ public class FragmentCalls extends FragmentBase
             View snackbarView = mSnackbar.getView();
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) snackbarView.getLayoutParams();
 
+            // move it to top
             params.gravity = Gravity.TOP;
-            params.setMargins(0, 50, 0, 0); // Add a margin so it's not touching the status bar
+            params.setMargins(100, 150, 100, 0);
             snackbarView.setLayoutParams(params);
 
             // add progress bar
@@ -183,6 +184,7 @@ public class FragmentCalls extends FragmentBase
             Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) mSnackbar.getView();
             layout.addView(progressBar, 1);
 
+            // add timer for progress bar
             mTimer = new CountDownTimer(CALL_DELAY_S * 1000, 100) {
                 @Override
                 public void onTick(long millisUntilFinished) {
