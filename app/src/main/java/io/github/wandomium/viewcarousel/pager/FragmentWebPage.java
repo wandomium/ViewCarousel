@@ -1,5 +1,7 @@
 package io.github.wandomium.viewcarousel.pager;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
@@ -7,13 +9,18 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.GeolocationPermissions;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import io.github.wandomium.viewcarousel.R;
@@ -21,6 +28,9 @@ import io.github.wandomium.viewcarousel.pager.data.Page;
 
 public class FragmentWebPage extends FragmentBase
 {
+    private static final String CLASS_TAG = FragmentWebPage.class.getSimpleName();
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 66;
+    
     private WebView mWebView;
     private SwipeRefreshLayout mSwipeRefresh;
     private View mBlockerView;
@@ -54,8 +64,29 @@ public class FragmentWebPage extends FragmentBase
         mWebView = view.findViewById(R.id.web_view);
         mBlockerView = view.findViewById(R.id.web_view_blocker);
 
-        mWebView.getSettings().setJavaScriptEnabled(true);
-        mWebView.getSettings().setDomStorageEnabled(true);
+        // enable everything
+        WebSettings settings = mWebView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setGeolocationEnabled(true);
+
+        // for location permission
+        mWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onGeolocationPermissionsShowPrompt(
+                    String origin, GeolocationPermissions.Callback callback) {
+                if (ContextCompat.checkSelfPermission(getContext(),
+                        Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(getActivity(),
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION},
+                            LOCATION_PERMISSION_REQUEST_CODE);
+                } else {
+                    // we want to retain the permission
+                    callback.invoke(origin, true, true);
+                }
+            }
+        });
 
         // connect swipe refresh layout and web view actions
         mSwipeRefresh.setOnRefreshListener( () -> mWebView.reload() );
@@ -76,7 +107,8 @@ public class FragmentWebPage extends FragmentBase
         });
 
         // default capture settings
-        mWebView.setEnabled(false);
+        // mWebView.setEnabled(false);
+        captureInput(false);
 
         if (mUrl != null) {
             mWebView.loadUrl(mUrl);
