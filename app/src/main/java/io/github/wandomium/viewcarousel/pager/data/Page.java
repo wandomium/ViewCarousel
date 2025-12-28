@@ -1,6 +1,8 @@
 package io.github.wandomium.viewcarousel.pager.data;
 
 import android.content.Context;
+import android.os.Environment;
+import android.provider.ContactsContract;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -15,6 +17,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class Page
@@ -57,7 +60,9 @@ public class Page
     }
 
     public static ArrayList<Page> loadPages(final Context ctx) {
-        File file = new File(ctx.getFilesDir(), CONFIG_FNAME_DEFAULT);
+        Log.d(CLASS_TAG, "external files dir: " + ctx.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS));
+        Log.d(CLASS_TAG, "files dir: " + ctx.getFilesDir());
+        File file = new File(ctx.getExternalFilesDir(null), CONFIG_FNAME_DEFAULT);
         Gson gson = new Gson();
         ArrayList<Page> pages = null;
 
@@ -74,19 +79,22 @@ public class Page
         return pages == null ? new ArrayList<>() : pages;
     }
 
-    public static void savePages(final Context ctx, ArrayList<Page> pages) {
-        File file = new File(ctx.getFilesDir(), CONFIG_FNAME_DEFAULT);
+    public static void savePages(final Context ctx, final ArrayList<Page> pages) {
+        File file = new File(ctx.getExternalFilesDir(null), CONFIG_FNAME_DEFAULT);
         Gson gson = new Gson();
 
+        // create a new list so we don't mess up the original one
+        ArrayList<Page> pagesToSave;
         if (pages == null) {
-            pages = new ArrayList<>();
+            pagesToSave = new ArrayList<>();
         }
         else {
-            pages.removeIf(Objects::isNull);
+            pagesToSave = new ArrayList<>(pages);
+            pagesToSave.removeIf(Objects::isNull);
         }
 
         try (FileWriter writer = new FileWriter(file)) {
-            gson.toJson(pages, writer); // Serialize ArrayList to JSON file
+            gson.toJson(pagesToSave, writer); // Serialize ArrayList to JSON file
             Log.d(CLASS_TAG,"Saving to " + file.getAbsolutePath());
             Log.d(CLASS_TAG, gson.toJson(pages));
         } catch (IOException e) {

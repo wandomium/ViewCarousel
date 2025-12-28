@@ -1,0 +1,10 @@
+[] nredi konfigurabilno ali imas btns ali ne
+[] podpri multiple konfiguracije
+[] exportaj config v user-accessible directory
+
+bugfix:
+[?] config does not persist=
+
+low:
+[] user manual on first run
+[] remove unused code
