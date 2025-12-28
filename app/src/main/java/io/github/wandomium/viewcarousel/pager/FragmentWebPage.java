@@ -9,6 +9,7 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -64,11 +65,14 @@ public class FragmentWebPage extends FragmentBase
         mWebView = view.findViewById(R.id.web_view);
         mBlockerView = view.findViewById(R.id.web_view_blocker);
 
-        // enable everything
+        // enable most settings so pages load correctly
         WebSettings settings = mWebView.getSettings();
-        settings.setJavaScriptEnabled(true);
+        settings.setJavaScriptEnabled(true);  // will also detect forms and enable autofill
         settings.setDomStorageEnabled(true);
-        settings.setGeolocationEnabled(true);
+        settings.setGeolocationEnabled(true); //allows requests to location
+
+        // it's one for all but no harm in calling it here
+        CookieManager.getInstance().setAcceptCookie(true);
 
         // for location permission
         mWebView.setWebChromeClient(new WebChromeClient() {
@@ -82,7 +86,7 @@ public class FragmentWebPage extends FragmentBase
                                     Manifest.permission.ACCESS_COARSE_LOCATION},
                             LOCATION_PERMISSION_REQUEST_CODE);
                 } else {
-                    // we want to retain the permission
+                    // retain = true. we want to retain the permission
                     callback.invoke(origin, true, true);
                 }
             }

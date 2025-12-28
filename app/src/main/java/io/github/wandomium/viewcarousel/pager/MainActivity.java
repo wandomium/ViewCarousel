@@ -12,6 +12,7 @@ import android.util.Log;
 import android.util.Rational;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.CookieManager;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
@@ -73,11 +74,15 @@ public class MainActivity extends AppCompatActivity
         mContactPickerLauncher = _createContactPickerLauncher();
 
         _loadPages();
+
+        // this is for all webviews
+        CookieManager.getInstance().setAcceptCookie(true);
     }
 
     @Override
     protected void onPause() {
         Page.savePages(this, mPages);
+        CookieManager.getInstance().flush();
         super.onPause();
     }
 
