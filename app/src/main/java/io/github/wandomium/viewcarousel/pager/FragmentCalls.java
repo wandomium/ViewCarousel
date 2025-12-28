@@ -5,17 +5,25 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.telecom.TelecomManager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import io.github.wandomium.viewcarousel.R;
 import io.github.wandomium.viewcarousel.pager.data.Page;
@@ -31,6 +39,11 @@ public class FragmentCalls extends FragmentBase
 
     private Button[] mBtns = new Button[cBtnLayouts.length];
     private Page mPage = null;
+
+    public static final int CALL_DELAY_S = 2;
+    private CountdownSnackbar mCountdownSnackbar;
+    private Handler mHandler;
+    private Runnable mMakeCallRunnable;
 
     @Nullable
     @Override
@@ -48,6 +61,24 @@ public class FragmentCalls extends FragmentBase
         if (mPage != null) {
             _setupBtns();
         }
+
+        mHandler = new Handler(Looper.getMainLooper());
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (mMakeCallRunnable != null) {
+            mHandler.removeCallbacks(mMakeCallRunnable);
+        }
+        if (mCountdownSnackbar != null) {
+            mCountdownSnackbar.dismiss();
+        }
+
+        mHandler = null;
+        mMakeCallRunnable = null;
+        mCountdownSnackbar = null;
+
+        super.onDestroyView();
     }
 
     @Override
@@ -58,9 +89,11 @@ public class FragmentCalls extends FragmentBase
         }
     }
 
-    public boolean onDirectCallBtnClicked(View v) {
+    public boolean onDirectCallBtnLongClick(View v) {
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(getContext(), "Missing permission", Toast.LENGTH_LONG).show();
+            Toast toast = Toast.makeText(getContext(), "Missing permission", Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 100);
+            toast.show();
         } else {
             // make call
             if (v.getTag() == null) {
@@ -78,6 +111,36 @@ public class FragmentCalls extends FragmentBase
         return true;
     }
 
+    public void onDirectCallBtnShortClick(View v) {
+        Toast toast = Toast.makeText(getContext(), "Long press to call", Toast.LENGTH_LONG);
+        toast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 100);
+        toast.show();
+    }
+
+    public boolean onDirectCallBtnTouch(View v, MotionEvent event) {
+        if (mHandler == null) {
+            return false;
+        }
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN -> {
+                mMakeCallRunnable = () -> onDirectCallBtnLongClick(v);
+                if (mCountdownSnackbar == null) {
+                    mCountdownSnackbar = new CountdownSnackbar(getView()); // attach it to fragment view and keep it
+                }
+                mCountdownSnackbar.show();
+                mHandler.postDelayed(mMakeCallRunnable, CALL_DELAY_S * 1000);
+                return true;
+            }
+            case MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> {
+                mHandler.removeCallbacks(mMakeCallRunnable);
+                mCountdownSnackbar.dismiss();
+                mMakeCallRunnable = null;
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void _setupBtns() {
         int i = 0;
         final int numContacts = mPage.contacts != null ? mPage.contacts.size() : 0;
@@ -86,13 +149,57 @@ public class FragmentCalls extends FragmentBase
             mBtns[i].setVisibility(View.VISIBLE);
             mBtns[i].setText(contact.name());
             mBtns[i].setTag(contact); //TODO maybe use id??
-            mBtns[i].setOnLongClickListener(this::onDirectCallBtnClicked);
+//            mBtns[i].setOnLongClickListener(this::onDirectCallBtnLongClick);
+            mBtns[i].setOnTouchListener(this::onDirectCallBtnTouch);
         }
         for (; i < mBtns.length; i++) {
             mBtns[i].setVisibility(View.GONE);
             mBtns[i].setText("");
             mBtns[i].setTag("");
             mBtns[i].setOnLongClickListener(null);
+        }
+    }
+
+    private static class CountdownSnackbar {
+        private final Snackbar mSnackbar;
+        private final CountDownTimer mTimer;
+
+        public CountdownSnackbar(View v) {
+            final String message = "Long press to call    ";
+            mSnackbar = Snackbar.make(v, message, Snackbar.LENGTH_SHORT);
+            View snackbarView = mSnackbar.getView();
+            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) snackbarView.getLayoutParams();
+
+            params.gravity = Gravity.TOP;
+            params.setMargins(0, 50, 0, 0); // Add a margin so it's not touching the status bar
+            snackbarView.setLayoutParams(params);
+
+            mTimer = new CountDownTimer(CALL_DELAY_S * 1000, 100) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    // Update the text every 1 second
+                    int remaining = (int) (millisUntilFinished / 1000) + 1;
+                    mSnackbar.setText(message + remaining);
+                }
+
+                @Override
+                public void onFinish() {
+                    // Hide the snackbar when time is up
+                    if (mSnackbar.isShown()) {
+                        mSnackbar.dismiss();
+                    }
+                }
+            };
+        }
+
+        public void show() {
+            mSnackbar.show();
+            mTimer.start();
+        }
+
+        public void dismiss() {
+            mSnackbar.dismiss();
+            mTimer.cancel();
         }
     }
 }

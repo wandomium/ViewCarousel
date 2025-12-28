@@ -1,9 +1,11 @@
 [] nredi konfigurabilno ali imas btns ali ne
+[] when no buttons, double finger down for menu
 [] podpri multiple konfiguracije
 [] exportaj config v user-accessible directory
+[] manual open in menu
+[] when adding phone page, notify the user of long press and direct call via speaker
 
-bugfix:
-[?] config does not persist=
+[x] Fixed swipe up detection
 
 low:
 [] user manual on first run
