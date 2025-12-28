@@ -43,9 +43,11 @@ public abstract class FragmentBase extends Fragment
     public void updateData(Page page) {}
     public void onHide()  { Log.d(CLASS_TAG, "onHide"); }
     public void onShow()  { Log.d(CLASS_TAG, "onShow"); }
-    public void captureInput(boolean capture) {
+    // new capture state can be rejected by the fragment if it is unsupported
+    public boolean captureInput(boolean capture) {
         Log.d(CLASS_TAG, "captureInput: " + capture);
         mCaptureInput = capture;
+        return mCaptureInput;
     }
 
     @Nullable

@@ -46,6 +46,11 @@ public class FragmentNewPage extends FragmentBase
                 mPageConfiguredCb.onPageConfigured(Page.createContactsPage(null)));
     }
 
+    @Override
+    public boolean captureInput(boolean capture) {
+        return false; //unsupported
+    }
+
     public void setPageConfigredCb(PageConfiguredCb cb) {
         this.mPageConfiguredCb = cb;
     }

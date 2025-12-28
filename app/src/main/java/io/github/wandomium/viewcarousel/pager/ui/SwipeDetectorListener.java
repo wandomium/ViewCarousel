@@ -30,7 +30,7 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
 
     @FunctionalInterface
     public interface SwipeCallback {
-        void onSwipe(final int direction);
+        void onSwipe(final int direction, final float distance);
     }
 
     public SwipeDetectorListener(int touchSlop, SwipeCallback cb) {
@@ -81,8 +81,8 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
             }
             // swipe left/right
             else if (Math.abs(mDx) > SWIPE_DISTANCE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                if (mDx > 0) { mSwipeCb.onSwipe(SWIPE_RIGHT); }
-                else { mSwipeCb.onSwipe(SWIPE_LEFT); }
+                if (mDx > 0) { mSwipeCb.onSwipe(SWIPE_RIGHT, mDx); }
+                else { mSwipeCb.onSwipe(SWIPE_LEFT, mDx); }
                 mSwipeInProccess = false;
                 return true;
             }
@@ -106,12 +106,12 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
         if ((Math.abs(dy)/Math.abs(dx)) > 0.5 && Math.abs(dy) > treshold) {
                 // swipe up
                 if (dy < 0) {  //&& velocityY < 0)
-                    mSwipeCb.onSwipe(SWIPE_UP);
+                    mSwipeCb.onSwipe(SWIPE_UP, mDy);
                     mSwipeInProccess = false;
                     return true;
                 }
                 else if (dy > 0 && mTwoFingerSwipe) { //&& velocityY > 0
-                    mSwipeCb.onSwipe(SWIPE_DOWN_2FINGER);
+                    mSwipeCb.onSwipe(SWIPE_DOWN_2FINGER, mDy);
                     mSwipeInProccess = false;
                     return true;
                 }

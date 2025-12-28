@@ -62,7 +62,7 @@ public class CarouselFragmentPager extends FrameLayout
 
         mPageIdDisplay = v.findViewById(R.id.page_indicator);
         mSwipeDetectorListener = new SwipeDetectorListener(
-            ViewConfiguration.get(context).getScaledTouchSlop(), (direction) -> {
+            ViewConfiguration.get(context).getScaledTouchSlop(), (direction, distance) -> {
                 switch (direction) {
                     case SwipeDetectorListener.SWIPE_LEFT -> _switchFragment(_nextFragment(), Direction.RIGHT_IN, false);
                     case SwipeDetectorListener.SWIPE_RIGHT -> _switchFragment(_previousFragment(), Direction.LEFT_IN, false);
@@ -143,9 +143,9 @@ public class CarouselFragmentPager extends FrameLayout
 
     public void captureInput(final boolean capture) {
         Log.d(CLASS_TAG, "captureInput: " + capture);
-        mCaptureInput = capture;
-        _getCurrentFragment().captureInput(capture);
-        if (mCaptureInputListener != null && capture) {
+        // fragment can reject capture if unsupported
+        mCaptureInput = _getCurrentFragment().captureInput(capture);
+        if (mCaptureInputListener != null && mCaptureInput) {
             mCaptureInputListener.onCaptureInput();
         }
     }

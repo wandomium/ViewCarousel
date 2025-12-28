@@ -85,6 +85,11 @@ public class FragmentCalls extends FragmentBase
     }
 
     @Override
+    public boolean captureInput(boolean capture) {
+        return false; //unsupported
+    }
+
+    @Override
     public void updateData(Page page) {
         mPage = page;
         if (getView() != null) {

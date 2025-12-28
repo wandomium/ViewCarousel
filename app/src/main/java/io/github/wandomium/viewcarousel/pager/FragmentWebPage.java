@@ -120,11 +120,13 @@ public class FragmentWebPage extends FragmentBase
     }
 
     @Override
-    public void captureInput(boolean capture) {
+    public boolean captureInput(boolean capture) {
         super.captureInput(capture);
-        mBlockerView.setVisibility(capture ? View.GONE : View.VISIBLE);
-        mWebView.setEnabled(capture);
-        mSwipeRefresh.setEnabled(!capture);
+        mBlockerView.setVisibility(mCaptureInput ? View.GONE : View.VISIBLE);
+        mWebView.setEnabled(mCaptureInput);
+        mSwipeRefresh.setEnabled(!mCaptureInput);
+
+        return mCaptureInput;
     }
 
     @Override
