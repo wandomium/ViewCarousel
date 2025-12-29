@@ -1,5 +1,5 @@
 [] nredi konfigurabilno ali imas btns ali ne
-[] when no buttons, double finger down for menu
+[x] double finger down for menu
 [] podpri multiple konfiguracije
 [] exportaj config v user-accessible directory
 [] manual open in menu

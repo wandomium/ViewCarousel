@@ -11,7 +11,6 @@ import android.provider.ContactsContract;
 import android.util.Log;
 import android.util.Rational;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.widget.PopupMenu;
@@ -56,8 +55,9 @@ public class MainActivity extends AppCompatActivity
         // capture and release focus
         mFPager.setCaptureInputListener(() -> {
             mBackPressedCb.setEnabled(true);
-            findViewById(R.id.menu_btn).setVisibility(View.GONE);
-            findViewById(R.id.call_btn).setVisibility(View.GONE);
+//            findViewById(R.id.menu_btn).setVisibility(View.GONE);
+//            findViewById(R.id.call_btn).setVisibility(View.GONE);
+            _showBtns(false);
             Toast.makeText(MainActivity.this, "CAPTURE", Toast.LENGTH_SHORT).show();
         });
         mBackPressedCb = new OnBackPressedCallback(false) {
@@ -65,8 +65,9 @@ public class MainActivity extends AppCompatActivity
             public void handleOnBackPressed() {
                 mFPager.captureInput(false);
                 setEnabled(false); // system handled back gesture
-                findViewById(R.id.menu_btn).setVisibility(View.VISIBLE);
-                findViewById(R.id.call_btn).setVisibility(View.VISIBLE);
+//                findViewById(R.id.menu_btn).setVisibility(View.VISIBLE);
+//                findViewById(R.id.call_btn).setVisibility(View.VISIBLE);
+                _showBtns(true);
                 Toast.makeText(MainActivity.this, "RELEASE", Toast.LENGTH_SHORT).show();
             }
         };
@@ -104,8 +105,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onPictureInPictureModeChanged(boolean isInPipMode, @NonNull Configuration newConfig) {
         super.onPictureInPictureModeChanged(isInPipMode, newConfig);
-        findViewById(R.id.menu_btn).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
-        findViewById(R.id.call_btn).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
+//        findViewById(R.id.menu_btn).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
+//        findViewById(R.id.call_btn).setVisibility(isInPipMode ? View.GONE : View.VISIBLE);
+        _showBtns(!isInPipMode);
     }
 
     public void addContactBtnClicked(View v) {
@@ -120,7 +122,13 @@ public class MainActivity extends AppCompatActivity
         PopupMenu menu = new PopupMenu(MainActivity.this, view);
         menu.getMenuInflater().inflate(R.menu.main_menu, menu.getMenu());
         menu.setOnMenuItemClickListener(this::_handleMenuSelection);
+        // TODO this is an ungly hack, see pager
         menu.setOnDismissListener((ignored) -> mFPager.setMenuVisible(false));
+
+        // show btns
+        MenuItem showBtnsItem = menu.getMenu().findItem(R.id.config_show_btns);
+        showBtnsItem.setChecked(Settings.getInstance(this).showBtns());
+
         menu.show();
     }
 
@@ -189,6 +197,14 @@ public class MainActivity extends AppCompatActivity
         enterPictureInPictureMode(params);
     }
 
+
+    private void _showBtns(final boolean show) {
+        final boolean settings = Settings.getInstance(this).showBtns();
+
+        findViewById(R.id.menu_btn).setVisibility(show && settings ? View.VISIBLE : View.GONE);
+        findViewById(R.id.call_btn).setVisibility(show && settings ? View.VISIBLE : View.GONE);
+    }
+
     /** @noinspection SameReturnValue*/
     private boolean _handleMenuSelection(MenuItem item) {
         final int id = item.getItemId();
@@ -218,6 +234,12 @@ public class MainActivity extends AppCompatActivity
         }
         else if (id == R.id.action_enter_pip) {
             _enterPipMode();
+        }
+        else if (id == R.id.config_show_btns) {
+            boolean show = !item.isChecked();
+            Settings.getInstance(this).showBtns(show);
+            item.setChecked(show);
+            _showBtns(show);
         }
 
         return true;

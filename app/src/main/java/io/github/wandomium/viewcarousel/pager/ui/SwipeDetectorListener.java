@@ -22,7 +22,7 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
 
     private final int cTouchSlop;
     private final SwipeCallback mSwipeCb;
-    private boolean mSwipeInProccess = false;
+    private boolean mSwipeInProcess = false;
     private boolean mTwoFingerSwipe = false;
 
     private float mDx;
@@ -40,12 +40,12 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
     }
 
     public boolean swipeInProgress() {
-        return mSwipeInProccess;
+        return mSwipeInProcess;
     }
 
     @Override
     public boolean onDown(@NonNull MotionEvent ev) {
-        mSwipeInProccess = false;
+        mSwipeInProcess = false;
         return true;
     }
 
@@ -53,17 +53,16 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
     public boolean onScroll(MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
         mDx = e2.getX() - e1.getX();
         mDy = e2.getY() - e1.getY();
-        if (!mSwipeInProccess) {
+        if (!mSwipeInProcess) {
             final float dx_abs = Math.abs(e2.getX() - e1.getX());
-            final float dy = e2.getY() - e1.getY();
-            final float dy_abs = Math.abs(dy);
+            final float dy_abs = Math.abs(mDy);
 
-            mTwoFingerSwipe = e1.getPointerCount() == 2 || e2.getPointerCount() == 2;
-            if ((dy_abs > cTouchSlop && dy < 0 ) || // upwards swipe
-                (dy_abs > cTouchSlop && dy > 0 && mTwoFingerSwipe) || // two finger down swipe
+            mTwoFingerSwipe = e1.getPointerCount() == 2 || e2.getPointerCount() == 2; //when finishing, none of these are 2
+            if ((dy_abs > cTouchSlop && mDy < 0 ) || // upwards swipe
+                (dy_abs > cTouchSlop && mDy > 0 && mTwoFingerSwipe) || // two finger down swipe to open the menu
                 (dx_abs > cTouchSlop && dx_abs > dy_abs)) // horizontal swipe
             {
-                mSwipeInProccess = true;
+                mSwipeInProcess = true;
                 return true;
             }
         }
@@ -72,16 +71,16 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
 //            mSwipeInProccess = mSwipeCb.onSwipe(SWIPE_2FINGER_DOWN, mDy);
 //        }
 
-        return mSwipeInProccess; // If already intercepting, continue consuming.
+        return mSwipeInProcess; // If already intercepting, continue consuming.
     }
 
     @Override
     public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
         mDx = e2.getX() - e1.getX();
         mDy = e2.getY() - e1.getY();
-        if (mSwipeInProccess) {
+        if (mSwipeInProcess) {
             // reset, fling done
-            mSwipeInProccess = false;
+            mSwipeInProcess = false;
 
             // swipe up/down for capture/menu
             if (Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD && _isUpOrDownSwipe(SWIPE_DISTANCE_THRESHOLD)) {
@@ -97,20 +96,20 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
         return false;
     }
 
-    // we want to support long swipe up and long swipe down
+    // Support long swipe up (for capture) and long swipe down
     public boolean onUp(MotionEvent e) {
-        if (mSwipeInProccess) {
-            mSwipeInProccess = false;
+        if (mSwipeInProcess) {
+            mSwipeInProcess = false;
             return _isUpOrDownSwipe(700);
         }
         return false;
     }
 
-    // We want to enable booth quick and long swipe up/down
-    private boolean _isUpOrDownSwipe(int treshold) {
+    // helper to detect swipe up/down for fling or long swipe
+    private boolean _isUpOrDownSwipe(int threshold) {
 
         if ((Math.abs(mDy)/Math.abs(mDx)) > 0.5 // so that the swipe can be a bit diagonal
-                && Math.abs(mDy) > treshold)
+                && Math.abs(mDy) > threshold)
         {
             if (mDy < 0) {
                 mSwipeCb.onSwipe(mTwoFingerSwipe ? SWIPE_2FINGER_UP : SWIPE_UP, mDy);

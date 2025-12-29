@@ -18,4 +18,9 @@
         android:title="@string/action_enter_pip"
         android:icon="@android:drawable/arrow_down_float"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/config_show_btns"
+        android:title="Show buttons"
+        android:checkable="true"/>
 </menu>

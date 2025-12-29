@@ -33,6 +33,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import java.util.ArrayList;
 
+import io.github.wandomium.viewcarousel.pager.Settings;
 import io.github.wandomium.viewcarousel.ui.AFocusMngr;
 import io.github.wandomium.viewcarousel.ui.CarouselViewAdapter;
 
