@@ -2,6 +2,7 @@ package io.github.wandomium.viewcarousel.pager;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -9,14 +10,17 @@ import io.github.wandomium.viewcarousel.R;
 
 public class Settings
 {
+    private static final String CLASS_TAG = Settings.class.getSimpleName();
+
     private static SharedPreferences mPerfs;
     private static Settings mInstance;
 
     private static final String IS_FIRST_RUN = "IS_FIRST_RUN";
     private static final String SHOW_BTNS = "SHOW_BTNS";
+    private static final String CONFIG_FILE = "CONFIG_FILE";
 
     private Settings(@NonNull Context ctx) {
-        mPerfs = ctx.getSharedPreferences(R.string.app_name + ".settings", Context.MODE_PRIVATE);
+        mPerfs = ctx.getApplicationContext().getSharedPreferences(R.string.app_name + ".settings", Context.MODE_PRIVATE);
     }
     public static Settings getInstance(Context ctx) {
         if (mInstance == null) {
@@ -36,5 +40,12 @@ public class Settings
     }
     public void showBtns(boolean show) {
         mPerfs.edit().putBoolean(SHOW_BTNS, show).apply();;
+    }
+    public String configFile() {
+        return mPerfs.getString(CONFIG_FILE, "config.json");
+    }
+    public void setConfigFile(String configFile) {
+        Log.d(CLASS_TAG, "New config file: " + configFile);
+        mPerfs.edit().putString(CONFIG_FILE, configFile).apply();
     }
 }

@@ -17,6 +17,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import io.github.wandomium.viewcarousel.R;
@@ -73,7 +74,7 @@ public class CarouselFragmentPager extends FrameLayout
                     case SwipeDetectorListener.SWIPE_RIGHT -> _switchFragment(_previousFragment(), Direction.LEFT_IN, false);
                     case SwipeDetectorListener.SWIPE_UP -> captureInput(true);
                     case SwipeDetectorListener.SWIPE_2FINGER_DOWN -> retval = _showMenu(distance);
-                    default -> throw new IllegalStateException("Unexpected value: " + direction);
+//                    default -> throw new IllegalStateException("Unexpected value: " + direction);
                 }
                 return retval;
         });
@@ -180,6 +181,16 @@ public class CarouselFragmentPager extends FrameLayout
         return true;
     }
 
+    public void removeAllFragments() {
+        FragmentTransaction fTransaction = mFragmentMngr.beginTransaction();
+        List<Fragment> fragmentList = mFragmentMngr.getFragments();
+
+        for (Fragment f : fragmentList) {
+            fTransaction.remove(f);
+        }
+        fTransaction.commitNow();
+        mFragmentTags.clear();
+    }
     public void removeFragment(final int position) throws IllegalArgumentException {
         try {
             if (position == mCurrentFragment) {

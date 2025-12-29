@@ -1,4 +1,4 @@
-[] nredi konfigurabilno ali imas btns ali ne
+[x] nredi konfigurabilno ali imas btns ali ne
 [x] double finger down for menu
 [] podpri multiple konfiguracije
 [] exportaj config v user-accessible directory

@@ -2,17 +2,20 @@ package io.github.wandomium.viewcarousel.pager;
 
 import android.Manifest;
 import android.app.PictureInPictureParams;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.text.InputType;
 import android.util.Log;
 import android.util.Rational;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.CookieManager;
+import android.widget.EditText;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
@@ -20,6 +23,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -27,6 +31,7 @@ import androidx.fragment.app.FragmentActivity;
 import java.util.ArrayList;
 
 import io.github.wandomium.viewcarousel.R;
+import io.github.wandomium.viewcarousel.pager.data.ConfigMngr;
 import io.github.wandomium.viewcarousel.pager.data.Page;
 import io.github.wandomium.viewcarousel.pager.ui.CarouselFragmentPager;
 
@@ -83,14 +88,14 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onPause() {
-        Page.savePages(this, mPages);
+        ConfigMngr.savePages(this, mPages, Settings.getInstance(this).configFile());
         CookieManager.getInstance().flush();
         super.onPause();
     }
 
     @Override
     public void onDestroy() {
-        Page.savePages(this, mPages);
+        ConfigMngr.savePages(this, mPages, Settings.getInstance(this).configFile());
         super.onDestroy();
     }
 
@@ -98,7 +103,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
-        Page.savePages(this, mPages);
+        ConfigMngr.savePages(this, mPages, Settings.getInstance(this).configFile());
         _enterPipMode();
     }
 
@@ -142,7 +147,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void _loadPages() {
-        mPages = Page.loadPages(this);
+//        mPages = Page.loadPages(this);
+        mPages = ConfigMngr.loadPages(this, Settings.getInstance(this).configFile());
 
         // TODO: detect if config file was manhandled and has too many pages
         for (Page page : mPages) {
@@ -241,6 +247,9 @@ public class MainActivity extends AppCompatActivity
             item.setChecked(show);
             _showBtns(show);
         }
+        else if (id == R.id.config_list_configs) {
+            _showConfigList();
+        }
 
         return true;
     }
@@ -307,6 +316,43 @@ public class MainActivity extends AppCompatActivity
                 _clearNewPage();
             }
         }
+    }
+
+    private void _showConfigList()
+    {
+        final String current = Settings.getInstance(this).configFile();
+        ArrayList<String> configs = ConfigMngr.getConfigs(this);
+
+        final int currentIdx = configs.indexOf(current);
+//        () -> Settings.getInstance(this).setConfigFile(input.getText().toString())
+        new AlertDialog.Builder(this)
+                .setTitle("Select configuration")
+                .setSingleChoiceItems(configs.toArray(new String[0]), currentIdx,
+                        (dialog, which) -> {
+                            Settings.getInstance(this).setConfigFile(configs.get(which));
+                            Log.d(CLASS_TAG, "CALL FROM SELECTOR");
+                        })
+                .setPositiveButton("Create new", (dialog, which) -> {
+                    dialog.dismiss();
+                    final EditText input = new EditText(this);
+                    input.setInputType(InputType.TYPE_CLASS_TEXT); // Standard text input
+                    input.setHint(".json");
+                    new AlertDialog.Builder(this)
+                        .setTitle("Enter name")
+                        .setView(input)
+                        .setNegativeButton("Cancel", null)
+                        .setPositiveButton("OK", (dialog1, which1) -> {
+                            Settings.getInstance(this).setConfigFile(input.getText().toString());
+                            Log.d(CLASS_TAG, Settings.getInstance(this).configFile());
+                            mPages.clear();
+                            mFPager.removeAllFragments();
+                            _loadPages();
+                        }).create().show();
+                }).setNegativeButton("OK", ((dialog, which) -> {
+                    mFPager.removeAllFragments();
+                    mPages.clear();
+                    _loadPages();
+                })).create().show();
     }
 
     private void _showUnsupportedActionToast() {

@@ -1,8 +1,13 @@
 package io.github.wandomium.viewcarousel.pager.data;
 
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Environment;
-import android.provider.ContactsContract;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -11,19 +16,23 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 
 public class Page
 {
     private static final String CLASS_TAG = Page.class.getSimpleName();
-    private static final String CONFIG_FNAME_DEFAULT = "config.json";
+
+    private static final String CONFIG_FOLDER_NAME = "ViewCarousel";
 
     public final static int DEFAULT_REFRESH_RATE_MIN = 15;
 
@@ -59,46 +68,63 @@ public class Page
         return new Page(PAGE_TYPE_CONTACTS, null, null, contacts);
     }
 
-    public static ArrayList<Page> loadPages(final Context ctx) {
-        Log.d(CLASS_TAG, "external files dir: " + ctx.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS));
-        Log.d(CLASS_TAG, "files dir: " + ctx.getFilesDir());
-        File file = new File(ctx.getExternalFilesDir(null), CONFIG_FNAME_DEFAULT);
-        Gson gson = new Gson();
-        ArrayList<Page> pages = null;
-
-        try (FileReader reader = new FileReader(file)) {
-            Type userListType = new TypeToken<ArrayList<Page>>() {}.getType();
-            pages = gson.fromJson(reader, userListType);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        Log.d(CLASS_TAG, "Loading from: " + file.getAbsolutePath());
-        Log.d(CLASS_TAG, pages == null ? "null" : gson.toJson(pages));
-
-        return pages == null ? new ArrayList<>() : pages;
-    }
-
-    public static void savePages(final Context ctx, final ArrayList<Page> pages) {
-        File file = new File(ctx.getExternalFilesDir(null), CONFIG_FNAME_DEFAULT);
-        Gson gson = new Gson();
-
-        // create a new list so we don't mess up the original one
-        ArrayList<Page> pagesToSave;
-        if (pages == null) {
-            pagesToSave = new ArrayList<>();
-        }
-        else {
-            pagesToSave = new ArrayList<>(pages);
-            pagesToSave.removeIf(Objects::isNull);
-        }
-
-        try (FileWriter writer = new FileWriter(file)) {
-            gson.toJson(pagesToSave, writer); // Serialize ArrayList to JSON file
-            Log.d(CLASS_TAG,"Saving to " + file.getAbsolutePath());
-            Log.d(CLASS_TAG, gson.toJson(pages));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//
+//    public static void savePagesExt(Context context, final ArrayList<Page> pages, final String fname)
+//    {
+//        // create a new list so we don't mess up the original one
+//        ArrayList<Page> pagesToSave;
+//        if (pages == null) {
+//            pagesToSave = new ArrayList<>();
+//        }
+//        else {
+//            pagesToSave = new ArrayList<>(pages);
+//            pagesToSave.removeIf(Objects::isNull);
+//        }
+//        // serialize data
+//        Gson gson = new Gson();
+//        final String data = gson.toJson(pagesToSave);
+//
+//        // write file
+//        final ContentResolver resolver = context.getContentResolver();
+//        final Uri fileUri = _getFileUri(fname, resolver);
+//
+//        if (fileUri != null) {
+//            try (OutputStream outputStream = resolver.openOutputStream(fileUri, "wt")) {
+//                outputStream.write(data.getBytes());
+//                Log.d(CLASS_TAG,"Saving to " + fileUri.getPath());
+//                Log.d(CLASS_TAG, data);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
+//
+//    // this needs to be simplified
+//    private static Uri _getFileUri(final String fname, ContentResolver resolver)
+//    {
+//        String folderPath = Environment.DIRECTORY_DOCUMENTS + "/" + CONFIG_FOLDER_NAME;
+//        Uri externalUri = MediaStore.Files.getContentUri("external");
+//
+//        // does the file exist?
+//        String selection = MediaStore.MediaColumns.RELATIVE_PATH + " LIKE ? AND " +
+//                MediaStore.MediaColumns.DISPLAY_NAME + "=?";
+//        String[] selectionArgs = new String[]{folderPath + "%", fname};
+//
+//        try (Cursor cursor = resolver.query(externalUri, null, selection, selectionArgs, null)) {
+//            if (cursor != null && cursor.moveToFirst()) {
+//                // File exists! Get its URI
+//                long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID));
+//                Log.d(CLASS_TAG, "file found: " + ContentUris.withAppendedId(externalUri, id).getPath());
+//                return ContentUris.withAppendedId(externalUri, id);
+//            }
+//        }
+//
+//        // file does not exist, create
+//        ContentValues values = new ContentValues();
+//        values.put(MediaStore.MediaColumns.DISPLAY_NAME, fname);
+//        values.put(MediaStore.MediaColumns.MIME_TYPE, "application/json");
+//        values.put(MediaStore.MediaColumns.RELATIVE_PATH, folderPath);
+//
+//        return resolver.insert(externalUri, values);
+//    }
 }
