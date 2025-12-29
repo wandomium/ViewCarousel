@@ -11,6 +11,7 @@ import android.provider.ContactsContract;
 import android.util.Log;
 import android.util.Rational;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.widget.PopupMenu;
@@ -119,6 +120,7 @@ public class MainActivity extends AppCompatActivity
         PopupMenu menu = new PopupMenu(MainActivity.this, view);
         menu.getMenuInflater().inflate(R.menu.main_menu, menu.getMenu());
         menu.setOnMenuItemClickListener(this::_handleMenuSelection);
+        menu.setOnDismissListener((ignored) -> mFPager.setMenuVisible(false));
         menu.show();
     }
 

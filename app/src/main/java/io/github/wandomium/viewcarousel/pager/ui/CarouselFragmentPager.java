@@ -9,7 +9,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
-import android.widget.Toast;
+import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -21,6 +21,7 @@ import java.util.Objects;
 
 import io.github.wandomium.viewcarousel.R;
 import io.github.wandomium.viewcarousel.pager.FragmentBase;
+import io.github.wandomium.viewcarousel.pager.MainActivity;
 import io.github.wandomium.viewcarousel.pager.data.Page;
 
 public class CarouselFragmentPager extends FrameLayout
@@ -54,6 +55,9 @@ public class CarouselFragmentPager extends FrameLayout
         void onCaptureInput();
     }
 
+    // Top Menu
+    private LinearLayout mTopMenu;
+
     public CarouselFragmentPager(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -63,14 +67,19 @@ public class CarouselFragmentPager extends FrameLayout
         mPageIdDisplay = v.findViewById(R.id.page_indicator);
         mSwipeDetectorListener = new SwipeDetectorListener(
             ViewConfiguration.get(context).getScaledTouchSlop(), (direction, distance) -> {
+                boolean retval = false; //by default we don't keep consuming the event
                 switch (direction) {
                     case SwipeDetectorListener.SWIPE_LEFT -> _switchFragment(_nextFragment(), Direction.RIGHT_IN, false);
                     case SwipeDetectorListener.SWIPE_RIGHT -> _switchFragment(_previousFragment(), Direction.LEFT_IN, false);
                     case SwipeDetectorListener.SWIPE_UP -> captureInput(true);
-                    case SwipeDetectorListener.SWIPE_DOWN_2FINGER -> Log.d(CLASS_TAG, "2 FINGER SWIPE DOWN");
+                    case SwipeDetectorListener.SWIPE_2FINGER_DOWN -> retval = _showMenu(distance);
+                    default -> throw new IllegalStateException("Unexpected value: " + direction);
                 }
+                return retval;
         });
         mGestureDetector = new GestureDetector(getContext(), mSwipeDetectorListener);
+
+        mTopMenu = v.findViewById(R.id.top_menu);
     }
 
     public void setFragmentManager(@NonNull FragmentManager fMngr) {
@@ -104,15 +113,8 @@ public class CarouselFragmentPager extends FrameLayout
             return super.onInterceptTouchEvent(ev);
         }
         mGestureDetector.onTouchEvent(ev);
-//        switch (action) {
-//            case MotionEvent.ACTION_DOWN -> {
-//                return false; // pass to child
-//            }
-//            case MotionEvent.ACTION_MOVE -> {
-//                if (mSwipeDetected) return true; // consume. events are dispatched to onTouchEvent
-//            }
-//        }
-        if (ev.getAction() == MotionEvent.ACTION_MOVE && mSwipeDetectorListener.swipeInProcess()) {
+
+        if (ev.getAction() == MotionEvent.ACTION_MOVE && mSwipeDetectorListener.swipeInProgress()) {
             return true;
         }
         else {
@@ -126,8 +128,10 @@ public class CarouselFragmentPager extends FrameLayout
         // return mGestureDetector.onTouchEvent(ev);
         final int action = ev.getAction();
         final boolean retval = mGestureDetector.onTouchEvent(ev);
+
         if ((action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL)
-            && mSwipeDetectorListener.swipeInProcess()) {
+            && mSwipeDetectorListener.swipeInProgress())
+        {
             return mSwipeDetectorListener.onUp(ev);
         }
         return retval;
@@ -232,6 +236,37 @@ public class CarouselFragmentPager extends FrameLayout
 
         return true;
     }
+
+    ///// TODO
+    /// This is an ugly hack, fix it when other stuff works
+    private boolean mMenuVisible = false;
+    public void setMenuVisible(boolean visible) {
+        mMenuVisible = visible;
+    }
+    private boolean _showMenu(final float distance) {
+        final int height = mTopMenu.getHeight();
+
+        //TODO this is ugly, FIX
+        MainActivity activity = (MainActivity) getContext();
+        if (!mMenuVisible) {
+            mMenuVisible = true;
+            activity.onMenuBtnClicked(mTopMenu);
+        }
+        return false;
+
+//        final boolean retval =  distance < height;
+//        if (retval) {
+//            mTopMenu.setTranslationY(distance-height);
+//        }
+//        return retval;
+    }
+
+    private boolean _hideMenu() {
+        mTopMenu.setTranslationY(-mTopMenu.getHeight());
+        return false;
+    }
+    /// END OF HACK
+    /// ///////////////
 
     private int _previousFragment() {
         return (mCurrentFragment == 0) ? mFragmentTags.size() - 1 : mCurrentFragment - 1;

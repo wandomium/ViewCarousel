@@ -11,6 +11,14 @@
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+    <LinearLayout
+        android:id="@+id/top_menu"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:background="#333333"
+        android:translationY="-300dp"
+        android:orientation="vertical">
+    </LinearLayout>
     <!-- Fragment position indicator -->
     <io.github.wandomium.viewcarousel.pager.ui.PageIndicator
         android:id="@+id/page_indicator"
