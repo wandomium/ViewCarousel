@@ -4,8 +4,11 @@
 [/] exportaj config v user-accessible directory
 [x] Show countdown to call
 [] Enable config file delete
+[] Make it so that .json does not have to be entered in name
 
+bugs:
 [x] Fixed swipe up detection
+[] recheck menu not showing checkmark
 
 low:
 [] user manual on first run
