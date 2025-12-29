@@ -190,6 +190,7 @@ public class CarouselFragmentPager extends FrameLayout
         }
         fTransaction.commitNow();
         mFragmentTags.clear();
+        mCurrentFragment = 0;
     }
     public void removeFragment(final int position) throws IllegalArgumentException {
         try {

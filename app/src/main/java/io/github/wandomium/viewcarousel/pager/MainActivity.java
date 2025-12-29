@@ -285,7 +285,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void _clearNewPage() {
-        mFNewPage.setPageConfigredCb(null);
+        if (mFNewPage != null) {
+            mFNewPage.setPageConfigredCb(null);
+        }
         mFNewPage = null;
         mFNewPageIdx = NEW_PAGE_IDX_NONE;
     }
@@ -330,7 +332,6 @@ public class MainActivity extends AppCompatActivity
                 .setSingleChoiceItems(configs.toArray(new String[0]), currentIdx,
                         (dialog, which) -> {
                             Settings.getInstance(this).setConfigFile(configs.get(which));
-                            Log.d(CLASS_TAG, "CALL FROM SELECTOR");
                         })
                 .setPositiveButton("Create new", (dialog, which) -> {
                     dialog.dismiss();
@@ -343,14 +344,15 @@ public class MainActivity extends AppCompatActivity
                         .setNegativeButton("Cancel", null)
                         .setPositiveButton("OK", (dialog1, which1) -> {
                             Settings.getInstance(this).setConfigFile(input.getText().toString());
-                            Log.d(CLASS_TAG, Settings.getInstance(this).configFile());
-                            mPages.clear();
                             mFPager.removeAllFragments();
+                            mPages.clear();
+                            _clearNewPage();
                             _loadPages();
                         }).create().show();
                 }).setNegativeButton("OK", ((dialog, which) -> {
                     mFPager.removeAllFragments();
                     mPages.clear();
+                    _clearNewPage();
                     _loadPages();
                 })).create().show();
     }
