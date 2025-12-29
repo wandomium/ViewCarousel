@@ -1,13 +1,14 @@
 [x] nredi konfigurabilno ali imas btns ali ne
 [x] double finger down for menu
-[] podpri multiple konfiguracije
-[] exportaj config v user-accessible directory
-[] manual open in menu
-[] when adding phone page, notify the user of long press and direct call via speaker
+[x] podpri multiple konfiguracije
+[/] exportaj config v user-accessible directory
 [x] Show countdown to call
+[] Enable config file delete
 
 [x] Fixed swipe up detection
 
 low:
 [] user manual on first run
+[] manual open in menu
 [] remove unused code
+[] when adding phone page, notify the user of long press and direct call via speaker

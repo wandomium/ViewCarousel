@@ -2,7 +2,6 @@ package io.github.wandomium.viewcarousel.pager;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -38,14 +37,13 @@ public class Settings
     public boolean showBtns() {
         return mPerfs.getBoolean(SHOW_BTNS, true);
     }
-    public void showBtns(boolean show) {
+    public void setShowBtns(boolean show) {
         mPerfs.edit().putBoolean(SHOW_BTNS, show).apply();;
     }
     public String configFile() {
         return mPerfs.getString(CONFIG_FILE, "config.json");
     }
     public void setConfigFile(String configFile) {
-        Log.d(CLASS_TAG, "New config file: " + configFile);
         mPerfs.edit().putString(CONFIG_FILE, configFile).apply();
     }
 }

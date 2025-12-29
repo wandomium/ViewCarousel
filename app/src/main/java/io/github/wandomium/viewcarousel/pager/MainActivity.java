@@ -2,7 +2,6 @@ package io.github.wandomium.viewcarousel.pager;
 
 import android.Manifest;
 import android.app.PictureInPictureParams;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -243,7 +242,7 @@ public class MainActivity extends AppCompatActivity
         }
         else if (id == R.id.config_show_btns) {
             boolean show = !item.isChecked();
-            Settings.getInstance(this).showBtns(show);
+            Settings.getInstance(this).setShowBtns(show);
             item.setChecked(show);
             _showBtns(show);
         }
