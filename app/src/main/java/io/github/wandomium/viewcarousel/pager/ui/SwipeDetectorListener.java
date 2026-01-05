@@ -97,7 +97,7 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
     }
 
     // Support long swipe up (for capture) and long swipe down
-    public boolean onUp(MotionEvent e) {
+    public boolean onSwipeDone(MotionEvent e) {
         if (mSwipeInProcess) {
             mSwipeInProcess = false;
             return _isUpOrDownSwipe(700);

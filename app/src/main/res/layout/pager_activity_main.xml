@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<io.github.wandomium.viewcarousel.pager.ui.UserActionsLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/root_view"
+    android:id="@+id/user_actions_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:background="@android:color/black"
     android:keepScreenOn="true">
 
-    <!-- Container where fragments will be swapped -->
     <io.github.wandomium.viewcarousel.pager.ui.CarouselFragmentPager
         android:id="@+id/carousel_pager"
         android:layout_width="0dp"
@@ -22,7 +22,6 @@
 
     <ImageButton
         android:id="@+id/menu_btn"
-        android:onClick="onMenuBtnClicked"
         android:contentDescription="Menu Button"
         android:layout_width="80dp"
         android:layout_height="100dp"
@@ -32,7 +31,6 @@
         app:layout_constraintBottom_toBottomOf="parent"/>
     <ImageButton
         android:id="@+id/call_btn"
-        android:onClick="onCallBtnClicked"
         android:contentDescription="Dialer Button"
         android:layout_width="80dp"
         android:layout_height="100dp"
@@ -40,4 +38,5 @@
         android:background="@drawable/outline_call_24"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+</io.github.wandomium.viewcarousel.pager.ui.UserActionsLayout>

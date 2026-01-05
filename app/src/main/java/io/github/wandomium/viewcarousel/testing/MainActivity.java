@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.testing_activity_main);
-        mainView = findViewById(R.id.root_view);
+        mainView = findViewById(R.id.user_actions_view);
         pageNumberTextView = findViewById(R.id.page_indicator);
 
         fragments = new ArrayList<>(4);

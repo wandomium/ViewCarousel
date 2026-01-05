@@ -4,11 +4,13 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.ContactsContract;
 import android.telecom.TelecomManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -21,12 +23,18 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.snackbar.Snackbar;
+
+import java.util.ArrayList;
 
 import io.github.wandomium.viewcarousel.R;
 import io.github.wandomium.viewcarousel.pager.data.Page;
@@ -82,11 +90,6 @@ public class FragmentCalls extends FragmentBase
         mCountdownSnackbar = null;
 
         super.onDestroyView();
-    }
-
-    @Override
-    public boolean captureInput(boolean capture) {
-        return false; //unsupported
     }
 
     @Override

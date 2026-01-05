@@ -1,0 +1,11 @@
+package io.github.wandomium.viewcarousel.pager.ui;
+
+@FunctionalInterface
+public interface ICaptureInput
+{
+    /**
+     * @param captureReq
+     * @return actual capture state of the component. Can be rejected if unsupported
+     */
+    boolean setCaptureInput(final boolean captureReq);
+}

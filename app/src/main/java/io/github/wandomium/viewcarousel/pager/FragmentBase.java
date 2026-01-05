@@ -13,15 +13,15 @@ import androidx.fragment.app.Fragment;
 
 import io.github.wandomium.viewcarousel.R;
 import io.github.wandomium.viewcarousel.pager.data.Page;
+import io.github.wandomium.viewcarousel.pager.ui.ICaptureInput;
 import io.github.wandomium.viewcarousel.testing.Fragments;
 
-public abstract class FragmentBase extends Fragment
+public abstract class FragmentBase extends Fragment implements ICaptureInput
 {
     private static final String CLASS_TAG = FragmentBase.class.getSimpleName();
 
     protected static final String ARG_ID = "id";
     protected int mId;
-    protected boolean mCaptureInput = false;
 
     // TODO: unify this with Page IDs
     public static final int FRAGMENT_NEW_PAGE = 0;
@@ -43,11 +43,12 @@ public abstract class FragmentBase extends Fragment
     public void updateData(Page page) {}
     public void onHide()  { Log.d(CLASS_TAG, "onHide"); }
     public void onShow()  { Log.d(CLASS_TAG, "onShow"); }
-    // new capture state can be rejected by the fragment if it is unsupported
-    public boolean captureInput(boolean capture) {
-        Log.d(CLASS_TAG, "captureInput: " + capture);
-        mCaptureInput = capture;
-        return mCaptureInput;
+
+    @Override
+    public boolean setCaptureInput(final boolean captureReq) {
+        // new capture state can be rejected by the fragment if it is unsupported
+        Log.d(CLASS_TAG, "captureInput: " + captureReq);
+        return false; //unsupported by default
     }
 
     @Nullable

@@ -112,7 +112,7 @@ public class FragmentWebPage extends FragmentBase
 
         // default capture settings
         // mWebView.setEnabled(false);
-        captureInput(false);
+        setCaptureInput(false);
 
         if (mUrl != null) {
             mWebView.loadUrl(mUrl);
@@ -120,13 +120,12 @@ public class FragmentWebPage extends FragmentBase
     }
 
     @Override
-    public boolean captureInput(boolean capture) {
-        super.captureInput(capture);
-        mBlockerView.setVisibility(mCaptureInput ? View.GONE : View.VISIBLE);
-        mWebView.setEnabled(mCaptureInput);
-        mSwipeRefresh.setEnabled(!mCaptureInput);
+    public boolean setCaptureInput(boolean captureReq) {
+        mBlockerView.setVisibility(captureReq ? View.GONE : View.VISIBLE);
+        mWebView.setEnabled(captureReq);
+        mSwipeRefresh.setEnabled(!captureReq);
 
-        return mCaptureInput;
+        return captureReq;
     }
 
     @Override
