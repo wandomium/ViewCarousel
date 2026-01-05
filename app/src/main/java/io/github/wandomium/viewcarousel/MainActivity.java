@@ -179,8 +179,10 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
         ConfigMngr.savePages(this, mFPager.getOrderedData(), Settings.getInstance(this).configFile());
     }
     public void onPageConfigured(int fIdx, Page page) {
-        mFPager.replaceFragment(mFNewPageIdx,
-                FragmentBase.createFragment(mFNewPageIdx, page, MainActivity.this::onDatasetUpdated));
+        mFPager.replaceFragment(
+            mFNewPageIdx,
+            FragmentBase.createFragment(mFNewPageIdx, page, MainActivity.this::onDatasetUpdated)
+        );
         _clearNewPageFragment();
         onDatasetUpdated();
     }
@@ -192,7 +194,8 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
             Toast.makeText(this, "New page already exists at index: " + mFNewPageIdx, Toast.LENGTH_SHORT).show();
             return;
         }
-        final FragmentNewPage fNewPage = (FragmentNewPage) FragmentBase.createFragment(idx, null, this::onPageConfigured);
+        final FragmentNewPage fNewPage = (FragmentNewPage) FragmentBase
+                .createFragment(idx, null, this::onPageConfigured);
         try {
             if (replace) {
                 mFPager.replaceFragment(idx, fNewPage);
