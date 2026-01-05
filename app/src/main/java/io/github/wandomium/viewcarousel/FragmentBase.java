@@ -1,4 +1,4 @@
-package io.github.wandomium.viewcarousel.pager;
+package io.github.wandomium.viewcarousel;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -11,10 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import io.github.wandomium.viewcarousel.R;
-import io.github.wandomium.viewcarousel.pager.data.Page;
-import io.github.wandomium.viewcarousel.pager.ui.ICaptureInput;
-import io.github.wandomium.viewcarousel.testing.Fragments;
+import io.github.wandomium.viewcarousel.data.Page;
+import io.github.wandomium.viewcarousel.ui.ICaptureInput;
 
 public abstract class FragmentBase extends Fragment implements ICaptureInput
 {
@@ -35,7 +33,7 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
             default -> throw new IllegalArgumentException("Invalid fragment type");
         };
         Bundle args = new Bundle();
-        args.putInt(Fragments.ARG_ID, id);
+        args.putInt(ARG_ID, id);
         f.setArguments(args);
         return f;
     }
@@ -56,7 +54,7 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         mId = getArguments().getInt(ARG_ID);
-        return inflater.inflate(R.layout.demo_fragment, container, false);
+        return inflater.inflate(R.layout.fragment_base, container, false);
     }
 
     @Override

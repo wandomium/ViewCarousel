@@ -1,4 +1,4 @@
-package io.github.wandomium.viewcarousel.pager.ui;
+package io.github.wandomium.viewcarousel.ui;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Objects;
 
 import io.github.wandomium.viewcarousel.R;
-import io.github.wandomium.viewcarousel.pager.FragmentBase;
-import io.github.wandomium.viewcarousel.pager.data.Page;
+import io.github.wandomium.viewcarousel.FragmentBase;
+import io.github.wandomium.viewcarousel.data.Page;
 
 public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
 {

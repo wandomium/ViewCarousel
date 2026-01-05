@@ -1,11 +1,9 @@
-package io.github.wandomium.viewcarousel.pager;
+package io.github.wandomium.viewcarousel;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
-
-import io.github.wandomium.viewcarousel.R;
 
 public class Settings
 {

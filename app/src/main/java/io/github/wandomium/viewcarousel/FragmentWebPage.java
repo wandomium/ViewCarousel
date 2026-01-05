@@ -1,4 +1,4 @@
-package io.github.wandomium.viewcarousel.pager;
+package io.github.wandomium.viewcarousel;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -24,8 +24,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import io.github.wandomium.viewcarousel.R;
-import io.github.wandomium.viewcarousel.pager.data.Page;
+import io.github.wandomium.viewcarousel.data.Page;
 
 public class FragmentWebPage extends FragmentBase
 {

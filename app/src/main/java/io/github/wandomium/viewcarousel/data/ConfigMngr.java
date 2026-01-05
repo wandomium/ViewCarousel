@@ -1,11 +1,8 @@
-package io.github.wandomium.viewcarousel.pager.data;
+package io.github.wandomium.viewcarousel.data;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Environment;
 import android.util.Log;
-
-import androidx.appcompat.app.AlertDialog;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -16,10 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
-
-import io.github.wandomium.viewcarousel.pager.Settings;
 
 public class ConfigMngr
 {

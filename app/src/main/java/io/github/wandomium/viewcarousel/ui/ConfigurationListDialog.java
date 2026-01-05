@@ -1,4 +1,4 @@
-package io.github.wandomium.viewcarousel.pager.ui;
+package io.github.wandomium.viewcarousel.ui;
 
 import android.text.InputType;
 import android.widget.EditText;
@@ -7,9 +7,9 @@ import androidx.appcompat.app.AlertDialog;
 
 import java.util.ArrayList;
 
-import io.github.wandomium.viewcarousel.pager.MainActivity;
-import io.github.wandomium.viewcarousel.pager.Settings;
-import io.github.wandomium.viewcarousel.pager.data.ConfigMngr;
+import io.github.wandomium.viewcarousel.MainActivity;
+import io.github.wandomium.viewcarousel.Settings;
+import io.github.wandomium.viewcarousel.data.ConfigMngr;
 
 public class ConfigurationListDialog
 {

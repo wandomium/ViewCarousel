@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<io.github.wandomium.viewcarousel.ui.UserActionsLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/user_actions_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:background="@android:color/black"
     android:keepScreenOn="true">
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPager"
+
+    <io.github.wandomium.viewcarousel.ui.CarouselFragmentPager
+        android:id="@+id/carousel_pager"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -18,49 +19,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
+
     <ImageButton
         android:id="@+id/menu_btn"
-        android:onClick="onMenuBtnClicked"
         android:contentDescription="Menu Button"
         android:layout_width="80dp"
         android:layout_height="100dp"
         android:elevation="18dp"
         android:background="@drawable/rounded_menu_24"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        tools:ignore="HardcodedText" />
+        app:layout_constraintBottom_toBottomOf="parent"/>
     <ImageButton
         android:id="@+id/call_btn"
-        android:onClick="onCallBtnClicked"
         android:contentDescription="Dialer Button"
         android:layout_width="80dp"
         android:layout_height="100dp"
         android:elevation="18dp"
         android:background="@drawable/outline_call_24"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="HardcodedText" />
-<!--    <ImageButton-->
-<!--        android:id="@+id/menu_btn"-->
-<!--        android:layout_width="164dp"-->
-<!--        android:layout_height="164dp"-->
-<!--        android:scaleType="centerInside"-->
-<!--        android:contentDescription="Menu"-->
-<!--        android:background="?attr/selectableItemBackgroundBorderless"-->
-<!--        app:backgroundTint="@color/android:transparent"-->
-<!--        android:layout_gravity="center"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"/>-->
-</androidx.constraintlayout.widget.ConstraintLayout>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-<!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    android:orientation="vertical"-->
-<!--    android:layout_width="match_parent"-->
-<!--    android:layout_height="match_parent">-->
-
-<!--    <WebView-->
-<!--        android:id="@+id/webview"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"/>-->
-<!--</LinearLayout>-->
+</io.github.wandomium.viewcarousel.ui.UserActionsLayout>

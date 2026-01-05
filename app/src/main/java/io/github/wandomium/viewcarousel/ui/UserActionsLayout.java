@@ -1,25 +1,19 @@
-package io.github.wandomium.viewcarousel.pager.ui;
+package io.github.wandomium.viewcarousel.ui;
 
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.LinearLayout;
-import android.widget.PopupMenu;
-import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import io.github.wandomium.viewcarousel.R;
-import io.github.wandomium.viewcarousel.pager.MainActivity;
-import io.github.wandomium.viewcarousel.pager.Settings;
+import io.github.wandomium.viewcarousel.MainActivity;
 
 public class UserActionsLayout extends ConstraintLayout implements ICaptureInput
 {
@@ -46,7 +40,7 @@ public class UserActionsLayout extends ConstraintLayout implements ICaptureInput
         }
 
         LayoutInflater inflater = LayoutInflater.from(context);
-        View v = inflater.inflate(R.layout.pager_user_actions, this,true);
+        View v = inflater.inflate(R.layout.user_actions_detector, this,true);
 
         ///// PLACEHOLDER
         mTopMenu = v.findViewById(R.id.top_menu);

@@ -1,4 +1,4 @@
-package io.github.wandomium.viewcarousel.pager.ui;
+package io.github.wandomium.viewcarousel.ui;
 
 import android.view.GestureDetector;
 import android.view.MotionEvent;

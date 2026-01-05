@@ -1,4 +1,4 @@
-package io.github.wandomium.viewcarousel.pager.ui;
+package io.github.wandomium.viewcarousel.ui;
 
 import android.content.Context;
 import android.os.Handler;

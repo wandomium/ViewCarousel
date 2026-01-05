@@ -1,13 +1,10 @@
-package io.github.wandomium.viewcarousel.pager;
+package io.github.wandomium.viewcarousel;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.NumberPicker;
 
 import androidx.annotation.NonNull;
@@ -15,8 +12,7 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.textfield.TextInputEditText;
 
-import io.github.wandomium.viewcarousel.R;
-import io.github.wandomium.viewcarousel.pager.data.Page;
+import io.github.wandomium.viewcarousel.data.Page;
 
 public class FragmentNewPage extends FragmentBase
 {
@@ -34,7 +30,7 @@ public class FragmentNewPage extends FragmentBase
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         super.onCreateView(inflater, container,savedInstanceState);
-        return inflater.inflate(R.layout.item_new_page, container, false);
+        return inflater.inflate(R.layout.fragment_new_page, container, false);
     }
 
     @Override
@@ -55,7 +51,7 @@ public class FragmentNewPage extends FragmentBase
     {
         // 2. Inflate the custom layout
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        View customView = inflater.inflate(R.layout.add_web_page_dialog, null);
+        View customView = inflater.inflate(R.layout.dialog_add_web_page, null);
 
         // Configure URL text
         TextInputEditText urlInput = customView.findViewById(R.id.url);
