@@ -137,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
         final boolean capture = mFPager.setCaptureInput(captureReq);
         mBackPressedCb.setEnabled(capture);
         mUserActionsLayout.setCaptureInput(capture);
+        _showBtns(!capture);
 
         //if capture was requested but not realized we don't write
         //release is currently never rejected
