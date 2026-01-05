@@ -28,9 +28,8 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
     public interface PageUpdatedCb {
         void onPageUpdated(int id, Page page);
     }
-    public void setPageUpdatedCb(PageUpdatedCb updatedCb) {
-        mPageUpdatedCb = updatedCb;
-    }
+
+
     public FragmentBase(Page page, PageUpdatedCb updatedCb) {
         mPage = page;
         mPageUpdatedCb = updatedCb;

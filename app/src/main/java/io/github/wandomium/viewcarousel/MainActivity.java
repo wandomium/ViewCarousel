@@ -5,9 +5,7 @@ import android.app.PictureInPictureParams;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.util.Log;
 import android.util.Rational;
 import android.view.MenuItem;
@@ -17,15 +15,10 @@ import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 
 import java.util.ArrayList;
 
@@ -66,7 +59,8 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
 
         /// BUTTONS
         findViewById(R.id.call_btn).setOnClickListener(this::onCallBtnClicked);
-        findViewById(R.id.menu_btn).setOnClickListener(this::onMenuBtnClicked);
+        findViewById(R.id.menu_btn).setOnClickListener(this::showPopupMenu);
+//        findViewById(R.id.menu_btn).setOnClickListener((v)->openOptionsMenu());
 
         /// release focus
         mBackPressedCb = new OnBackPressedCallback(false) {
@@ -122,10 +116,8 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
     public void nextPage() { mFPager.showNextFragment(); }
     public void previousPage() { mFPager.showPreviousFragment(); }
     public void reloadPagesFromConfig() {
-        // clear all pages
         mFPager.removeAllFragments();
-        _removeNewPageFragment();
-        // load freash from config
+        _clearNewPageFragment();
         _loadPages();
     }
 
@@ -138,11 +130,9 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
             Toast.makeText(this, "Could not launch dialer", Toast.LENGTH_LONG).show();
         }
     }
-    public void onMenuBtnClicked(View view) {
-        if (mMenuVisible) {
-            return;
-        }
-//        findViewById(R.id.menu_btn).setOnClickListener((v)->openOptionsMenu());
+    public void showPopupMenu(View view) {
+        if (mMenuVisible) { return; }
+
         PopupMenu menu = new PopupMenu(this, view);
         menu.getMenuInflater().inflate(R.menu.main_menu, menu.getMenu());
 
@@ -156,22 +146,16 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
             final int id = item.getItemId();
             final int currentFrIdx = mFPager.currentFragmentIdx();
 
-            if (id == R.id.action_add_page)
-            {
-                _addNewPageFragment(currentFrIdx + 1, false);
-            }
+            if (id == R.id.action_add_page) { _addNewPageFragment(currentFrIdx + 1, false); }
             else if (id == R.id.action_remove_page)
             {
                 Log.d(CLASS_TAG, "Remove: " + currentFrIdx);
-                if (currentFrIdx == mFNewPageIdx) { _removeNewPageFragment(); } //TODO: simplify this call
+                if (currentFrIdx == mFNewPageIdx) { _clearNewPageFragment(); } //TODO: simplify this call
                 if (mFPager.numFragments() == 0) { _addNewPageFragment(0, true);} // replace current fragment with new one
                 else { mFPager.removeFragment(currentFrIdx); }
                 onDatasetUpdated();
             }
-            else if (id == R.id.action_enter_pip)
-            {
-                _enterPipMode();
-            }
+            else if (id == R.id.action_enter_pip) { _enterPipMode(); }
             else if (id == R.id.config_show_btns)
             {
                 boolean show = !item.isChecked();
@@ -179,10 +163,8 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
                 item.setChecked(show);
                 _showBtns(show);
             }
-            else if (id == R.id.config_list_configs)
-            {
-                ConfigurationListDialog.show(this);
-            }
+            else if (id == R.id.config_list_configs) { ConfigurationListDialog.show(this); }
+
             return true;
         });
 
@@ -194,48 +176,46 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
     /// PageUpdatedCb Impl
     public void onDatasetUpdated(int fIdx, Page page) { onDatasetUpdated();}
     public void onDatasetUpdated() {
-        ArrayList<Page> pages = new ArrayList<>();
-        for (Fragment fBase : getSupportFragmentManager().getFragments() ) {
-            pages.add(((FragmentBase)fBase).getData());
-        }
-
-        ConfigMngr.savePages(this, pages, Settings.getInstance(this).configFile());
+        ConfigMngr.savePages(this, mFPager.getOrderedData(), Settings.getInstance(this).configFile());
     }
-    public void onNewPageConfigured(int fIdx, Page page) {
-        if (fIdx != mFNewPageIdx) {
-            // TODO check this, should not happen
-            Log.e(CLASS_TAG, "newPageConfigured fragment idx does not match new page idx " + fIdx + " != " + mFNewPageIdx);
-        }
-        FragmentBase fBase = null;
-        switch (page.page_type) {
-            case Page.PAGE_TYPE_CONTACTS:
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, 333);
-            case Page.PAGE_TYPE_WEB:
-                fBase = FragmentBase.createFragment(mFNewPageIdx, page, MainActivity.this::onDatasetUpdated);
-                break;
-        }
-        if (fBase != null) {
-            mFPager.replaceFragment(mFNewPageIdx, fBase);
-            _removeNewPageFragment();
-        }
+    public void onPageConfigured(int fIdx, Page page) {
+        mFPager.replaceFragment(mFNewPageIdx,
+                FragmentBase.createFragment(mFNewPageIdx, page, MainActivity.this::onDatasetUpdated));
+        _clearNewPageFragment();
+        onDatasetUpdated();
     }
 
     ////////////////
-    ////// HELPERS
-    private void _showBtns(final boolean showRequest) {
-        final boolean show = showRequest && Settings.getInstance(this).showBtns();
+    /// NEW PAGE FRAGMENT
+    private void _addNewPageFragment(int idx, boolean replace) {
+        if (mFNewPageIdx != NEW_PAGE_IDX_NONE) {
+            Toast.makeText(this, "New page already exists at index: " + mFNewPageIdx, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final FragmentNewPage fNewPage = (FragmentNewPage) FragmentBase.createFragment(idx, null, this::onPageConfigured);
+        try {
+            if (replace) {
+                mFPager.replaceFragment(idx, fNewPage);
+            }
+            else {
+                mFPager.addFragment(idx, fNewPage);
+                mFPager.showFragment(idx);
+            }
+        } catch (IllegalArgumentException ignored) {
+            Toast.makeText(MainActivity.this, "Max page limit reached", Toast.LENGTH_LONG).show();
+            return;
+        }
+        mFNewPage = fNewPage;
+        mFNewPageIdx = idx;
+    }
+    private void _clearNewPageFragment() {
+        mFNewPage = null;
+        mFNewPageIdx = NEW_PAGE_IDX_NONE;
+    }
 
-        findViewById(R.id.menu_btn).setVisibility(show ? View.VISIBLE : View.GONE);
-        findViewById(R.id.call_btn).setVisibility(show ? View.VISIBLE : View.GONE);
-    }
-    private void _enterPipMode() {
-        Rational ratio = new Rational(9, 12);
-        PictureInPictureParams params = new PictureInPictureParams.Builder()
-                .setAspectRatio(ratio)
-                .setSeamlessResizeEnabled(true)
-                .build();
-        enterPictureInPictureMode(params);
-    }
+
+    ////////////////
+    ////// HELPERS
     private void _loadPages() {
         ArrayList<Page> pages = ConfigMngr.loadPages(this, Settings.getInstance(this).configFile());
 
@@ -254,36 +234,19 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
             _addNewPageFragment(0, false);
         }
     }
+    private void _showBtns(final boolean showRequest) {
+        final boolean show = showRequest && Settings.getInstance(this).showBtns();
 
-    ////////////////
-    /// NEW PAGE FRAGMENT
-    private void _addNewPageFragment(int idx, boolean replace) {
-        if (mFNewPageIdx != NEW_PAGE_IDX_NONE) {
-            Toast.makeText(this, "New page already exists at index: " + mFNewPageIdx, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        final FragmentNewPage fNewPage = (FragmentNewPage) FragmentBase.createFragment(idx, null, this::onNewPageConfigured);
-        try {
-            if (replace) {
-                mFPager.replaceFragment(idx, fNewPage);
-            }
-            else {
-                mFPager.addFragment(idx, fNewPage);
-                mFPager.showFragment(idx);
-            }
-        } catch (IllegalArgumentException ignored) {
-            Toast.makeText(MainActivity.this, "Max page limit reached", Toast.LENGTH_LONG).show();
-            return;
-        }
-        mFNewPage = fNewPage;
-        mFNewPageIdx = idx;
+        findViewById(R.id.menu_btn).setVisibility(show ? View.VISIBLE : View.GONE);
+        findViewById(R.id.call_btn).setVisibility(show ? View.VISIBLE : View.GONE);
     }
-    private void _removeNewPageFragment() {
-        if (mFNewPage != null) {
-            mFNewPage.setPageUpdatedCb(null);
-        }
-        mFNewPage = null;
-        mFNewPageIdx = NEW_PAGE_IDX_NONE;
+    private void _enterPipMode() {
+        Rational ratio = new Rational(9, 12);
+        PictureInPictureParams params = new PictureInPictureParams.Builder()
+                .setAspectRatio(ratio)
+                .setSeamlessResizeEnabled(true)
+                .build();
+        enterPictureInPictureMode(params);
     }
 
     ////////////////
@@ -298,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
         int i = 0;
         for (; i < CarouselFragmentPager.MAX_VIEWS - 1; i++) {
             mFPager.addFragment(i,
-                    FragmentBase.createFragment(i, null, this::onNewPageConfigured));
+                    FragmentBase.createFragment(i, null, this::onPageConfigured));
         }
         mFPager.addFragment(i++,
             FragmentBase.createFragment(i, Page.createWebPage("https://archlinux.org", 1), this::onDatasetUpdated));

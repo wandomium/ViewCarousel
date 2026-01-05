@@ -52,7 +52,7 @@ public class UserActionsLayout extends ConstraintLayout implements ICaptureInput
             switch (direction) {
                 case SwipeDetectorListener.SWIPE_LEFT -> mMainActivity.nextPage();
                 case SwipeDetectorListener.SWIPE_RIGHT -> mMainActivity.previousPage();
-                case SwipeDetectorListener.SWIPE_2FINGER_DOWN -> mMainActivity.onMenuBtnClicked(mTopMenu);
+                case SwipeDetectorListener.SWIPE_2FINGER_DOWN -> mMainActivity.showPopupMenu(mTopMenu);
                 case SwipeDetectorListener.SWIPE_UP -> {
                     if (!mCaptureInput) {
                         mCaptureInput = mMainActivity.setCaptureInput(true); //this one will call us anyway

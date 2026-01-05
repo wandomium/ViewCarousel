@@ -67,6 +67,9 @@ public class FragmentCalls extends FragmentBase
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+
+        ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.CALL_PHONE}, 333);
+
         for (int i = 0; i < cBtnLayouts.length; i++) {
             mDirectCallBtns[i] = view.findViewById(cBtnLayouts[i]);
             _setDirectCallBtnEnabled(i, i < mPage.contacts.size());

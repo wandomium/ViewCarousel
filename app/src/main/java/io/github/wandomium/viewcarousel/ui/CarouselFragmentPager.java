@@ -68,6 +68,14 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
         return  _getCurrentFragment().setCaptureInput(captureReq);
     }
 
+
+    public ArrayList<Page> getOrderedData() {
+        ArrayList<Page> retval = new ArrayList<>(mFragmentTags.size());
+        for (String tag : mFragmentTags) {
+            retval.add(((FragmentBase)mFragmentMngr.findFragmentByTag(tag)).getData());
+        }
+        return retval;
+    }
     ////// FRAGMENT NAVIGATION
     //////
     public int numFragments() {
