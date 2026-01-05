@@ -34,21 +34,22 @@ public class FragmentWebPage extends FragmentBase
     private WebView mWebView;
     private SwipeRefreshLayout mSwipeRefresh;
     private View mBlockerView;
-    private String mUrl;
 
     private static final long TIME_UNITS = 1000L * 60L;
-    private int mRefreshRate = 0;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final Runnable mRefreshRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mRefreshRate > 0) {
+            if (mPage.refresh_rate > 0) {
                 mWebView.reload();
-                mHandler.postDelayed(this, mRefreshRate * TIME_UNITS);
+                mHandler.postDelayed(this, mPage.refresh_rate * TIME_UNITS);
             }
         }
     };
 
+    public FragmentWebPage(Page page, PageUpdatedCb updatedCb) {
+       super(page != null ? page : Page.createWebPage("", null), updatedCb);
+    }
 
     @Nullable
     @Override
@@ -113,9 +114,21 @@ public class FragmentWebPage extends FragmentBase
         // mWebView.setEnabled(false);
         setCaptureInput(false);
 
-        if (mUrl != null) {
-            mWebView.loadUrl(mUrl);
+        if (!mPage.url.isEmpty()) {
+            mWebView.loadUrl(mPage.url);
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        // nullify all view references
+        mWebView = null;
+        mSwipeRefresh = null;
+        mBlockerView = null;
+
+        mHandler.removeCallbacks(mRefreshRunnable);
+
+        super.onDestroyView();
     }
 
     @Override
@@ -128,15 +141,9 @@ public class FragmentWebPage extends FragmentBase
     }
 
     @Override
-    public void updateData(Page page) {
-        setUrl(page.url);
-        setRefreshRate(page.refresh_rate);
-    }
-
-    @Override
     public void onShow() {
         super.onShow();
-        if (mWebView.getUrl() == null) { loadUrl(mUrl); }
+        if (mWebView.getUrl() == null && mPage != null) { loadUrl(mPage.url); }
         else {
             mHandler.post(mRefreshRunnable);
         }
@@ -149,20 +156,14 @@ public class FragmentWebPage extends FragmentBase
         mHandler.removeCallbacks(mRefreshRunnable);
     }
 
-    @Override
-    public void onDestroy() {
-        // stop any activities that could outlive this fragment and keep dangling references
-        mHandler.removeCallbacks(mRefreshRunnable);
-        super.onDestroy();
-    }
-
-    public void setRefreshRate(int rate) { mRefreshRate = rate;}
-    public void setUrl(final String url) { mUrl = url; }
-
     public void loadUrl(final String url) {
-        mWebView.loadUrl(url);
+        if (!mPage.url.equals(url)) {
+            mPage = Page.createWebPage(url, mPage.refresh_rate);
+            mPageUpdatedCb.onPageUpdated(mId, mPage);
+        }
+        mWebView.loadUrl(mPage.url);
 
-        if (url.startsWith("https://meteo.arso.gov.si/uploads/meteo/app/inca/m/")) {
+        if (mPage.url.startsWith("https://meteo.arso.gov.si/uploads/meteo/app/inca/m/")) {
             // This fixes swipe to refresh gesture detection on some pages (for ex. INCA - Full-Screen WebGL map)
             // If view is at the top, we say child can't scroll and we get the gesture
             mSwipeRefresh.setOnChildScrollUpCallback((parent, child) -> mWebView.getScrollY() == 0);

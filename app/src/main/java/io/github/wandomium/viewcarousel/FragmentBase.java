@@ -21,16 +21,26 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
     protected static final String ARG_ID = "id";
     protected int mId;
 
-    // TODO: unify this with Page IDs
-    public static final int FRAGMENT_NEW_PAGE = 0;
-    public static final int FRAGMENT_WEB_PAGE = 1;
-    public static final int FRAGMENT_CALLS = 2;
-    public static FragmentBase createFragment(int id, int type) {
-        FragmentBase f = switch (type) {
-            case FRAGMENT_WEB_PAGE -> new FragmentWebPage();
-            case FRAGMENT_NEW_PAGE -> new FragmentNewPage();
-            case FRAGMENT_CALLS -> new FragmentCalls();
-            default -> throw new IllegalArgumentException("Invalid fragment type");
+    protected Page mPage;
+    protected PageUpdatedCb mPageUpdatedCb;
+
+    @FunctionalInterface
+    public interface PageUpdatedCb {
+        void onPageUpdated(int id, Page page);
+    }
+    public void setPageUpdatedCb(PageUpdatedCb updatedCb) {
+        mPageUpdatedCb = updatedCb;
+    }
+    public FragmentBase(Page page, PageUpdatedCb updatedCb) {
+        mPage = page;
+        mPageUpdatedCb = updatedCb;
+    }
+    public static FragmentBase createFragment(int id, Page page, PageUpdatedCb updatedCb) {
+        FragmentBase f = switch (page != null ? page.page_type : Page.PAGE_TYPE_UNKNOWN) {
+            case Page.PAGE_TYPE_WEB -> new FragmentWebPage(page, updatedCb);
+            case Page.PAGE_TYPE_CONTACTS -> new FragmentCalls(page, updatedCb);
+            case Page.PAGE_TYPE_UNKNOWN -> new FragmentNewPage(updatedCb);
+            default -> throw new IllegalArgumentException("Invalid page type");
         };
         Bundle args = new Bundle();
         args.putInt(ARG_ID, id);
@@ -38,7 +48,7 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
         return f;
     }
 
-    public void updateData(Page page) {}
+    public Page getData() { return mPage; }
     public void onHide()  { Log.d(CLASS_TAG, "onHide"); }
     public void onShow()  { Log.d(CLASS_TAG, "onShow"); }
 
@@ -60,6 +70,12 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         ((TextView) view.findViewById(R.id.text1)).setText(Integer.toString(mId));
+    }
+
+    @Override
+    public void onDestroy() {
+        mPageUpdatedCb = null;
+        super.onDestroy();
     }
 
     @Override

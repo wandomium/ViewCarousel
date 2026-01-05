@@ -18,11 +18,8 @@ public class FragmentNewPage extends FragmentBase
 {
     private static final String URL_INIT_TEXT = "https://";
 
-    private PageConfiguredCb mPageConfiguredCb;
-
-    @FunctionalInterface
-    public interface PageConfiguredCb {
-        void onPageConfigured(Page page);
+    public FragmentNewPage(PageUpdatedCb updatedCb) {
+        super(null, updatedCb);
     }
 
     @Nullable
@@ -39,13 +36,8 @@ public class FragmentNewPage extends FragmentBase
             .setOnClickListener((ignored) -> _showAddWebPageDialog());
         view.findViewById(R.id.btn_add_call_page)
             .setOnClickListener((ignored) ->
-                mPageConfiguredCb.onPageConfigured(Page.createContactsPage(null)));
+                mPageUpdatedCb.onPageUpdated(mId, Page.createContactsPage(null)));
     }
-
-    public void setPageConfigredCb(PageConfiguredCb cb) {
-        this.mPageConfiguredCb = cb;
-    }
-
 
     private void _showAddWebPageDialog()
     {
@@ -71,7 +63,7 @@ public class FragmentNewPage extends FragmentBase
                     if (urlInput.getText() != null) {
                         String url = urlInput.getText().toString();
                         if (!url.isEmpty() && !url.equals(URL_INIT_TEXT)) {
-                            mPageConfiguredCb.onPageConfigured(
+                            mPageUpdatedCb.onPageUpdated(mId,
                                     Page.createWebPage(url, refreshRate.getValue())
                             );
                         }

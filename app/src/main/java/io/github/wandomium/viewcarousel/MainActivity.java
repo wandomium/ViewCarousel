@@ -17,11 +17,14 @@ import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
 import java.util.ArrayList;
@@ -40,9 +43,6 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
     private OnBackPressedCallback mBackPressedCb;
     private CarouselFragmentPager mFPager;
 
-    // TODO: have data stored in fragments and call them on save - single place for data store
-    private ArrayList<Page> mPages;
-
     private UserActionsLayout mUserActionsLayout;
 
     private boolean mMenuVisible = false;
@@ -50,8 +50,6 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
     private final int NEW_PAGE_IDX_NONE = -1;
     private FragmentNewPage mFNewPage = null;
     private int mFNewPageIdx = NEW_PAGE_IDX_NONE;
-
-    private ActivityResultLauncher<Intent> mContactPickerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,54 +77,26 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
         };
         getOnBackPressedDispatcher().addCallback(mBackPressedCb);
 
-        /// contact select
-        mContactPickerLauncher = _createContactPickerLauncher();
-
         /// this is for all webviews
         CookieManager.getInstance().setAcceptCookie(true);
     }
 
     @Override
     protected void onPause() {
-        ConfigMngr.savePages(this, mPages, Settings.getInstance(this).configFile());
         CookieManager.getInstance().flush();
         super.onPause();
     }
 
     @Override
-    public void onDestroy() {
-        ConfigMngr.savePages(this, mPages, Settings.getInstance(this).configFile());
-        super.onDestroy();
-    }
-
-    // auto enter pip mode
-    @Override
-    protected void onUserLeaveHint() {
+    protected void onUserLeaveHint() { // auto enter pip mode
         super.onUserLeaveHint();
-        ConfigMngr.savePages(this, mPages, Settings.getInstance(this).configFile());
         _enterPipMode();
-    }
-    private void _enterPipMode() {
-        Rational ratio = new Rational(9, 12);
-        PictureInPictureParams params = new PictureInPictureParams.Builder()
-                .setAspectRatio(ratio)
-                .setSeamlessResizeEnabled(true)
-                .build();
-        enterPictureInPictureMode(params);
     }
 
     @Override
     public void onPictureInPictureModeChanged(boolean isInPipMode, @NonNull Configuration newConfig) {
         super.onPictureInPictureModeChanged(isInPipMode, newConfig);
         _showBtns(!isInPipMode);
-    }
-
-    // TODO move?
-    public void onAddContactBtnClicked(View v) {
-        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, 333);
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
-        mContactPickerLauncher.launch(intent);
     }
 
     ////// ICaptureInput IMPL
@@ -147,36 +117,19 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
         return capture;
     }
 
-    /////// PAGE NAVIGATION
+    ////////////////
+    /////// PAGE MANIPULATION
     public void nextPage() { mFPager.showNextFragment(); }
     public void previousPage() { mFPager.showPreviousFragment(); }
-    ////// PAGE MANIPULATION
-    private void _addPage() {
-        if (mFNewPageIdx == NEW_PAGE_IDX_NONE) {
-            _addNewPageFragment(mFPager.currentFragmentIdx() + 1, false);
-        }
-        else {
-            Toast.makeText(this, "New page already exists at index: " + mFNewPageIdx, Toast.LENGTH_SHORT).show();
-        }
-    }
-    private void _removePage() {
-        final int currentFragmentId = mFPager.currentFragmentIdx();
-        Log.d(CLASS_TAG, "Remove: " + mPages.toString() + "  " + currentFragmentId);
-
-        mPages.remove(currentFragmentId);
-        if (currentFragmentId == mFNewPageIdx) { _clearNewPage(); }
-        if (mPages.isEmpty()) { _addNewPageFragment(0, true);} // replace current fragment with new one
-        else { mFPager.removeFragment(currentFragmentId); }
-    }
     public void reloadPagesFromConfig() {
         // clear all pages
         mFPager.removeAllFragments();
-        mPages.clear();
-        _clearNewPage();
+        _removeNewPageFragment();
         // load freash from config
         _loadPages();
     }
 
+    ////////////////
     /////// BUTTONS
     public void onCallBtnClicked(View v) {
         try {
@@ -201,17 +154,33 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
         menu.setOnDismissListener((ignored) -> mMenuVisible = false);
         menu.setOnMenuItemClickListener((item) -> {
             final int id = item.getItemId();
+            final int currentFrIdx = mFPager.currentFragmentIdx();
 
-            if (id == R.id.action_add_page) { _addPage();}
-            else if (id == R.id.action_remove_page) { _removePage(); }
-            else if (id == R.id.action_enter_pip) { _enterPipMode(); }
-            else if (id == R.id.config_show_btns) {
+            if (id == R.id.action_add_page)
+            {
+                _addNewPageFragment(currentFrIdx + 1, false);
+            }
+            else if (id == R.id.action_remove_page)
+            {
+                Log.d(CLASS_TAG, "Remove: " + currentFrIdx);
+                if (currentFrIdx == mFNewPageIdx) { _removeNewPageFragment(); } //TODO: simplify this call
+                if (mFPager.numFragments() == 0) { _addNewPageFragment(0, true);} // replace current fragment with new one
+                else { mFPager.removeFragment(currentFrIdx); }
+                onDatasetUpdated();
+            }
+            else if (id == R.id.action_enter_pip)
+            {
+                _enterPipMode();
+            }
+            else if (id == R.id.config_show_btns)
+            {
                 boolean show = !item.isChecked();
                 Settings.getInstance(this).setShowBtns(show);
                 item.setChecked(show);
                 _showBtns(show);
             }
-            else if (id == R.id.config_list_configs) {
+            else if (id == R.id.config_list_configs)
+            {
                 ConfigurationListDialog.show(this);
             }
             return true;
@@ -221,28 +190,63 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
         menu.show();
     }
 
-    //////
+    ////////////////
+    /// PageUpdatedCb Impl
+    public void onDatasetUpdated(int fIdx, Page page) { onDatasetUpdated();}
+    public void onDatasetUpdated() {
+        ArrayList<Page> pages = new ArrayList<>();
+        for (Fragment fBase : getSupportFragmentManager().getFragments() ) {
+            pages.add(((FragmentBase)fBase).getData());
+        }
+
+        ConfigMngr.savePages(this, pages, Settings.getInstance(this).configFile());
+    }
+    public void onNewPageConfigured(int fIdx, Page page) {
+        if (fIdx != mFNewPageIdx) {
+            // TODO check this, should not happen
+            Log.e(CLASS_TAG, "newPageConfigured fragment idx does not match new page idx " + fIdx + " != " + mFNewPageIdx);
+        }
+        FragmentBase fBase = null;
+        switch (page.page_type) {
+            case Page.PAGE_TYPE_CONTACTS:
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, 333);
+            case Page.PAGE_TYPE_WEB:
+                fBase = FragmentBase.createFragment(mFNewPageIdx, page, MainActivity.this::onDatasetUpdated);
+                break;
+        }
+        if (fBase != null) {
+            mFPager.replaceFragment(mFNewPageIdx, fBase);
+            _removeNewPageFragment();
+        }
+    }
+
+    ////////////////
+    ////// HELPERS
     private void _showBtns(final boolean showRequest) {
         final boolean show = showRequest && Settings.getInstance(this).showBtns();
 
         findViewById(R.id.menu_btn).setVisibility(show ? View.VISIBLE : View.GONE);
         findViewById(R.id.call_btn).setVisibility(show ? View.VISIBLE : View.GONE);
     }
+    private void _enterPipMode() {
+        Rational ratio = new Rational(9, 12);
+        PictureInPictureParams params = new PictureInPictureParams.Builder()
+                .setAspectRatio(ratio)
+                .setSeamlessResizeEnabled(true)
+                .build();
+        enterPictureInPictureMode(params);
+    }
     private void _loadPages() {
-//        mPages = Page.loadPages(this);
-        mPages = ConfigMngr.loadPages(this, Settings.getInstance(this).configFile());
+        ArrayList<Page> pages = ConfigMngr.loadPages(this, Settings.getInstance(this).configFile());
 
         // TODO: detect if config file was manhandled and has too many pages
-        for (Page page : mPages) {
+        for (Page page : pages) {
             final int idx = mFPager.numFragments();
             switch (page.page_type) {
                 case Page.PAGE_TYPE_WEB, Page.PAGE_TYPE_CONTACTS:
-                    FragmentBase fBase = FragmentBase.createFragment(idx, page.page_type);
-                    fBase.updateData(page);
+                    FragmentBase fBase = FragmentBase.createFragment(idx, page, this::onDatasetUpdated);
                     mFPager.addFragment(idx, fBase);
                     break;
-                default:
-                    continue;
             }
         }
         if (mFPager.numFragments() == 0) {
@@ -251,11 +255,14 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
         }
     }
 
-    private boolean _addNewPageFragment(int idx, boolean replace) {
+    ////////////////
+    /// NEW PAGE FRAGMENT
+    private void _addNewPageFragment(int idx, boolean replace) {
         if (mFNewPageIdx != NEW_PAGE_IDX_NONE) {
-            return false;
+            Toast.makeText(this, "New page already exists at index: " + mFNewPageIdx, Toast.LENGTH_SHORT).show();
+            return;
         }
-        FragmentNewPage fNewPage = (FragmentNewPage) FragmentBase.createFragment(mFNewPageIdx, FragmentBase.FRAGMENT_NEW_PAGE);
+        final FragmentNewPage fNewPage = (FragmentNewPage) FragmentBase.createFragment(idx, null, this::onNewPageConfigured);
         try {
             if (replace) {
                 mFPager.replaceFragment(idx, fNewPage);
@@ -266,79 +273,22 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
             }
         } catch (IllegalArgumentException ignored) {
             Toast.makeText(MainActivity.this, "Max page limit reached", Toast.LENGTH_LONG).show();
-            return false;
+            return;
         }
         mFNewPage = fNewPage;
         mFNewPageIdx = idx;
-        mPages.add(idx, null); //blank page. not exported but we need it for index
-        mFNewPage.setPageConfigredCb(new PageConfiguredCb());
-
-        return true;
     }
-
-    private ActivityResultLauncher<Intent> _createContactPickerLauncher() {
-        return registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(), result -> {
-                    Page.Contact contact = null;
-                    if (result.getResultCode() == FragmentActivity.RESULT_OK)
-                        //This action is rare so we don't care about a potential performance hit when catching the exception
-                        try (final Cursor cursor = this.getContentResolver().query(result.getData().getData(),
-                                null, null, null, null)) {
-                            cursor.moveToFirst();
-
-                            contact = new Page.Contact(
-                                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)),
-                                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                            );
-                        } catch (IllegalArgumentException | NullPointerException e) {
-                            Log.e(CLASS_TAG, "Failed to add contact " + e.getMessage());
-                        }
-                    if (contact == null) {
-                        return;
-                    }
-                    int currentItem = mFPager.currentFragmentIdx();
-                    Page page = mPages.get(currentItem); // if this is null there is a bug
-                    if (page.contacts == null) {
-                        page.contacts = new ArrayList<>();
-                    }
-                    page.contacts.add(contact);
-                    mFPager.notifyFragmentDataChanged(currentItem, page);
-                });
-    }
-
-    private void _clearNewPage() {
+    private void _removeNewPageFragment() {
         if (mFNewPage != null) {
-            mFNewPage.setPageConfigredCb(null);
+            mFNewPage.setPageUpdatedCb(null);
         }
         mFNewPage = null;
         mFNewPageIdx = NEW_PAGE_IDX_NONE;
     }
 
-    private class PageConfiguredCb implements FragmentNewPage.PageConfiguredCb {
-        @Override
-        public void onPageConfigured(Page page) {
-            FragmentBase fBase = null;
-            switch (page.page_type) {
-                case Page.PAGE_TYPE_WEB -> {
-                    fBase = FragmentBase.createFragment(mFNewPageIdx, FragmentBase.FRAGMENT_WEB_PAGE);
-                    // todo set refreshRate
-                    ((FragmentWebPage) fBase).setUrl(page.url);
-                }
-                case Page.PAGE_TYPE_CONTACTS -> {
-//                    _showUnsupportedActionToast();
-                    fBase = FragmentBase.createFragment(mFNewPageIdx, FragmentBase.FRAGMENT_CALLS);
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, 333);
-                }
-                default -> {} //keep the fragment
-            }
-            if (fBase != null) {
-                MainActivity.this.mPages.set(mFNewPageIdx, page); //todo!! arrange correctly
-                mFPager.replaceFragment(mFNewPageIdx, fBase);
-                _clearNewPage();
-            }
-        }
-    }
-
+    ////////////////
+    ////////////////
+    ////////////////
     private void _showUnsupportedActionToast() {
         Toast.makeText(this, "Unsupported action", Toast.LENGTH_LONG).show();
     }
@@ -348,10 +298,9 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
         int i = 0;
         for (; i < CarouselFragmentPager.MAX_VIEWS - 1; i++) {
             mFPager.addFragment(i,
-                    FragmentBase.createFragment(i, FragmentBase.FRAGMENT_NEW_PAGE));
+                    FragmentBase.createFragment(i, null, this::onNewPageConfigured));
         }
-        FragmentWebPage wp = (FragmentWebPage) FragmentBase.createFragment(i, FragmentBase.FRAGMENT_WEB_PAGE);
-        wp.setUrl("https://archlinux.org");
-        mFPager.addFragment(i++, wp);
+        mFPager.addFragment(i++,
+            FragmentBase.createFragment(i, Page.createWebPage("https://archlinux.org", 1), this::onDatasetUpdated));
     }
 }

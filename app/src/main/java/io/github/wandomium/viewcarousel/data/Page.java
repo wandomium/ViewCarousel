@@ -14,6 +14,7 @@ public class Page
 
     public final static int DEFAULT_REFRESH_RATE_MIN = 15;
 
+    public final static int PAGE_TYPE_UNKNOWN = -1;
     public final static int PAGE_TYPE_WEB = 1;
     public final static int PAGE_TYPE_CONTACTS = 2;
 
@@ -43,7 +44,7 @@ public class Page
     }
 
     public static Page createContactsPage(@Nullable ArrayList<Contact> contacts) {
-        return new Page(PAGE_TYPE_CONTACTS, null, null, contacts);
+        return new Page(PAGE_TYPE_CONTACTS, null, null, contacts != null ? contacts : new ArrayList<>());
     }
 
 //
