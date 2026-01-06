@@ -10,7 +10,7 @@ android {
         applicationId = "io.github.wandomium.viewcarousel"
         minSdk = 31
         targetSdk = 35
-        versionCode = 20
+        versionCode = 30
         versionName = "0.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

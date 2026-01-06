@@ -3,7 +3,6 @@ package io.github.wandomium.viewcarousel.ui;
 import android.text.InputType;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 

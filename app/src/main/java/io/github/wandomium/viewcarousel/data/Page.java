@@ -25,10 +25,7 @@ public class Page {
 
     // contacts
     public record Contact(String name, String phone) {}
-
     public ArrayList<Contact> contacts;
-
-    /// ///
 
     private Page(int pageType, String url, Integer refreshRate, ArrayList<Contact> contacts) {
         this.page_type = pageType;
