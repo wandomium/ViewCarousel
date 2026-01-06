@@ -85,7 +85,6 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
                 (dx_abs > cTouchSlop && dx_abs > dy_abs)) // horizontal swipe
             {
                 mSwipeInProcess = true;
-                return true;
             }
         }
         // TODO: for later, when we want to track swipe and show the menu nicely
