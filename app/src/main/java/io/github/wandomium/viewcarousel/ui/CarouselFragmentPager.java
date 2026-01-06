@@ -145,7 +145,7 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
             mFragmentMngr.beginTransaction().remove(fRemove).commitNow(); // TODO do we need the commitNow? probably not for remove
         }
         mFragmentTags.remove(position);
-        Log.d(CLASS_TAG, "Removed, remaining: " + mFragmentTags.toString() + " current=" + mCurrentFragmentIdx);
+        Log.d(CLASS_TAG, "Removed, remaining: " + mFragmentTags + " current=" + mCurrentFragmentIdx);
     }
     public void removeAllFragments() {
         FragmentTransaction fTransaction = mFragmentMngr.beginTransaction();
@@ -174,7 +174,7 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
         fTransaction.commitNow();
         mFragmentTags.set(position, fNewTag);
 
-        Log.d(CLASS_TAG, "Removed, remaining: " + mFragmentTags.toString());
+        Log.d(CLASS_TAG, "Removed, remaining: " + mFragmentTags);
     }
 
     ////// HELPER METHODS
@@ -216,12 +216,12 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
         fFrom.onShow();
         fTransaction.disallowAddToBackStack();
 
-        int numpPages = mFragmentTags.size();
+        int numPages = mFragmentTags.size();
         mCurrentFragmentIdx = to;
         if (replaceCurrent) {
-            numpPages--;
+            numPages--;
         }
-        mPageIdDisplay.showPageIndicator(mCurrentFragmentIdx +1, numpPages);
+        mPageIdDisplay.showPageIndicator(mCurrentFragmentIdx +1, numPages);
 
         // TODO: we probably don't need commitNow here. only when adding new fragments
         fTransaction.commitNow();

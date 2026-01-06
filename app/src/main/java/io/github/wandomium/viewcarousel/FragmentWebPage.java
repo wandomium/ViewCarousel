@@ -28,7 +28,9 @@ import io.github.wandomium.viewcarousel.data.Page;
 
 public class FragmentWebPage extends FragmentBase
 {
+    @SuppressWarnings("unused")
     private static final String CLASS_TAG = FragmentWebPage.class.getSimpleName();
+
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 66;
     
     private WebView mWebView;
@@ -79,9 +81,9 @@ public class FragmentWebPage extends FragmentBase
             @Override
             public void onGeolocationPermissionsShowPrompt(
                     String origin, GeolocationPermissions.Callback callback) {
-                if (ContextCompat.checkSelfPermission(getContext(),
+                if (ContextCompat.checkSelfPermission(requireContext(),
                         Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(getActivity(),
+                    ActivityCompat.requestPermissions(requireActivity(),
                             new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                                     Manifest.permission.ACCESS_COARSE_LOCATION},
                             LOCATION_PERMISSION_REQUEST_CODE);

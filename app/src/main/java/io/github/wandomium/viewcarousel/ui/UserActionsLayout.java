@@ -116,18 +116,18 @@ public class UserActionsLayout extends ConstraintLayout implements ICaptureInput
     }
 
     /// CURRENTLY UNUSED, FOR TOP MENU
-    private boolean _showTopMenu(final float distance) {
-        final int height = mTopMenu.getHeight();
-        final boolean retval =  distance < height;
-        if (retval) {
-            mTopMenu.setTranslationY(distance-height);
-        }
-        return retval;
-    }
-
-    private boolean _hideTopMenu() {
-        mTopMenu.setTranslationY(-mTopMenu.getHeight());
-        return false;
-    }
+//    private boolean _showTopMenu(final float distance) {
+//        final int height = mTopMenu.getHeight();
+//        final boolean retval =  distance < height;
+//        if (retval) {
+//            mTopMenu.setTranslationY(distance-height);
+//        }
+//        return retval;
+//    }
+//
+//    private boolean _hideTopMenu() {
+//        mTopMenu.setTranslationY(-mTopMenu.getHeight());
+//        return false;
+//    }
     /// ///////////////
 }

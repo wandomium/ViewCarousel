@@ -11,12 +11,7 @@ public class PageIndicator extends androidx.appcompat.widget.AppCompatTextView
     public static final int PAGE_ID_DISPLAY_MS_DEFOPT = 1000;
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
-    private final Runnable mPageIdAnimation = new Runnable() {
-        @Override
-        public void run() {
-            PageIndicator.this.setVisibility(View.GONE);
-        }
-    };
+    private final Runnable mPageIdAnimation = () -> PageIndicator.this.setVisibility(View.GONE);
 
     public PageIndicator(Context context, AttributeSet attrs) {
         super(context, attrs);

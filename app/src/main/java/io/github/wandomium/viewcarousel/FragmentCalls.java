@@ -108,7 +108,7 @@ public class FragmentCalls extends FragmentBase
         super.onDestroyView();
     }
 
-    public void onAddContactBtnClicked(View v) { // TODO move?
+    public void onAddContactBtnClicked(View ignored) {
         ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.CALL_PHONE}, 333);
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
@@ -180,6 +180,7 @@ public class FragmentCalls extends FragmentBase
                             cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
                     );
                 } catch (IllegalArgumentException | NullPointerException e) {
+                    e.printStackTrace();
                     Log.e(CLASS_TAG, "Failed to add contact " + e.getMessage());
                 }
             if (contact == null) {

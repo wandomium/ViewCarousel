@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListener
 {
+    @SuppressWarnings("unused")
     private static final String CLASS_TAG = SwipeDetectorListener.class.getSimpleName();
 
     public static final int SWIPE_LEFT  = 1;
@@ -67,8 +68,8 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
             }
         }
         // TODO: for later, when we want to track swipe and show the menu nicely
-//        if (mSwipeInProccess && mTwoFingerSwipe && mDy > 0) {
-//            mSwipeInProccess = mSwipeCb.onSwipe(SWIPE_2FINGER_DOWN, mDy);
+//        if (mSwipeInProcess && mTwoFingerSwipe && mDy > 0) {
+//            mSwipeInProcess = mSwipeCb.onSwipe(SWIPE_2FINGER_DOWN, mDy);
 //        }
 
         return mSwipeInProcess; // If already intercepting, continue consuming.
@@ -97,7 +98,7 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
     }
 
     // Support long swipe up (for capture) and long swipe down
-    public boolean onSwipeDone(MotionEvent e) {
+    public boolean onSwipeDone(MotionEvent ignored) {
         if (mSwipeInProcess) {
             mSwipeInProcess = false;
             return _isUpOrDownSwipe(700);

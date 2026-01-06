@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 public class Settings
 {
+    @SuppressWarnings("unused")
     private static final String CLASS_TAG = Settings.class.getSimpleName();
 
     private static SharedPreferences mPerfs;
@@ -25,18 +26,18 @@ public class Settings
         }
         return mInstance;
     }
-    public boolean isFirstRun() {
-        boolean firstRun = mPerfs.getBoolean(IS_FIRST_RUN, true);
-        if (firstRun) {
-            mPerfs.edit().putBoolean(IS_FIRST_RUN, false).apply();
-        }
-        return firstRun;
-    }
+//    public boolean isFirstRun() {
+//        boolean firstRun = mPerfs.getBoolean(IS_FIRST_RUN, true);
+//        if (firstRun) {
+//            mPerfs.edit().putBoolean(IS_FIRST_RUN, false).apply();
+//        }
+//        return firstRun;
+//    }
     public boolean showBtns() {
         return mPerfs.getBoolean(SHOW_BTNS, true);
     }
     public void setShowBtns(boolean show) {
-        mPerfs.edit().putBoolean(SHOW_BTNS, show).apply();;
+        mPerfs.edit().putBoolean(SHOW_BTNS, show).apply();
     }
     public String configFile() {
         return mPerfs.getString(CONFIG_FILE, "config.json");

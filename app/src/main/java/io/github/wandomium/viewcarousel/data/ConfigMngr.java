@@ -1,7 +1,6 @@
 package io.github.wandomium.viewcarousel.data;
 
 import android.content.Context;
-import android.os.Environment;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -12,7 +11,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -21,7 +19,6 @@ public class ConfigMngr
 {
     private static final String CLASS_TAG = ConfigMngr.class.getSimpleName();
 
-    public static final String CONFIG_FNAME_DEFAULT = "config";
     private static final String SUFFIX = ".json";
 
     public static ArrayList<String> getConfigs(Context ctx)

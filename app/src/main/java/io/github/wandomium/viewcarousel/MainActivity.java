@@ -1,6 +1,5 @@
 package io.github.wandomium.viewcarousel;
 
-import android.Manifest;
 import android.app.PictureInPictureParams;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -17,8 +16,6 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.Fragment;
 
 import java.util.ArrayList;
 
@@ -41,7 +38,6 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
     private boolean mMenuVisible = false;
 
     private final int NEW_PAGE_IDX_NONE = -1;
-    private FragmentNewPage mFNewPage = null;
     private int mFNewPageIdx = NEW_PAGE_IDX_NONE;
 
     @Override
@@ -209,11 +205,9 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
             Toast.makeText(MainActivity.this, "Max page limit reached", Toast.LENGTH_LONG).show();
             return;
         }
-        mFNewPage = fNewPage;
         mFNewPageIdx = idx;
     }
     private void _clearNewPageFragment() {
-        mFNewPage = null;
         mFNewPageIdx = NEW_PAGE_IDX_NONE;
     }
 
@@ -251,23 +245,5 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
                 .setSeamlessResizeEnabled(true)
                 .build();
         enterPictureInPictureMode(params);
-    }
-
-    ////////////////
-    ////////////////
-    ////////////////
-    private void _showUnsupportedActionToast() {
-        Toast.makeText(this, "Unsupported action", Toast.LENGTH_LONG).show();
-    }
-
-    private void _loadDummyPages() {
-        // temp
-        int i = 0;
-        for (; i < CarouselFragmentPager.MAX_VIEWS - 1; i++) {
-            mFPager.addFragment(i,
-                    FragmentBase.createFragment(i, null, this::onPageConfigured));
-        }
-        mFPager.addFragment(i++,
-            FragmentBase.createFragment(i, Page.createWebPage("https://archlinux.org", 1), this::onDatasetUpdated));
     }
 }
