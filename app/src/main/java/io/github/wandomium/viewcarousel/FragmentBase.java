@@ -1,5 +1,6 @@
 package io.github.wandomium.viewcarousel;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,6 +11,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.webkit.internal.ApiFeature;
+
+import com.google.gson.Gson;
 
 import io.github.wandomium.viewcarousel.data.Page;
 import io.github.wandomium.viewcarousel.ui.ICaptureInput;
@@ -19,30 +23,27 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
     private static final String CLASS_TAG = FragmentBase.class.getSimpleName();
 
     protected static final String ARG_ID = "id";
+    protected static final String PAGE = "page";
     protected int mId;
 
     protected Page mPage;
-    protected PageUpdatedCb mPageUpdatedCb;
+    protected FragmentDataUpdatedCb mPageUpdatedCb;
 
     @FunctionalInterface
-    public interface PageUpdatedCb {
-        void onPageUpdated(int id, Page page);
+    public interface FragmentDataUpdatedCb {
+        void onFragmentDataUpdated(int id, int type, Page page); // type is here for hacks because we need a no-arg constructor
     }
 
-
-    public FragmentBase(Page page, PageUpdatedCb updatedCb) {
-        mPage = page;
-        mPageUpdatedCb = updatedCb;
-    }
-    public static FragmentBase createFragment(int id, Page page, PageUpdatedCb updatedCb) {
+    public static FragmentBase createFragment(int id, Page page) {
         FragmentBase f = switch (page != null ? page.page_type : Page.PAGE_TYPE_UNKNOWN) {
-            case Page.PAGE_TYPE_WEB -> new FragmentWebPage(page, updatedCb);
-            case Page.PAGE_TYPE_CONTACTS -> new FragmentCalls(page, updatedCb);
-            case Page.PAGE_TYPE_UNKNOWN -> new FragmentNewPage(updatedCb);
+            case Page.PAGE_TYPE_WEB -> new FragmentWebPage();
+            case Page.PAGE_TYPE_CONTACTS -> new FragmentCalls();
+            case Page.PAGE_TYPE_UNKNOWN -> new FragmentNewPage();
             default -> throw new IllegalArgumentException("Invalid page type");
         };
         Bundle args = new Bundle();
         args.putInt(ARG_ID, id);
+        args.putString(PAGE, new Gson().toJson(page));
         f.setArguments(args);
         return f;
     }
@@ -58,11 +59,29 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
         return false; //unsupported by default
     }
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mId = getArguments().getInt(ARG_ID);
+        mPage = new Gson().fromJson(getArguments().getString(PAGE), Page.class);
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+
+        if (context instanceof FragmentDataUpdatedCb) {
+            mPageUpdatedCb = (FragmentDataUpdatedCb) context;
+        }
+        else {
+            throw new IllegalArgumentException("Context must implement FragmentDataUpdatedCb");
+        }
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        mId = getArguments().getInt(ARG_ID);
         return inflater.inflate(R.layout.fragment_base, container, false);
     }
 

@@ -24,8 +24,7 @@ public class Page {
     public final int refresh_rate;
 
     // contacts
-    public record Contact(String name, String phone) {
-    }
+    public record Contact(String name, String phone) {}
 
     public ArrayList<Contact> contacts;
 

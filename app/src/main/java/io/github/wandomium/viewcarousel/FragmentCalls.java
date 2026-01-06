@@ -29,6 +29,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 
 import io.github.wandomium.viewcarousel.data.Page;
@@ -52,9 +54,12 @@ public class FragmentCalls extends FragmentBase
     private Handler mHandler;
     private Runnable mMakeCallRunnable;
 
-
-    public FragmentCalls(Page page, PageUpdatedCb updatedCb) {
-        super(page != null ? page : Page.createContactsPage(null), updatedCb);
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (mPage == null) {
+            mPage = Page.createContactsPage(null);
+        }
     }
 
     @Nullable
@@ -192,7 +197,7 @@ public class FragmentCalls extends FragmentBase
             mPage.contacts.add(contact);
             _setDirectCallBtnEnabled(mPage.contacts.size() - 1, true);
 
-            mPageUpdatedCb.onPageUpdated(mId, mPage);
+            mPageUpdatedCb.onFragmentDataUpdated(mId, Page.PAGE_TYPE_CONTACTS, mPage);
         }
     }
 }

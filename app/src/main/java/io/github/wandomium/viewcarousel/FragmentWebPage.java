@@ -49,8 +49,12 @@ public class FragmentWebPage extends FragmentBase
         }
     };
 
-    public FragmentWebPage(Page page, PageUpdatedCb updatedCb) {
-       super(page != null ? page : Page.createWebPage("", null), updatedCb);
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (mPage == null) {
+            mPage = Page.createWebPage("", 0);
+        }
     }
 
     @Nullable
@@ -161,7 +165,7 @@ public class FragmentWebPage extends FragmentBase
     public void loadUrl(final String url) {
         if (!mPage.url.equals(url)) {
             mPage = Page.createWebPage(url, mPage.refresh_rate);
-            mPageUpdatedCb.onPageUpdated(mId, mPage);
+            mPageUpdatedCb.onFragmentDataUpdated(mId, Page.PAGE_TYPE_WEB, mPage);
         }
         mWebView.loadUrl(mPage.url);
 

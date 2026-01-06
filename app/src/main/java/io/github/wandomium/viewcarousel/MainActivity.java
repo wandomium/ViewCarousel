@@ -26,7 +26,7 @@ import io.github.wandomium.viewcarousel.ui.ConfigurationListDialog;
 import io.github.wandomium.viewcarousel.ui.ICaptureInput;
 import io.github.wandomium.viewcarousel.ui.UserActionsLayout;
 
-public class MainActivity extends AppCompatActivity implements ICaptureInput
+public class MainActivity extends AppCompatActivity implements ICaptureInput, FragmentBase.FragmentDataUpdatedCb
 {
     private static final String CLASS_TAG = MainActivity.class.getSimpleName();
 
@@ -171,17 +171,20 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
 
     ////////////////
     /// PageUpdatedCb Impl
-    public void onDatasetUpdated(int fIdx, Page page) { onDatasetUpdated();}
+    @Override
+    public void onFragmentDataUpdated(int id, int type, Page page)
+    {
+        if (type == Page.PAGE_TYPE_UNKNOWN) {
+            // new page was just configured
+            mFPager.replaceFragment(
+                    mFNewPageIdx, FragmentBase.createFragment(mFNewPageIdx, page)
+            );
+            _clearNewPageFragment();
+        }
+        onDatasetUpdated();
+    }
     public void onDatasetUpdated() {
         ConfigMngr.savePages(this, mFPager.getOrderedData(), Settings.getInstance(this).configFile());
-    }
-    public void onPageConfigured(int fIdx, Page page) {
-        mFPager.replaceFragment(
-            mFNewPageIdx,
-            FragmentBase.createFragment(mFNewPageIdx, page, MainActivity.this::onDatasetUpdated)
-        );
-        _clearNewPageFragment();
-        onDatasetUpdated();
     }
 
     ////////////////
@@ -191,8 +194,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
             Toast.makeText(this, "New page already exists at index: " + mFNewPageIdx, Toast.LENGTH_SHORT).show();
             return;
         }
-        final FragmentNewPage fNewPage = (FragmentNewPage) FragmentBase
-                .createFragment(idx, null, this::onPageConfigured);
+        final FragmentNewPage fNewPage = (FragmentNewPage) FragmentBase.createFragment(idx, null);
         try {
             if (replace) {
                 mFPager.replaceFragment(idx, fNewPage);
@@ -222,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
             final int idx = mFPager.numFragments();
             switch (page.page_type) {
                 case Page.PAGE_TYPE_WEB, Page.PAGE_TYPE_CONTACTS:
-                    FragmentBase fBase = FragmentBase.createFragment(idx, page, this::onDatasetUpdated);
+                    FragmentBase fBase = FragmentBase.createFragment(idx, page);
                     mFPager.addFragment(idx, fBase);
                     break;
             }
