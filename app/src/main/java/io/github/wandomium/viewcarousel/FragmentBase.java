@@ -75,9 +75,6 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (savedInstanceState != null) {
-            mCaptureInput = savedInstanceState.getBoolean(CAPTURE_KEY);
-        }
         mId = requireArguments().getInt(ARG_ID);
         mPage = new Gson().fromJson(requireArguments().getString(PAGE), Page.class);
     }

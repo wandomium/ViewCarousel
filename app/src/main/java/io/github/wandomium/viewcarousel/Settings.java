@@ -32,6 +32,7 @@ public class Settings
 //    private static final String IS_FIRST_RUN = "IS_FIRST_RUN";
     private static final String SHOW_BTNS = "SHOW_BTNS";
     private static final String CONFIG_FILE = "CONFIG_FILE";
+    private static final String NIGHT_MODE = "NIGHT_MODE";
 
     private Settings(@NonNull Context ctx) {
         mPerfs = ctx.getApplicationContext().getSharedPreferences(R.string.app_name + ".settings", Context.MODE_PRIVATE);
@@ -58,7 +59,7 @@ public class Settings
     public String configFile() {
         return mPerfs.getString(CONFIG_FILE, "config.json");
     }
-    public void setConfigFile(String configFile) {
-        mPerfs.edit().putString(CONFIG_FILE, configFile).apply();
-    }
+    public void setConfigFile(String configFile) { mPerfs.edit().putString(CONFIG_FILE, configFile).apply();}
+    public boolean nightMode() { return mPerfs.getBoolean(NIGHT_MODE, true);}
+    public void setNightMode(boolean enable) { mPerfs.edit().putBoolean(NIGHT_MODE, enable).apply();}
 }

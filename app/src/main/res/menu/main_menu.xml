@@ -39,6 +39,12 @@ along with ViewCarousel. If not, see <https://www.gnu.org/licenses/>.
         android:id="@+id/config_show_btns"
         android:title="Show buttons"
         android:checkable="true"/>
+
+    <item
+        android:id="@+id/config_dark_mode"
+        android:title="Dark mode (needs restart)"
+        android:checkable="true"/>
+
     <item
         android:id="@+id/config_list_configs"
         android:title="Manage configurations"/>

@@ -32,6 +32,7 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 
 import java.util.ArrayList;
 
@@ -60,7 +61,12 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
     private int mFNewPageIdx = NEW_PAGE_IDX_NONE;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        AppCompatDelegate.setDefaultNightMode(
+                Settings.getInstance(this).nightMode() ?
+                        AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -140,12 +146,18 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
     public void showPopupMenu(View view) {
         if (mMenuVisible) { return; }
 
+        final Settings SETTINGS = Settings.getInstance(this);
+
         PopupMenu menu = new PopupMenu(this, view);
         menu.getMenuInflater().inflate(R.menu.main_menu, menu.getMenu());
 
         // show btns menu item
         MenuItem showBtnsItem = menu.getMenu().findItem(R.id.config_show_btns);
-        showBtnsItem.setChecked(Settings.getInstance(this).showBtns());
+        showBtnsItem.setChecked(SETTINGS.showBtns());
+
+        // dark mode menu item
+        MenuItem darkModeItem = menu.getMenu().findItem(R.id.config_dark_mode);
+        darkModeItem.setChecked(SETTINGS.nightMode());
 
         // action listeners
         menu.setOnDismissListener((ignored) -> mMenuVisible = false);
@@ -166,9 +178,14 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
             else if (id == R.id.config_show_btns)
             {
                 boolean show = !item.isChecked();
-                Settings.getInstance(this).setShowBtns(show);
+                SETTINGS.setShowBtns(show);
                 item.setChecked(show);
                 _showBtns(show);
+            }
+            else if (id == R.id.config_dark_mode) {
+                boolean enable = !item.isChecked(); //if it is not diaplying a checkbox and was clicked it should
+                SETTINGS.setNightMode(enable);
+                item.setChecked(enable);
             }
             else if (id == R.id.config_list_configs) { DialogConfigurationList.show(this); }
             else if (id == R.id.bug_report) { DialogBugReport.show(this); }
