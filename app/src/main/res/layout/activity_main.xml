@@ -21,8 +21,6 @@ along with ViewCarousel. If not, see <https://www.gnu.org/licenses/>.
     android:id="@+id/user_actions_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:background="@android:color/tertiary_text_light"
     android:keepScreenOn="true">
 
     <io.github.wandomium.viewcarousel.ui.CarouselFragmentPager
