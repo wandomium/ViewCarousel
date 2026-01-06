@@ -52,8 +52,8 @@ public class ConfigurationListDialog
             final int selected = alertDialog.getListView().getCheckedItemPosition();
             if (ConfigMngr.deleteConfig(mainActivity, configs.get(selected))) {
                 configs.remove(configs.get(selected));
+                alertDialog.getListView().setItemChecked(0, true);
                 adapter.notifyDataSetChanged();
-                alertDialog.getListView().setSelection(0);
             }
         });
     }
@@ -62,7 +62,7 @@ public class ConfigurationListDialog
     {
         final EditText input = new EditText(mainActivity);
         input.setInputType(InputType.TYPE_CLASS_TEXT); // Standard text input
-        input.setHint(".json");
+//        input.setHint(".json");
         new AlertDialog.Builder(mainActivity)
                 .setTitle("Enter name")
                 .setView(input)

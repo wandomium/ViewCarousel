@@ -15,12 +15,14 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class ConfigMngr
 {
     private static final String CLASS_TAG = ConfigMngr.class.getSimpleName();
 
-    public static final String CONFIG_FNAME_DEFAULT = "config.json";
+    public static final String CONFIG_FNAME_DEFAULT = "config";
+    private static final String SUFFIX = ".json";
 
     public static ArrayList<String> getConfigs(Context ctx)
     {
@@ -32,7 +34,8 @@ public class ConfigMngr
         if (files != null) {
             for (File file : files) {
                 if (file.isFile()) { // Ensure we aren't listing sub-folders
-                    configList.add(file.getName());
+                    //configList.add(file.getName().replaceAll("(?i)\\.json$", ""));
+                    configList.add(file.getName().replaceAll(Pattern.quote(SUFFIX) + "$", ""));
                 }
             }
         }
@@ -41,13 +44,13 @@ public class ConfigMngr
 
     public static boolean deleteConfig(Context ctx, final String configFname)
     {
-        File file = new File(ctx.getExternalFilesDir(null), configFname);
+        File file = new File(ctx.getExternalFilesDir(null), configFname + SUFFIX);
         return file.delete();
     }
 
     public static ArrayList<Page> loadPages(final Context ctx, final String configFname)
     {
-        File file = new File(ctx.getExternalFilesDir(null), configFname);
+        File file = new File(ctx.getExternalFilesDir(null), configFname + SUFFIX);
 
         Gson gson = new Gson();
         ArrayList<Page> pages = null;
@@ -66,7 +69,7 @@ public class ConfigMngr
     }
 
     public static void savePages(final Context ctx, final ArrayList<Page> pages, final String configName) {
-        File file = new File(ctx.getExternalFilesDir(null), configName);
+        File file = new File(ctx.getExternalFilesDir(null), configName + SUFFIX);
         Gson gson = new Gson();
 
         // create a new list so we don't mess up the original one
