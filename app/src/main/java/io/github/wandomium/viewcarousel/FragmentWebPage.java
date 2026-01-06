@@ -143,6 +143,7 @@ public class FragmentWebPage extends FragmentBase
     @Override
     public void onDestroyView() {
         // nullify all view references
+        mWebView.setWebViewClient(new WebViewClient());
         mWebView = null;
         mSwipeRefresh = null;
         mBlockerView = null;

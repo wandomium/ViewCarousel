@@ -186,6 +186,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
                 boolean enable = !item.isChecked(); //if it is not diaplying a checkbox and was clicked it should
                 SETTINGS.setNightMode(enable);
                 item.setChecked(enable);
+                _reloadWithAnimation();
             }
             else if (id == R.id.config_list_configs) { DialogConfigurationList.show(this); }
             else if (id == R.id.bug_report) { DialogBugReport.show(this); }
@@ -310,5 +311,17 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
                 .setSeamlessResizeEnabled(true)
                 .build();
         enterPictureInPictureMode(params);
+    }
+
+    private void _reloadWithAnimation() {
+        Intent intent = getIntent();
+        finish();
+
+        // Disable the default exit animation
+        overridePendingTransition(0, 0);
+        startActivity(intent);
+
+        // Apply a smooth fade-in for the new instance
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 }
