@@ -32,7 +32,6 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.WindowCompat;
 
 import java.util.ArrayList;
 
@@ -42,16 +41,17 @@ import io.github.wandomium.viewcarousel.ui.CarouselFragmentPager;
 import io.github.wandomium.viewcarousel.ui.DialogConfigurationList;
 import io.github.wandomium.viewcarousel.ui.DialogBugReport;
 import io.github.wandomium.viewcarousel.ui.ICaptureInput;
-import io.github.wandomium.viewcarousel.ui.UserActionsLayout;
+import io.github.wandomium.viewcarousel.ui.SwipeDetectorListener;
+import io.github.wandomium.viewcarousel.ui.SwipeDetectorLayout;
 
-public class MainActivity extends AppCompatActivity implements ICaptureInput, FragmentBase.FragmentDataUpdatedCb
+public class MainActivity extends AppCompatActivity implements ICaptureInput, FragmentBase.FragmentDataUpdatedCb, SwipeDetectorListener.SwipeCallback
 {
     private static final String CLASS_TAG = MainActivity.class.getSimpleName();
 
     private OnBackPressedCallback mBackPressedCb;
     private CarouselFragmentPager mFPager;
 
-    private UserActionsLayout mUserActionsLayout;
+    private SwipeDetectorLayout mUserActionsLayout;
 
     private boolean mMenuVisible = false;
 
@@ -105,24 +105,6 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
     public void onPictureInPictureModeChanged(boolean isInPipMode, @NonNull Configuration newConfig) {
         super.onPictureInPictureModeChanged(isInPipMode, newConfig);
         _showBtns(!isInPipMode);
-    }
-
-    ////// ICaptureInput IMPL
-    @Override
-    public boolean setCaptureInput(final boolean captureReq) {
-        // If current fragment does not support capture it can reject it
-        final boolean capture = mFPager.setCaptureInput(captureReq);
-        mBackPressedCb.setEnabled(capture);
-        mUserActionsLayout.setCaptureInput(capture);
-        _showBtns(!capture);
-
-        //if capture was requested but not realized we don't write
-        //release is currently never rejected
-        //TODO it would be cleaner to have two methods here but later...
-        if (!(captureReq && !capture)) {
-            Toast.makeText(MainActivity.this, capture ? "CAPTURE" : "RELEASE", Toast.LENGTH_SHORT).show();
-        }
-        return capture;
     }
 
     ////////////////
@@ -190,6 +172,38 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
         menu.show();
     }
 
+    ////////////////
+    /// ICaptureInput IMPL
+    @Override
+    public boolean setCaptureInput(final boolean captureReq) {
+        // If current fragment does not support capture it can reject it
+        final boolean capture = mFPager.setCaptureInput(captureReq);
+        mBackPressedCb.setEnabled(capture);
+        mUserActionsLayout.setCaptureInput(capture);
+        _showBtns(!capture);
+
+        //if capture was requested but not realized we don't write
+        //release is currently never rejected
+        //TODO it would be cleaner to have two methods here but later...
+        if (!(captureReq && !capture)) {
+            Toast.makeText(MainActivity.this, capture ? "CAPTURE" : "RELEASE", Toast.LENGTH_SHORT).show();
+        }
+        return capture;
+    }
+    ////////////////
+    /// SwipeDetectorListener Impl
+    @Override
+    public boolean onSwipe(int direction, float distance) {
+        boolean retval = true;
+        switch (direction) {
+            case SwipeDetectorListener.SWIPE_LEFT -> mFPager.showNextFragment();
+            case SwipeDetectorListener.SWIPE_RIGHT -> mFPager.showPreviousFragment();
+            case SwipeDetectorListener.SWIPE_2FINGER_DOWN -> showPopupMenu(findViewById(R.id.top_menu));
+            case SwipeDetectorListener.SWIPE_UP -> setCaptureInput(true);
+            default -> retval = false; // don't consume the event
+        }
+        return retval;
+    }
     ////////////////
     /// PageUpdatedCb Impl
     @Override

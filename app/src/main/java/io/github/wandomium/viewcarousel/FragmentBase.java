@@ -94,6 +94,12 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
         }
     }
 
+    @Override
+    public void onDetach() {
+        mPageUpdatedCb = null;
+        super.onDetach();
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -104,12 +110,6 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         ((TextView) view.findViewById(R.id.text1)).setText(Integer.toString(mId));
-    }
-
-    @Override
-    public void onDestroy() {
-        mPageUpdatedCb = null;
-        super.onDestroy();
     }
 
     @Override

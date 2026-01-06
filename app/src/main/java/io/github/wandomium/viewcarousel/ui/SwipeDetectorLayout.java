@@ -29,14 +29,10 @@ import android.widget.LinearLayout;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import io.github.wandomium.viewcarousel.R;
-import io.github.wandomium.viewcarousel.MainActivity;
 
-public class UserActionsLayout extends ConstraintLayout implements ICaptureInput
+public class SwipeDetectorLayout extends ConstraintLayout implements ICaptureInput
 {
-    private static final String CLASS_TAG = UserActionsLayout.class.getSimpleName();
-
-    private MainActivity mMainActivity;
-
+    private static final String CLASS_TAG = SwipeDetectorLayout.class.getSimpleName();
     // Top Menu
     private LinearLayout mTopMenu;
 
@@ -45,39 +41,26 @@ public class UserActionsLayout extends ConstraintLayout implements ICaptureInput
     private SwipeDetectorListener mSwipeDetectorListener;
     private boolean mCaptureInput  = false;
 
-    public UserActionsLayout(Context context, AttributeSet attrs) {
+    public SwipeDetectorLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-
-        try {
-            mMainActivity = (MainActivity) context;
-        }
-        catch (ClassCastException e) {
-            throw new IllegalArgumentException("RootLayout needs to be instantiated from MainActivity");
-        }
 
         LayoutInflater inflater = LayoutInflater.from(context);
         View v = inflater.inflate(R.layout.user_actions_detector, this,true);
 
         ///// PLACEHOLDER
         mTopMenu = v.findViewById(R.id.top_menu);
+    }
 
-        ///// SWIPING
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        if (!(getContext() instanceof SwipeDetectorListener.SwipeCallback swipeCallback)) {
+            throw new IllegalArgumentException("RootLayout needs to be instantiated from MainActivity");
+        }
+
         mSwipeDetectorListener = new SwipeDetectorListener(
-                ViewConfiguration.get(context).getScaledTouchSlop(), (direction, distance) -> {
-            boolean retval = true;
-            switch (direction) {
-                case SwipeDetectorListener.SWIPE_LEFT -> mMainActivity.nextPage();
-                case SwipeDetectorListener.SWIPE_RIGHT -> mMainActivity.previousPage();
-                case SwipeDetectorListener.SWIPE_2FINGER_DOWN -> mMainActivity.showPopupMenu(mTopMenu);
-                case SwipeDetectorListener.SWIPE_UP -> {
-                    if (!mCaptureInput) {
-                        mCaptureInput = mMainActivity.setCaptureInput(true); //this one will call us anyway
-                    }
-                }
-                default -> retval = false; // don't consume the event
-            }
-            return retval;
-        });
+                ViewConfiguration.get(getContext()).getScaledTouchSlop(), swipeCallback);
         mGestureDetector = new GestureDetector(getContext(), mSwipeDetectorListener);
     }
 
@@ -88,7 +71,6 @@ public class UserActionsLayout extends ConstraintLayout implements ICaptureInput
     public void onDetachedFromWindow() {
         mSwipeDetectorListener = null; // holds implicit reference to mMainActivity
         mGestureDetector = null;
-        mMainActivity = null;
         mTopMenu = null;
         super.onDetachedFromWindow();
     }
