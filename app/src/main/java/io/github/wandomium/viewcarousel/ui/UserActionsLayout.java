@@ -129,6 +129,5 @@ public class UserActionsLayout extends ConstraintLayout implements ICaptureInput
         mTopMenu.setTranslationY(-mTopMenu.getHeight());
         return false;
     }
-    /// END OF HACK
     /// ///////////////
 }

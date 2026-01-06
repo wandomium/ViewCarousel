@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -38,9 +39,14 @@ public class ConfigMngr
         return configList;
     }
 
-    public static ArrayList<Page> loadPages(final Context ctx, final String configFname) {
-        Log.d(CLASS_TAG, "external files dir: " + ctx.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS));
-        Log.d(CLASS_TAG, "files dir: " + ctx.getFilesDir());
+    public static boolean deleteConfig(Context ctx, final String configFname)
+    {
+        File file = new File(ctx.getExternalFilesDir(null), configFname);
+        return file.delete();
+    }
+
+    public static ArrayList<Page> loadPages(final Context ctx, final String configFname)
+    {
         File file = new File(ctx.getExternalFilesDir(null), configFname);
 
         Gson gson = new Gson();

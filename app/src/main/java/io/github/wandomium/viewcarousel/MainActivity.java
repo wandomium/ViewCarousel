@@ -119,6 +119,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
         mFPager.removeAllFragments();
         _clearNewPageFragment();
         _loadPages();
+        onDatasetUpdated();
     }
 
     ////////////////
