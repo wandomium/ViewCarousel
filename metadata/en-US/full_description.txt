@@ -1,0 +1,3 @@
+Application features a circular carousel of maximum five pages that users can swipe through. Each slot in the loop is configured as either a web page or direct phone dialer for up to 4 contacts.
+Multiple configurations are supported.
+Application supports PiP mode and keeps the screen on.
