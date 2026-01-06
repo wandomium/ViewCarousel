@@ -3,6 +3,7 @@ package io.github.wandomium.viewcarousel.ui;
 import android.text.InputType;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
@@ -34,7 +35,7 @@ public class ConfigurationListDialog
                 .setSingleChoiceItems(adapter, currentConfigIdx, null)
                 .setNeutralButton("Create new", (dialog, which) -> {
                     dialog.dismiss();
-                    showNewConfigDialog(mainActivity);})
+                    _showNewConfigDialog(mainActivity, configs);})
                 .setNegativeButton("Delete", null)
                 .setPositiveButton("Select", ((dialog, which) -> {
                     final int selected = ((AlertDialog)dialog).getListView().getCheckedItemPosition();
@@ -57,18 +58,32 @@ public class ConfigurationListDialog
         });
     }
 
-    public static void showNewConfigDialog(MainActivity mainActivity)
+    private static void _showNewConfigDialog(MainActivity mainActivity, ArrayList<String> configs)
     {
         final EditText input = new EditText(mainActivity);
         input.setInputType(InputType.TYPE_CLASS_TEXT); // Standard text input
 //        input.setHint(".json");
-        new AlertDialog.Builder(mainActivity)
+        AlertDialog alertDialog = new AlertDialog.Builder(mainActivity)
                 .setTitle("Enter name")
                 .setView(input)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("OK", (dialog, which) -> {
-                    Settings.getInstance(mainActivity).setConfigFile(input.getText().toString());
-                    mainActivity.reloadPagesFromConfig();
-                }).create().show();
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    dialog.dismiss();
+                    show(mainActivity);
+                })
+                .setPositiveButton("OK", null)
+                .create();
+
+        alertDialog.show();
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener((v) -> {
+            final String name = input.getText().toString();
+            if (configs.contains(name)) {
+                alertDialog.setTitle("Enter different name (" + name + " exists)");
+            }
+            else {
+                alertDialog.dismiss();
+                Settings.getInstance(mainActivity).setConfigFile(name);
+                mainActivity.reloadPagesFromConfig();
+            }
+        });
     }
 }
