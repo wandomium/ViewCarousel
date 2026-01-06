@@ -134,7 +134,6 @@ public class FragmentWebPage extends FragmentBase
 
         // default capture settings
         // mWebView.setEnabled(false);
-        setCaptureInput(false);
 
         if (!mPage.url.isEmpty()) {
             mWebView.loadUrl(mPage.url);

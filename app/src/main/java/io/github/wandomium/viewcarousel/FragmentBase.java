@@ -44,6 +44,7 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
     protected Page mPage;
     protected FragmentDataUpdatedCb mPageUpdatedCb;
 
+
     @FunctionalInterface
     public interface FragmentDataUpdatedCb {
         void onFragmentDataUpdated(int type, Page page); // type is here for hacks because we need a no-arg constructor
@@ -68,16 +69,15 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
     public void onShow()  { Log.d(CLASS_TAG, "onShow"); }
 
     @Override
-    public boolean setCaptureInput(final boolean captureReq) {
-        // new capture state can be rejected by the fragment if it is unsupported
-        Log.d(CLASS_TAG, "captureInput: " + captureReq);
-        return false; //unsupported by default
-    }
+    public boolean setCaptureInput(final boolean captureReq) { return false;}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (savedInstanceState != null) {
+            mCaptureInput = savedInstanceState.getBoolean(CAPTURE_KEY);
+        }
         mId = requireArguments().getInt(ARG_ID);
         mPage = new Gson().fromJson(requireArguments().getString(PAGE), Page.class);
     }

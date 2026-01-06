@@ -47,13 +47,14 @@ import io.github.wandomium.viewcarousel.ui.SwipeDetectorLayout;
 public class MainActivity extends AppCompatActivity implements ICaptureInput, FragmentBase.FragmentDataUpdatedCb, SwipeDetectorListener.SwipeCallback
 {
     private static final String CLASS_TAG = MainActivity.class.getSimpleName();
+    private static final String CAPTURE_KEY = "CAPTURE";
 
+    private SwipeDetectorLayout mSwipeDetectorLayout;
     private OnBackPressedCallback mBackPressedCb;
     private CarouselFragmentPager mFPager;
 
-    private SwipeDetectorLayout mUserActionsLayout;
-
     private boolean mMenuVisible = false;
+    private boolean mCaptureInput = false;
 
     private final int NEW_PAGE_IDX_NONE = -1;
     private int mFNewPageIdx = NEW_PAGE_IDX_NONE;
@@ -69,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
         _loadPages();
 
         /// SWIPES
-        mUserActionsLayout = findViewById(R.id.user_actions_view);
+        mSwipeDetectorLayout = findViewById(R.id.user_actions_view);
 
         /// BUTTONS
         findViewById(R.id.call_btn).setOnClickListener(this::onCallBtnClicked);
@@ -87,6 +88,13 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
 
         /// this is for all webviews
         CookieManager.getInstance().setAcceptCookie(true);
+
+        // and restoring the state if necessary
+        // it is called after _loadPages so fragments should already be created
+        if (savedInstanceState != null) {
+            mCaptureInput = savedInstanceState.getBoolean(CAPTURE_KEY);
+            setCaptureInput(mCaptureInput);
+        }
     }
 
     @Override
@@ -96,6 +104,14 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
     }
 
     @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(CAPTURE_KEY, mCaptureInput);
+    }
+
+    /////////////
+    /// PIP
+    @Override
     protected void onUserLeaveHint() { // auto enter pip mode
         super.onUserLeaveHint();
         _enterPipMode();
@@ -104,13 +120,9 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
     @Override
     public void onPictureInPictureModeChanged(boolean isInPipMode, @NonNull Configuration newConfig) {
         super.onPictureInPictureModeChanged(isInPipMode, newConfig);
-        _showBtns(!isInPipMode);
+        _showBtns(!isInPipMode && !mCaptureInput);
     }
 
-    ////////////////
-    /////// PAGE MANIPULATION
-    public void nextPage() { mFPager.showNextFragment(); }
-    public void previousPage() { mFPager.showPreviousFragment(); }
     public void reloadPagesFromConfig() {
         mFPager.removeAllFragments();
         _clearNewPageFragment();
@@ -118,8 +130,6 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
         onDatasetUpdated();
     }
 
-    ////////////////
-    /////// BUTTONS
     public void onCallBtnClicked(View v) {
         try {
             startActivity(new Intent(Intent.ACTION_DIAL));
@@ -175,20 +185,21 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
     ////////////////
     /// ICaptureInput IMPL
     @Override
-    public boolean setCaptureInput(final boolean captureReq) {
+    public boolean setCaptureInput(final boolean captureReq)
+    {
         // If current fragment does not support capture it can reject it
-        final boolean capture = mFPager.setCaptureInput(captureReq);
-        mBackPressedCb.setEnabled(capture);
-        mUserActionsLayout.setCaptureInput(capture);
-        _showBtns(!capture);
+        mCaptureInput = mFPager.setCaptureInput(captureReq);
+        mBackPressedCb.setEnabled(mCaptureInput);
+        mSwipeDetectorLayout.setCaptureInput(mCaptureInput);
+        _showBtns(!mCaptureInput);
 
         //if capture was requested but not realized we don't write
         //release is currently never rejected
         //TODO it would be cleaner to have two methods here but later...
-        if (!(captureReq && !capture)) {
-            Toast.makeText(MainActivity.this, capture ? "CAPTURE" : "RELEASE", Toast.LENGTH_SHORT).show();
+        if (!(captureReq && !mCaptureInput)) {
+            Toast.makeText(MainActivity.this, mCaptureInput ? "CAPTURE" : "RELEASE", Toast.LENGTH_SHORT).show();
         }
-        return capture;
+        return mCaptureInput;
     }
     ////////////////
     /// SwipeDetectorListener Impl
