@@ -48,7 +48,7 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
     private FragmentManager mFragmentMngr;
 
     // Fragment list
-    private int mCurrentFragmentIdx = 0;
+    private int mCurrentFrIdx = 0;
     private int mIdCount = 0;
     private String _createNewTag() {
         return "f_" + (mIdCount++);
@@ -81,14 +81,14 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
     @Override
     public boolean setCaptureInput(final boolean captureReq) {
         // fragment can reject capture if unsupported
-        return  _getCurrentFragment().setCaptureInput(captureReq);
+        return  _requireFragment(mFragmentTags.get(mCurrentFrIdx)).setCaptureInput(captureReq);
     }
 
 
     public ArrayList<Page> getOrderedData() {
         ArrayList<Page> retval = new ArrayList<>(mFragmentTags.size());
         for (String tag : mFragmentTags) {
-            retval.add(((FragmentBase)mFragmentMngr.findFragmentByTag(tag)).getData());
+            retval.add(_requireFragment(tag).getData());
         }
         return retval;
     }
@@ -98,7 +98,7 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
         return mFragmentTags.size();
     }
     public int currentFragmentIdx() {
-        return mCurrentFragmentIdx;
+        return mCurrentFrIdx;
     }
     public void showNextFragment() {
         _switchFragment(_nextFragmentIdx(), Animation.RIGHT_IN, false); //swipe left
@@ -112,14 +112,14 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
             return; //state might not be as expected
         }
         Animation animation;
-        if (position == 0 && mCurrentFragmentIdx == mFragmentTags.size() - 1) {
+        if (position == 0 && mCurrentFrIdx == mFragmentTags.size() - 1) {
             animation = Animation.LEFT_IN;
         }
-        else if (position == mFragmentTags.size() - 1 && mCurrentFragmentIdx == 0) {
+        else if (position == mFragmentTags.size() - 1 && mCurrentFrIdx == 0) {
             animation = Animation.RIGHT_IN;
         }
         else {
-            animation = position < mCurrentFragmentIdx ? Animation.LEFT_IN : Animation.RIGHT_IN;
+            animation = position < mCurrentFrIdx ? Animation.LEFT_IN : Animation.RIGHT_IN;
         }
 
         _switchFragment(position, animation, false);
@@ -153,15 +153,15 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
     }
     public void removeFragment(final int position) throws IllegalArgumentException
     {
-        if (position == mCurrentFragmentIdx) {
+        if (position == mCurrentFrIdx) {
             _switchFragment(_previousFragmentIdx(), Animation.LEFT_IN, true);
         }
         else {
-            final Fragment fRemove = mFragmentMngr.findFragmentByTag(mFragmentTags.get(position));
+            final Fragment fRemove = _requireFragment(mFragmentTags.get(position));
             mFragmentMngr.beginTransaction().remove(fRemove).commitNow(); // TODO do we need the commitNow? probably not for remove
         }
         mFragmentTags.remove(position);
-        Log.d(CLASS_TAG, "Removed, remaining: " + mFragmentTags + " current=" + mCurrentFragmentIdx);
+        Log.d(CLASS_TAG, "Removed, remaining: " + mFragmentTags + " current=" + mCurrentFrIdx);
     }
     public void removeAllFragments() {
         FragmentTransaction fTransaction = mFragmentMngr.beginTransaction();
@@ -172,18 +172,18 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
         }
         fTransaction.commitNow();
         mFragmentTags.clear();
-        mCurrentFragmentIdx = 0;
+        mCurrentFrIdx = 0;
     }
     public void replaceFragment(final int position, Fragment fNew) throws IllegalArgumentException
     {
-        final Fragment fRemove = mFragmentMngr.findFragmentByTag(mFragmentTags.get(position));
+        final Fragment fRemove = _requireFragment(mFragmentTags.get(position));
         final String fNewTag = _createNewTag();
 
         FragmentTransaction fTransaction =
             mFragmentMngr.beginTransaction().remove(fRemove).add(R.id.fragment_container, fNew, fNewTag);
 
         // if replacing at current position, keep fragment visible
-        if (position != mCurrentFragmentIdx) {
+        if (position != mCurrentFrIdx) {
             fTransaction.hide(fNew);
         }
 
@@ -195,24 +195,22 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
 
     ////// HELPER METHODS
     private int _previousFragmentIdx() {
-        return (mCurrentFragmentIdx == 0) ? mFragmentTags.size() - 1 : mCurrentFragmentIdx - 1;
+        return (mCurrentFrIdx == 0) ? mFragmentTags.size() - 1 : mCurrentFrIdx - 1;
     }
     private int _nextFragmentIdx() {
-        return (mCurrentFragmentIdx == mFragmentTags.size() - 1) ? 0 : mCurrentFragmentIdx + 1;
+        return (mCurrentFrIdx == mFragmentTags.size() - 1) ? 0 : mCurrentFrIdx + 1;
     }
-    private FragmentBase _getCurrentFragment() {
+    private FragmentBase _requireFragment(final String tag) {
         // O(N) lookup but we have < 10 fragments
-        return (FragmentBase) mFragmentMngr.findFragmentByTag(mFragmentTags.get(mCurrentFragmentIdx));
+        return (FragmentBase) Objects.requireNonNull(mFragmentMngr.findFragmentByTag(tag));
     }
     private void _switchFragment(int to, Animation direction, boolean replaceCurrent) {
-        Log.d(CLASS_TAG, "switch: " + mCurrentFragmentIdx + " -> " + to);
+        Log.d(CLASS_TAG, "switch: " + mCurrentFrIdx + " -> " + to);
         Log.d(CLASS_TAG, mFragmentTags.toString());
         // TODO: pop enter animations
         FragmentTransaction fTransaction = mFragmentMngr.beginTransaction();
-        final FragmentBase fFrom = (FragmentBase) Objects.requireNonNull(
-                mFragmentMngr.findFragmentByTag(mFragmentTags.get(mCurrentFragmentIdx)));
-        final FragmentBase fTo = (FragmentBase) Objects.requireNonNull(
-                mFragmentMngr.findFragmentByTag(mFragmentTags.get(to)));
+        final FragmentBase fFrom = _requireFragment(mFragmentTags.get(mCurrentFrIdx));
+        final FragmentBase fTo = _requireFragment(mFragmentTags.get(to));
         switch (direction) {
             case RIGHT_IN -> fTransaction.setCustomAnimations(
                     R.anim.slide_in_right, R.anim.slide_out_left);
@@ -233,11 +231,11 @@ public class CarouselFragmentPager extends FrameLayout implements ICaptureInput
         fTransaction.disallowAddToBackStack();
 
         int numPages = mFragmentTags.size();
-        mCurrentFragmentIdx = to;
+        mCurrentFrIdx = to;
         if (replaceCurrent) {
             numPages--;
         }
-        mPageIdDisplay.showPageIndicator(mCurrentFragmentIdx +1, numPages);
+        mPageIdDisplay.showPageIndicator(mCurrentFrIdx +1, numPages);
 
         // TODO: we probably don't need commitNow here. only when adding new fragments
         fTransaction.commitNow();

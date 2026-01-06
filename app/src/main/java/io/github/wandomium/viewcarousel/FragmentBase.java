@@ -46,7 +46,7 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
 
     @FunctionalInterface
     public interface FragmentDataUpdatedCb {
-        void onFragmentDataUpdated(int id, int type, Page page); // type is here for hacks because we need a no-arg constructor
+        void onFragmentDataUpdated(int type, Page page); // type is here for hacks because we need a no-arg constructor
     }
 
     public static FragmentBase createFragment(int id, Page page) {
@@ -77,8 +77,9 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mId = getArguments().getInt(ARG_ID);
-        mPage = new Gson().fromJson(getArguments().getString(PAGE), Page.class);
+
+        mId = requireArguments().getInt(ARG_ID);
+        mPage = new Gson().fromJson(requireArguments().getString(PAGE), Page.class);
     }
 
     @Override

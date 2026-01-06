@@ -40,15 +40,17 @@ public class ConfigMngr
     public static ArrayList<String> getConfigs(Context ctx)
     {
         File directory = ctx.getExternalFilesDir(null);
-
-        File[] files = directory.listFiles();
         ArrayList<String> configList = new ArrayList<>();
 
-        if (files != null) {
-            for (File file : files) {
-                if (file.isFile()) { // Ensure we aren't listing sub-folders
-                    //configList.add(file.getName().replaceAll("(?i)\\.json$", ""));
-                    configList.add(file.getName().replaceAll(Pattern.quote(SUFFIX) + "$", ""));
+        if (directory != null) {
+            File[] files = directory.listFiles();
+
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isFile()) { // Ensure we aren't listing sub-folders
+                        //configList.add(file.getName().replaceAll("(?i)\\.json$", ""));
+                        configList.add(file.getName().replaceAll(Pattern.quote(SUFFIX) + "$", ""));
+                    }
                 }
             }
         }

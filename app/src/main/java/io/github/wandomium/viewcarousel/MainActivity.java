@@ -32,13 +32,15 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.WindowCompat;
 
 import java.util.ArrayList;
 
 import io.github.wandomium.viewcarousel.data.ConfigMngr;
 import io.github.wandomium.viewcarousel.data.Page;
 import io.github.wandomium.viewcarousel.ui.CarouselFragmentPager;
-import io.github.wandomium.viewcarousel.ui.ConfigurationListDialog;
+import io.github.wandomium.viewcarousel.ui.DialogConfigurationList;
+import io.github.wandomium.viewcarousel.ui.DialogBugReport;
 import io.github.wandomium.viewcarousel.ui.ICaptureInput;
 import io.github.wandomium.viewcarousel.ui.UserActionsLayout;
 
@@ -176,8 +178,11 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
                 item.setChecked(show);
                 _showBtns(show);
             }
-            else if (id == R.id.config_list_configs) { ConfigurationListDialog.show(this); }
-
+            else if (id == R.id.config_list_configs) { DialogConfigurationList.show(this); }
+            else if (id == R.id.bug_report) { DialogBugReport.show(this); }
+            //TODO: user manual
+//            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/wandomium/ViewCarousel/blob/main/README.md"));
+//            startActivity(intent);
             return true;
         });
 
@@ -188,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
     ////////////////
     /// PageUpdatedCb Impl
     @Override
-    public void onFragmentDataUpdated(int id, int type, Page page)
+    public void onFragmentDataUpdated(int type, Page page)
     {
         if (type == Page.PAGE_TYPE_UNKNOWN) {
             // new page was just configured

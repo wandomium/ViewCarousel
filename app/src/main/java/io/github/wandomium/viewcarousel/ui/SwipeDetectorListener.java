@@ -68,6 +68,11 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
 
     @Override
     public boolean onScroll(MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
+        if (e1 == null) {
+            // incomplete event stream or error state
+            mSwipeInProcess = false;
+            return false;
+        }
         mDx = e2.getX() - e1.getX();
         mDy = e2.getY() - e1.getY();
         if (!mSwipeInProcess) {
@@ -93,6 +98,11 @@ public class SwipeDetectorListener extends GestureDetector.SimpleOnGestureListen
 
     @Override
     public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
+        if (e1 == null) {
+            // incomplete event stream or error state
+            mSwipeInProcess = false;
+            return false;
+        }
         mDx = e2.getX() - e1.getX();
         mDy = e2.getY() - e1.getY();
         if (mSwipeInProcess) {

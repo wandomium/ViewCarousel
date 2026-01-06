@@ -42,4 +42,6 @@ along with ViewCarousel. If not, see <https://www.gnu.org/licenses/>.
     <item
         android:id="@+id/config_list_configs"
         android:title="Manage configurations"/>
+    <item android:id="@+id/bug_report"
+        android:title="Bug report"/>
 </menu>

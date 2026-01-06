@@ -22,7 +22,7 @@ along with ViewCarousel. If not, see <https://www.gnu.org/licenses/>.
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:background="@android:color/black"
+    android:background="@android:color/tertiary_text_light"
     android:keepScreenOn="true">
 
     <io.github.wandomium.viewcarousel.ui.CarouselFragmentPager
@@ -38,7 +38,6 @@ along with ViewCarousel. If not, see <https://www.gnu.org/licenses/>.
 
     <ImageButton
         android:id="@+id/menu_btn"
-        android:contentDescription="Menu Button"
         android:layout_width="80dp"
         android:layout_height="100dp"
         android:elevation="18dp"
@@ -47,7 +46,6 @@ along with ViewCarousel. If not, see <https://www.gnu.org/licenses/>.
         app:layout_constraintBottom_toBottomOf="parent"/>
     <ImageButton
         android:id="@+id/call_btn"
-        android:contentDescription="Dialer Button"
         android:layout_width="80dp"
         android:layout_height="100dp"
         android:elevation="18dp"

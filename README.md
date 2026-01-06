@@ -27,26 +27,28 @@ Application supports PiP (Picture in Picture) mode and is configured to keep the
 
 # User Manual
 #### Gestures
-* Swipe left: next page
-* Swipe right: previous page
-* Swipe down from top: reloads web page
-* Swipe down from top with two fingers: open menu
+* _Swipe left_: next page
+* _Swipe right_: previous page
+* _Swipe down from top_: reloads web page
+* _Swipe down from top with two fingers_: open menu
 #### Action buttons
-* Phone icon on top right opens the dialer
-* Hamburger icon on bottom right opens menu
-* Buttons can be hidden 
+* _Phone icon_ on top right opens the dialer
+* _Hamburger icon_ on bottom right opens the menu
+
+Buttons can be hidden 
 #### Menu items
-* Add page: adds a new page after the current one
-* Remove page: removes the current page
-* PiP mode: initiates PiP mode
-* Show buttons: hide or show action buttons
-* Manage configurations: load, create or delete configurations
+* _Add page_: adds a new page after the current one
+* _Remove page_: removes the current page
+* _PiP mode_: initiates PiP mode
+* _Show buttons_: hide or show action buttons
+* _Manage configurations_: load, create or delete configurations
 ### Available Pages
 #### New Page
 Select globe icon for new web page or phone icon for new dialer page
 #### Web Page
-* Swipe up: capture input (enables interaction with the web page, other gestures will not work)
-* Back swipe: release input if captured
+* _Swipe up_: capture input (enables interaction with the web page, other gestures will not work)
+* _Back swipe_: release input if captured
 #### Dialer Page
-* Long press on contact to make a direct call on speaker (3s - countdown appears)
-* Maximum 3 contacts can be added
+* _Long press_ on contact to make a direct call on speaker (3s - countdown appears)
+
+Maximum 3 contacts can be added

@@ -29,7 +29,7 @@ public class Settings
     private static SharedPreferences mPerfs;
     private static Settings mInstance;
 
-    private static final String IS_FIRST_RUN = "IS_FIRST_RUN";
+//    private static final String IS_FIRST_RUN = "IS_FIRST_RUN";
     private static final String SHOW_BTNS = "SHOW_BTNS";
     private static final String CONFIG_FILE = "CONFIG_FILE";
 

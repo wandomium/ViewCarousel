@@ -28,7 +28,7 @@ import io.github.wandomium.viewcarousel.MainActivity;
 import io.github.wandomium.viewcarousel.Settings;
 import io.github.wandomium.viewcarousel.data.ConfigMngr;
 
-public class ConfigurationListDialog
+public class DialogConfigurationList
 {
 
     public static void show(MainActivity mainActivity)

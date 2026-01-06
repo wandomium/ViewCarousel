@@ -45,6 +45,7 @@ public class CountdownSnackbar {
         // add progress bar
         ProgressBar progressBar = new CircularProgressIndicator(v.getContext());
         progressBar.setMax(FragmentCalls.CALL_DELAY_S * 1000);
+        //TODO: fix restricted api usage
         Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) mSnackbar.getView();
         layout.addView(progressBar, 1);
 

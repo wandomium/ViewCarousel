@@ -45,8 +45,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
-import com.google.gson.Gson;
-
 import java.util.ArrayList;
 
 import io.github.wandomium.viewcarousel.data.Page;
@@ -61,6 +59,7 @@ public class FragmentCalls extends FragmentBase
     };
 
     private Button[] mDirectCallBtns = new Button[cBtnLayouts.length];
+    private Button mAddContactBtn;
 
     private ActivityResultLauncher<Intent> mContactPickerLauncher;
 
@@ -111,7 +110,7 @@ public class FragmentCalls extends FragmentBase
             btn.setOnTouchListener(null);
         }
         mDirectCallBtns = null;
-        getView().findViewById(R.id.add_contact_button).setOnClickListener(null);
+        requireView().findViewById(R.id.add_contact_button).setOnClickListener(null);
 
         // stop pending actions if any
         if (mMakeCallRunnable != null) {
@@ -192,7 +191,7 @@ public class FragmentCalls extends FragmentBase
             Page.Contact contact = null;
             if (result.getResultCode() == FragmentActivity.RESULT_OK)
                 //This action is rare so we don't care about a potential performance hit when catching the exception
-                try (final Cursor cursor = getContext().getContentResolver().query(result.getData().getData(),
+                try (final Cursor cursor = requireContext().getContentResolver().query(result.getData().getData(),
                         null, null, null, null)) {
                     cursor.moveToFirst();
 
@@ -213,7 +212,7 @@ public class FragmentCalls extends FragmentBase
             mPage.contacts.add(contact);
             _setDirectCallBtnEnabled(mPage.contacts.size() - 1, true);
 
-            mPageUpdatedCb.onFragmentDataUpdated(mId, Page.PAGE_TYPE_CONTACTS, mPage);
+            mPageUpdatedCb.onFragmentDataUpdated(Page.PAGE_TYPE_CONTACTS, mPage);
         }
     }
 }
