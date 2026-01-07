@@ -181,7 +181,8 @@ public class FragmentWebPage extends FragmentBase
     public void loadUrl(final String url) {
         if (!mPage.url.equals(url)) {
             mPage = Page.createWebPage(url, mPage.refresh_rate);
-            mPageUpdatedCb.onFragmentDataUpdated(Page.PAGE_TYPE_WEB, mPage);
+            if (mPageUpdatedCb != null) {
+                mPageUpdatedCb.onFragmentDataUpdated(Type.WEB, mPage);}
         }
         mWebView.loadUrl(mPage.url);
 

@@ -59,7 +59,6 @@ public class FragmentCalls extends FragmentBase
     };
 
     private Button[] mDirectCallBtns = new Button[cBtnLayouts.length];
-    private Button mAddContactBtn;
 
     private ActivityResultLauncher<Intent> mContactPickerLauncher;
 
@@ -105,24 +104,21 @@ public class FragmentCalls extends FragmentBase
 
     @Override
     public void onDestroyView() {
-        // nullify all view references and callbacks that hold reference to fragment
-        for (Button btn : mDirectCallBtns) {
-            btn.setOnTouchListener(null);
-        }
-        mDirectCallBtns = null;
-        requireView().findViewById(R.id.add_contact_button).setOnClickListener(null);
-
         // stop pending actions if any
         if (mMakeCallRunnable != null) {
             mHandler.removeCallbacks(mMakeCallRunnable);
-            mMakeCallRunnable = null;
         }
         if (mCountdownSnackbar != null) {
             mCountdownSnackbar.dismiss();
-            mCountdownSnackbar = null;
         }
 
+        // nullify all view references and callbacks that hold reference to fragment
+        // fragment instance can stay alive even if the view is destroyed
+        mDirectCallBtns = null;
+        mCountdownSnackbar = null;
+
         mHandler = null;
+        mMakeCallRunnable = null;
         mContactPickerLauncher = null;
 
         super.onDestroyView();
@@ -212,7 +208,8 @@ public class FragmentCalls extends FragmentBase
             mPage.contacts.add(contact);
             _setDirectCallBtnEnabled(mPage.contacts.size() - 1, true);
 
-            mPageUpdatedCb.onFragmentDataUpdated(Page.PAGE_TYPE_CONTACTS, mPage);
+            if (mPageUpdatedCb != null) {
+                mPageUpdatedCb.onFragmentDataUpdated(Type.DIALER, mPage);}
         }
     }
 }

@@ -39,6 +39,7 @@ public class SwipeDetectorLayout extends ConstraintLayout implements ICaptureInp
     // Swipe gesture detector - previous, next, focus
     private GestureDetector mGestureDetector;
     private SwipeDetectorListener mSwipeDetectorListener;
+    private SwipeDetectorListener.SwipeCallback mOnSwipeCallback;
     private boolean mCaptureInput  = false;
 
     public SwipeDetectorLayout(Context context, AttributeSet attrs) {
@@ -51,16 +52,20 @@ public class SwipeDetectorLayout extends ConstraintLayout implements ICaptureInp
         mTopMenu = v.findViewById(R.id.top_menu);
     }
 
+    public void setOnSwipeCallback(SwipeDetectorListener.SwipeCallback cb) {
+        mOnSwipeCallback = cb;
+    }
+
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        if (!(getContext() instanceof SwipeDetectorListener.SwipeCallback swipeCallback)) {
-            throw new IllegalArgumentException("RootLayout needs to be instantiated from MainActivity");
+        if (mOnSwipeCallback == null) {
+            throw new IllegalArgumentException("Swipe detector callback must no be null");
         }
 
         mSwipeDetectorListener = new SwipeDetectorListener(
-                ViewConfiguration.get(getContext()).getScaledTouchSlop(), swipeCallback);
+                ViewConfiguration.get(getContext()).getScaledTouchSlop(), mOnSwipeCallback);
         mGestureDetector = new GestureDetector(getContext(), mSwipeDetectorListener);
     }
 

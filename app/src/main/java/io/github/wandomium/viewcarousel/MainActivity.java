@@ -45,7 +45,7 @@ import io.github.wandomium.viewcarousel.ui.ICaptureInput;
 import io.github.wandomium.viewcarousel.ui.SwipeDetectorListener;
 import io.github.wandomium.viewcarousel.ui.SwipeDetectorLayout;
 
-public class MainActivity extends AppCompatActivity implements ICaptureInput, FragmentBase.FragmentDataUpdatedCb, SwipeDetectorListener.SwipeCallback
+public class MainActivity extends AppCompatActivity implements ICaptureInput
 {
     private static final String CLASS_TAG = MainActivity.class.getSimpleName();
     private static final String CAPTURE_KEY = "CAPTURE";
@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
 
     private final int NEW_PAGE_IDX_NONE = -1;
     private int mFNewPageIdx = NEW_PAGE_IDX_NONE;
+    private FragmentBase mFNewPage = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -77,13 +78,14 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
 
         /// SWIPES
         mSwipeDetectorLayout = findViewById(R.id.user_actions_view);
+        mSwipeDetectorLayout.setOnSwipeCallback(this::onSwipe);
 
         /// BUTTONS
         findViewById(R.id.call_btn).setOnClickListener(this::onCallBtnClicked);
         findViewById(R.id.menu_btn).setOnClickListener(this::showPopupMenu);
 //        findViewById(R.id.menu_btn).setOnClickListener((v)->openOptionsMenu());
 
-        /// release focus
+        /// Focus management
         mBackPressedCb = new OnBackPressedCallback(false) {
             @Override
             public void handleOnBackPressed() {
@@ -104,15 +106,26 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
     }
 
     @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(CAPTURE_KEY, mCaptureInput);
+    }
+
+    @Override
     protected void onPause() {
         CookieManager.getInstance().flush();
         super.onPause();
     }
 
     @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(CAPTURE_KEY, mCaptureInput);
+    protected void onDestroy() {
+        for (FragmentBase fBase : mFPager.getOrderedFragments()) {
+            fBase.setPageUpdatedCb(null);
+        }
+        mSwipeDetectorLayout.setOnSwipeCallback(null);
+        _clearNewPageFragment();
+
+        super.onDestroy();
     }
 
     /////////////
@@ -143,6 +156,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
             Toast.makeText(this, "Could not launch dialer", Toast.LENGTH_LONG).show();
         }
     }
+
     public void showPopupMenu(View view) {
         if (mMenuVisible) { return; }
 
@@ -163,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
         menu.setOnDismissListener((ignored) -> mMenuVisible = false);
         menu.setOnMenuItemClickListener((item) -> {
             final int id = item.getItemId();
-            final int currentFrIdx = mFPager.currentFragmentIdx();
+            final int currentFrIdx = mFPager.currentFragmentPosition();
 
             if (id == R.id.action_add_page) { _addNewPageFragment(currentFrIdx + 1, false); }
             else if (id == R.id.action_remove_page)
@@ -183,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
                 _showBtns(show);
             }
             else if (id == R.id.config_dark_mode) {
-                boolean enable = !item.isChecked(); //if it is not diaplying a checkbox and was clicked it should
+                boolean enable = !item.isChecked(); //if it is not displaying a checkbox and was clicked it should
                 SETTINGS.setNightMode(enable);
                 item.setChecked(enable);
                 _reloadWithAnimation();
@@ -221,8 +235,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
     }
     ////////////////
     /// SwipeDetectorListener Impl
-    @Override
-    public boolean onSwipe(int direction, float distance) {
+    public boolean onSwipe(int direction, float ignored) {
         boolean retval = true;
         switch (direction) {
             case SwipeDetectorListener.SWIPE_LEFT -> mFPager.showNextFragment();
@@ -235,20 +248,20 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
     }
     ////////////////
     /// PageUpdatedCb Impl
-    @Override
-    public void onFragmentDataUpdated(int type, Page page)
-    {
-        if (type == Page.PAGE_TYPE_UNKNOWN) {
-            // new page was just configured
-            mFPager.replaceFragment(
-                    mFNewPageIdx, FragmentBase.createFragment(mFNewPageIdx, page)
-            );
-            _clearNewPageFragment();
-        }
+    public void onNewPageConfigured(Page page) {
+        final FragmentBase fBase = FragmentBase.createFragment(mFNewPageIdx, page);
+        fBase.setPageUpdatedCb((ignored1,ignored2) -> onDatasetUpdated());
+        mFPager.replaceFragment(mFNewPageIdx, fBase);
+        _clearNewPageFragment();
         onDatasetUpdated();
     }
     public void onDatasetUpdated() {
-        ConfigMngr.savePages(this, mFPager.getOrderedData(), Settings.getInstance(this).configFile());
+        ArrayList<FragmentBase> fragments = mFPager.getOrderedFragments();
+        ArrayList<Page> pages = new ArrayList<>(fragments.size());
+        for (FragmentBase fBase : fragments) {
+            pages.add(fBase.getData());
+        }
+        ConfigMngr.savePages(this, pages, Settings.getInstance(this).configFile());
     }
 
     ////////////////
@@ -258,22 +271,28 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
             Toast.makeText(this, "New page already exists at index: " + mFNewPageIdx, Toast.LENGTH_SHORT).show();
             return;
         }
-        final FragmentNewPage fNewPage = (FragmentNewPage) FragmentBase.createFragment(idx, null);
+        mFNewPage = FragmentBase.createFragment(idx, null);
+        mFNewPage.setPageUpdatedCb((ignored, page) -> onNewPageConfigured(page));
         try {
             if (replace) {
-                mFPager.replaceFragment(idx, fNewPage);
+                mFPager.replaceFragment(idx, mFNewPage);
             }
             else {
-                mFPager.addFragment(idx, fNewPage);
+                mFPager.addFragment(idx, mFNewPage);
                 mFPager.showFragment(idx);
             }
         } catch (IllegalArgumentException ignored) {
             Toast.makeText(MainActivity.this, "Max page limit reached", Toast.LENGTH_LONG).show();
+            _clearNewPageFragment();
             return;
         }
         mFNewPageIdx = idx;
     }
     private void _clearNewPageFragment() {
+        if (mFNewPage != null) {
+            mFNewPage.setPageUpdatedCb(null);
+            mFNewPage = null;
+        }
         mFNewPageIdx = NEW_PAGE_IDX_NONE;
     }
 
@@ -289,6 +308,7 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
             switch (page.page_type) {
                 case Page.PAGE_TYPE_WEB, Page.PAGE_TYPE_CONTACTS:
                     FragmentBase fBase = FragmentBase.createFragment(idx, page);
+                    fBase.setPageUpdatedCb((ignored1, ignored2) -> onDatasetUpdated());
                     mFPager.addFragment(idx, fBase);
                     break;
             }
@@ -314,7 +334,8 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput, Fr
     }
 
     private void _reloadWithAnimation() {
-        Intent intent = getIntent();
+        final Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         finish();
 
         // Disable the default exit animation

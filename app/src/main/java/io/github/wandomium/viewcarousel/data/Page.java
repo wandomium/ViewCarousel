@@ -28,7 +28,6 @@ public class Page {
 
     public final static int DEFAULT_REFRESH_RATE_MIN = 15;
 
-    public final static int PAGE_TYPE_UNKNOWN = -1;
     public final static int PAGE_TYPE_WEB = 1;
     public final static int PAGE_TYPE_CONTACTS = 2;
 

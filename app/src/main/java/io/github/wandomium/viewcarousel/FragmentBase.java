@@ -16,19 +16,15 @@
  */
 package io.github.wandomium.viewcarousel;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.google.gson.Gson;
+
+import java.util.Objects;
 
 import io.github.wandomium.viewcarousel.data.Page;
 import io.github.wandomium.viewcarousel.ui.ICaptureInput;
@@ -38,28 +34,42 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
     private static final String CLASS_TAG = FragmentBase.class.getSimpleName();
 
     protected static final String ARG_ID = "id";
-    protected static final String PAGE = "page";
-    protected int mId;
+    protected static final String ARG_PAGE = "page";
 
+    protected int mId = -1;
     protected Page mPage;
     protected FragmentDataUpdatedCb mPageUpdatedCb;
 
+    public enum Type {
+        WEB, DIALER, NEW_PAGE;
+
+        static Type fromInt(int which) {
+            return switch (which) {
+                case Page.PAGE_TYPE_WEB -> WEB;
+                case Page.PAGE_TYPE_CONTACTS -> DIALER;
+                default -> NEW_PAGE;
+            };
+        }
+    }
 
     @FunctionalInterface
     public interface FragmentDataUpdatedCb {
-        void onFragmentDataUpdated(int type, Page page); // type is here for hacks because we need a no-arg constructor
+        void onFragmentDataUpdated(Type type, Page page);
+    }
+    public void setPageUpdatedCb(FragmentDataUpdatedCb cb) {
+        mPageUpdatedCb = cb;
     }
 
-    public static FragmentBase createFragment(int id, Page page) {
-        FragmentBase f = switch (page != null ? page.page_type : Page.PAGE_TYPE_UNKNOWN) {
-            case Page.PAGE_TYPE_WEB -> new FragmentWebPage();
-            case Page.PAGE_TYPE_CONTACTS -> new FragmentCalls();
-            case Page.PAGE_TYPE_UNKNOWN -> new FragmentNewPage();
-            default -> throw new IllegalArgumentException("Invalid page type");
+
+    public static FragmentBase createFragment(final int id, final Page page) {
+        FragmentBase f = switch (page != null ? Type.fromInt(page.page_type) : Type.NEW_PAGE) {
+            case WEB -> new FragmentWebPage();
+            case DIALER -> new FragmentCalls();
+            case NEW_PAGE -> new FragmentNewPage();
         };
         Bundle args = new Bundle();
         args.putInt(ARG_ID, id);
-        args.putString(PAGE, new Gson().toJson(page));
+        args.putString(ARG_PAGE, new Gson().toJson(page));
         f.setArguments(args);
         return f;
     }
@@ -76,37 +86,21 @@ public abstract class FragmentBase extends Fragment implements ICaptureInput
         super.onCreate(savedInstanceState);
 
         mId = requireArguments().getInt(ARG_ID);
-        mPage = new Gson().fromJson(requireArguments().getString(PAGE), Page.class);
+        mPage = new Gson().fromJson(
+            Objects.requireNonNullElseGet(
+                savedInstanceState, this::requireArguments).getString(ARG_PAGE), Page.class);
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-
-        if (context instanceof FragmentDataUpdatedCb) {
-            mPageUpdatedCb = (FragmentDataUpdatedCb) context;
-        }
-        else {
-            throw new IllegalArgumentException("Context must implement FragmentDataUpdatedCb");
-        }
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(ARG_PAGE, new Gson().toJson(mPage));
     }
 
     @Override
     public void onDetach() {
         mPageUpdatedCb = null;
         super.onDetach();
-    }
-
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_base, container, false);
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        ((TextView) view.findViewById(R.id.text1)).setText(Integer.toString(mId));
     }
 
     @Override

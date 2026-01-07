@@ -47,8 +47,10 @@ public class FragmentNewPage extends FragmentBase
         view.findViewById(R.id.btn_add_web_page)
             .setOnClickListener((ignored) -> _showAddWebPageDialog());
         view.findViewById(R.id.btn_add_call_page)
-            .setOnClickListener((ignored) ->
-                mPageUpdatedCb.onFragmentDataUpdated(Page.PAGE_TYPE_UNKNOWN, Page.createContactsPage(null)));
+            .setOnClickListener((ignored) -> {
+                if (mPageUpdatedCb != null) {
+                    mPageUpdatedCb.onFragmentDataUpdated(Type.NEW_PAGE, Page.createContactsPage(null));}
+            });
     }
 
     private void _showAddWebPageDialog()
@@ -75,9 +77,10 @@ public class FragmentNewPage extends FragmentBase
                     if (urlInput.getText() != null) {
                         String url = urlInput.getText().toString();
                         if (!url.isEmpty() && !url.equals(URL_INIT_TEXT)) {
-                            mPageUpdatedCb.onFragmentDataUpdated(Page.PAGE_TYPE_UNKNOWN,
-                                    Page.createWebPage(url, refreshRate.getValue())
-                            );
+                            if (mPageUpdatedCb != null) {
+                                mPageUpdatedCb.onFragmentDataUpdated(
+                                    Type.NEW_PAGE,
+                                    Page.createWebPage(url, refreshRate.getValue()));}
                         }
                     }
                     id.dismiss();
