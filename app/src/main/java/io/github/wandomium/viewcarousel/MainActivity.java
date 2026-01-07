@@ -20,6 +20,7 @@ import android.app.PictureInPictureParams;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Rational;
@@ -204,9 +205,9 @@ public class MainActivity extends AppCompatActivity implements ICaptureInput
             }
             else if (id == R.id.config_list_configs) { DialogConfigurationList.show(this); }
             else if (id == R.id.bug_report) { DialogBugReport.show(this); }
-            //TODO: user manual
-//            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/wandomium/ViewCarousel/blob/main/README.md"));
-//            startActivity(intent);
+            else if (id == R.id.manual) { startActivity(new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://github.com/wandomium/ViewCarousel/blob/main/README.md")));
+            }
             return true;
         });
 

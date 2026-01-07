@@ -50,4 +50,6 @@ along with ViewCarousel. If not, see <https://www.gnu.org/licenses/>.
         android:title="Manage configurations"/>
     <item android:id="@+id/bug_report"
         android:title="Bug report"/>
+    <item android:id="@+id/manual"
+        android:title="Manual"/>
 </menu>

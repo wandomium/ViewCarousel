@@ -1,6 +1,1 @@
-[] replace all axtivity variables stores with requireActivity
-[] check how to use view model to share data
-[] relace unnecessary return true in swipedetector
-[] store capture inout so it persist 
-     - one is a bug in Mainactivity pip mode that ignores capture for buttons
-     - having several captures is unclean 
+This is a first release, it is in BETA state
