@@ -1,0 +1,17 @@
+[x] nredi konfigurabilno ali imas btns ali ne
+[x] double finger down for menu
+[x] podpri multiple konfiguracije
+[/] exportaj config v user-accessible directory
+[x] Show countdown to call
+[] Enable config file delete
+[] Make it so that .json does not have to be entered in name
+
+bugs:
+[x] Fixed swipe up detection
+[] recheck menu not showing checkmark
+
+low:
+[] user manual on first run
+[] manual open in menu
+[] remove unused code
+[] when adding phone page, notify the user of long press and direct call via speaker

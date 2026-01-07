@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">ViewCarousel</string>
+    <string name="remove_page">Remove Page</string>
+    <string name="add_page">Add Page</string>
+    <string name="action_enter_pip">PiP Mode</string>
+</resources>

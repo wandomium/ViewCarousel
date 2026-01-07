@@ -1,0 +1,104 @@
+/**
+ * This file is part of ViewCarousel.
+ * <p>
+ * ViewCarousel is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * ViewCarousel is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU General Public License
+ * along with ViewCarousel. If not, see <https://www.gnu.org/licenses/>.
+ */
+package io.github.wandomium.viewcarousel.ui;
+
+import android.text.InputType;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+
+import androidx.appcompat.app.AlertDialog;
+
+import java.util.ArrayList;
+
+import io.github.wandomium.viewcarousel.MainActivity;
+import io.github.wandomium.viewcarousel.Settings;
+import io.github.wandomium.viewcarousel.data.ConfigMngr;
+
+public class DialogConfigurationList
+{
+
+    public static void show(MainActivity mainActivity)
+    {
+        final Settings SETTINGS = Settings.getInstance(mainActivity);
+
+        ArrayList<String> configs = ConfigMngr.getConfigs(mainActivity);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                mainActivity,
+                android.R.layout.simple_list_item_single_choice,
+                configs
+        );
+
+        String currentConfig = SETTINGS.configFile();
+        int currentConfigIdx = configs.indexOf(currentConfig);
+
+        AlertDialog alertDialog = new AlertDialog.Builder(mainActivity)
+                .setTitle("Select configuration")
+                .setSingleChoiceItems(adapter, currentConfigIdx, null)
+                .setNeutralButton("Create new", (dialog, which) -> {
+                    dialog.dismiss();
+                    _showNewConfigDialog(mainActivity, configs);})
+                .setNegativeButton("Delete", null)
+                .setPositiveButton("Select", ((dialog, which) -> {
+                    final int selected = ((AlertDialog)dialog).getListView().getCheckedItemPosition();
+                    SETTINGS.setConfigFile(configs.get(selected));
+                    mainActivity.reloadPagesFromConfig();
+                })).create();
+
+        // hackish way to prevent dialog from disappearing when config is deleted
+        // user must select a new one
+        // show needs to be called so that buttons are created first
+        alertDialog.show();
+
+        alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener((v) -> {
+            final int selected = alertDialog.getListView().getCheckedItemPosition();
+            if (ConfigMngr.deleteConfig(mainActivity, configs.get(selected))) {
+                configs.remove(configs.get(selected));
+                alertDialog.getListView().setItemChecked(0, true);
+                adapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    private static void _showNewConfigDialog(MainActivity mainActivity, ArrayList<String> configs)
+    {
+        final EditText input = new EditText(mainActivity);
+        input.setInputType(InputType.TYPE_CLASS_TEXT); // Standard text input
+//        input.setHint(".json");
+        AlertDialog alertDialog = new AlertDialog.Builder(mainActivity)
+                .setTitle("Enter name")
+                .setView(input)
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    dialog.dismiss();
+                    show(mainActivity);
+                })
+                .setPositiveButton("OK", null)
+                .create();
+
+        alertDialog.show();
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener((v) -> {
+            final String name = input.getText().toString();
+            if (configs.contains(name)) {
+                alertDialog.setTitle("Enter different name (" + name + " exists)");
+            }
+            else {
+                alertDialog.dismiss();
+                Settings.getInstance(mainActivity).setConfigFile(name);
+                mainActivity.reloadPagesFromConfig();
+            }
+        });
+    }
+}

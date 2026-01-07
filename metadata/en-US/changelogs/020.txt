@@ -1,0 +1,11 @@
+[] nredi konfigurabilno ali imas btns ali ne
+[x] implementiraj calls page
+[] podpri multiple konfiguracije
+
+bugfix:
+[?] config does not persist
+[x] when all pages are removed, black screen appears
+
+low:
+[] user manual on first run
+[] remove unused code

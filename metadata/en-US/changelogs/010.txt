@@ -1,0 +1,14 @@
+Bugs - Major
+[] When putting the app to the background with add web pageOld open dialog we lose the pageOld on reload and crash on inde out of err!!
+
+[] Having bith swipe refresh and Capture functionality doesn't work ok. disable refresh when capture is active
+
+geolocation api
+capture gesture popravit
+vec configov na voljo
+back btn ne dela
+button dodaj poleg pip mode
+brez gumbov
+
+auto out if capture after idle
+button for back
