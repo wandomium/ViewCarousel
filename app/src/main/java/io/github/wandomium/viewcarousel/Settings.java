@@ -60,6 +60,6 @@ public class Settings
         return mPerfs.getString(CONFIG_FILE, "config.json");
     }
     public void setConfigFile(String configFile) { mPerfs.edit().putString(CONFIG_FILE, configFile).apply();}
-    public boolean nightMode() { return mPerfs.getBoolean(NIGHT_MODE, true);}
+    public boolean nightMode() { return mPerfs.getBoolean(NIGHT_MODE, false);}
     public void setNightMode(boolean enable) { mPerfs.edit().putBoolean(NIGHT_MODE, enable).apply();}
 }

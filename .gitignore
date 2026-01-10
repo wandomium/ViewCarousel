@@ -1,5 +1,8 @@
 bckp/
 
+# build file
+app/release/
+
 # Gradle files
 .gradle/
 build/

@@ -1,0 +1,4 @@
+Beta release
+
+[x] Fixed occasional crash on webviewload
+[x] default is night mode off

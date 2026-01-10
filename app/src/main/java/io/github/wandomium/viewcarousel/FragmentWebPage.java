@@ -38,6 +38,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Lifecycle;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import io.github.wandomium.viewcarousel.data.Page;
@@ -52,6 +53,8 @@ public class FragmentWebPage extends FragmentBase
     private WebView mWebView;
     private SwipeRefreshLayout mSwipeRefresh;
     private View mBlockerView;
+
+    private boolean mCaptureInput = false;
 
     private static final long TIME_UNITS = 1000L * 60L;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -133,7 +136,7 @@ public class FragmentWebPage extends FragmentBase
         });
 
         // default capture settings
-        // mWebView.setEnabled(false);
+         setCaptureInput(mCaptureInput);
 
         if (!mPage.url.isEmpty()) {
             mWebView.loadUrl(mPage.url);
@@ -155,11 +158,14 @@ public class FragmentWebPage extends FragmentBase
 
     @Override
     public boolean setCaptureInput(boolean captureReq) {
-        mBlockerView.setVisibility(captureReq ? View.GONE : View.VISIBLE);
-        mWebView.setEnabled(captureReq);
-        mSwipeRefresh.setEnabled(!captureReq);
+        mCaptureInput = captureReq;
+        if (getViewLifecycleOwner().getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.CREATED)) {
+            mBlockerView.setVisibility(mCaptureInput ? View.GONE : View.VISIBLE);
+            mWebView.setEnabled(mCaptureInput);
+            mSwipeRefresh.setEnabled(!mCaptureInput);
+        }
 
-        return captureReq;
+        return mCaptureInput;
     }
 
     @Override
